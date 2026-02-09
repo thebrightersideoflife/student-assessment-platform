@@ -1,0 +1,98 @@
+/* Print styles for completion badge and question sheets */
+@media print {
+  /* Reset everything for clean printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Set page margins to none for full-page printing */
+  @page {
+    margin: 0;
+    size: A4;
+  }
+  
+  /* Hide navigation and controls */
+  .no-print,
+  .button,
+  button,
+  nav,
+  header:not(.print-header) {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Print completion badge */
+  .completion-badge {
+    display: block !important;
+    page-break-inside: avoid;
+    margin: 0 auto !important;
+    padding: 40px !important;
+    border: 3px solid #333 !important;
+    background: white !important;
+    max-width: 100% !important;
+  }
+  
+  /* Keep button hidden in certificate but show content */
+  .completion-badge .button {
+    display: none !important;
+  }
+  
+  /* Print question sheet */
+  #printable-questions {
+    display: block !important;
+    background: white !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  
+  /* Add spacing to each page section */
+  #printable-questions > div {
+    padding-top: 60px !important;
+  }
+  
+  /* Keep first page as is */
+  #printable-questions > div:first-child {
+    padding-top: 40px !important;
+  }
+  
+  /* Ensure text is visible */
+  #printable-questions * {
+    color: #000 !important;
+    background: transparent !important;
+  }
+  
+  /* Keep borders visible */
+  #printable-questions div[style*="border"] {
+    border-color: #333 !important;
+  }
+  
+  /* Keep question numbers visible */
+  #printable-questions div[style*="background: var(--accent-primary)"] {
+    background: #333 !important;
+    color: white !important;
+  }
+  
+  /* Page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+  
+  /* Avoid breaking questions across pages */
+  .question-block {
+    page-break-inside: avoid;
+  }
+  
+  /* Hide elements marked as no-print */
+  .no-print {
+    display: none !important;
+  }
+}
