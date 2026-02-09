@@ -1,7 +1,9 @@
+// src/pages/WeeksPage.jsx
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { weeks } from "../data/weeks";
 import WeekCard from "../components/WeekCard";
 import ThemeToggle from "../components/ThemeToggle";
+import { questions } from "../data/questions";
 
 export default function WeeksPage() {
   const { moduleId } = useParams();
@@ -33,13 +35,19 @@ export default function WeeksPage() {
         {moduleId} – Weeks
       </h1>
 
-      {weeks.map(week => (
-        <WeekCard
-          key={`${week.id}-${pageKey}`}
-          moduleId={moduleId}
-          week={week}
-        />
-      ))}
+      {weeks.map(week => {
+        const hasQuestions =
+            questions[moduleId]?.[week.id]?.length > 0;
+
+        return (
+            <WeekCard
+            key={`${week.id}-${pageKey}`}
+            moduleId={moduleId}
+            week={week}
+            hasQuestions={hasQuestions}
+            />
+        );
+        })}
     </div>
   );
 }
