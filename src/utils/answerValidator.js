@@ -238,4 +238,7 @@ class AnswerValidator {
   }
 }
 
+export function validateAnswer(userAnswer, correctAnswers, options = {}) {
+  return AnswerValidator.validate(userAnswer, correctAnswers, options);
+}
 export default AnswerValidator;

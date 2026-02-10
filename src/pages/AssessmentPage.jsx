@@ -16,25 +16,26 @@ export default function AssessmentPage() {
   const moduleInfo = modules.find(m => m.id === moduleId);
   
   // Check if assessment was previously completed
+  const completionStatus = AssessmentStorage.getCompletionStatus(moduleId, weekId);
+  const wasCompleted = completionStatus !== null;
+  
+  // Load in-progress answers if they exist
   const savedProgress = AssessmentStorage.loadProgress(moduleId, weekId);
-  const wasCompleted = savedProgress?.completed === true;
   
   // Track answers: { questionId: { answer, isCorrect, checked } }
   const [answers, setAnswers] = useState(savedProgress?.answers || {});
-  const [submitted, setSubmitted] = useState(wasCompleted);
+  const [submitted, setSubmitted] = useState(false);
   const [showPrintView, setShowPrintView] = useState(false);
-  const [viewMode, setViewMode] = useState(wasCompleted ? "review" : "test"); // "test" | "review"
+  
+  // If already completed, show certificate page immediately
+  const [showCertificate, setShowCertificate] = useState(wasCompleted);
 
-  // Auto-save progress when answers change
+  // Auto-save progress when answers change (only if not completed)
   useEffect(() => {
-    if (!submitted && Object.keys(answers).length > 0) {
-      AssessmentStorage.saveProgress(moduleId, weekId, {
-        answers,
-        completed: false,
-        inProgress: true
-      });
+    if (!wasCompleted && !submitted && Object.keys(answers).length > 0) {
+      AssessmentStorage.saveProgress(moduleId, weekId, answers);
     }
-  }, [answers, moduleId, weekId, submitted]);
+  }, [answers, moduleId, weekId, wasCompleted, submitted]);
 
   function handleAnswerChange(questionId, answerData) {
     setAnswers(prev => {
@@ -58,16 +59,17 @@ export default function AssessmentPage() {
                 : newAnswers[q.id]?.isCorrect
             ).length;
             
-            // Save completion to local storage
-            AssessmentStorage.markCompleted(moduleId, weekId, {
-              answers: newAnswers,
-              score: correctCount,
-              totalQuestions: requiredQuestions.length,
-              completedDate: new Date().toISOString()
-            });
+            // Save completion to local storage (ONLY score and status)
+            // This also clears in-progress data
+            AssessmentStorage.markCompleted(
+              moduleId, 
+              weekId, 
+              correctCount, 
+              requiredQuestions.length
+            );
             
             setSubmitted(true);
-            setViewMode("review");
+            setShowCertificate(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }, 500); // Small delay for smooth UX
         }
@@ -97,21 +99,22 @@ export default function AssessmentPage() {
       answers[q.id]?.isCorrect
     ).length;
 
-    // Save completion to local storage
-    AssessmentStorage.markCompleted(moduleId, weekId, {
-      answers,
-      score: correctCount,
-      totalQuestions: requiredQuestions.length,
-      completedDate: new Date().toISOString()
-    });
+    // Save completion to local storage (ONLY score and status)
+    // This also clears in-progress data
+    AssessmentStorage.markCompleted(
+      moduleId, 
+      weekId, 
+      correctCount, 
+      requiredQuestions.length
+    );
 
     setSubmitted(true);
-    setViewMode("review");
+    setShowCertificate(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleRedo() {
-    if (!window.confirm("Are you sure you want to redo this assessment? Your current progress will be lost.")) {
+    if (!window.confirm("Are you sure you want to redo this assessment? Your previous score will be lost.")) {
       return;
     }
     
@@ -119,30 +122,29 @@ export default function AssessmentPage() {
     AssessmentStorage.resetAssessment(moduleId, weekId);
     setAnswers({});
     setSubmitted(false);
-    setViewMode("test");
+    setShowCertificate(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function handleContinue() {
-    setViewMode("test");
-    setSubmitted(false);
-  }
-
-  // Calculate score
+  // Calculate score (use stored score if completed, or current answers)
   const requiredQuestions = moduleQuestions.filter(q => 
     q.type === "open-ended" || q.type === "multiple-choice"
   );
   
-  const correctCount = requiredQuestions.filter(q => 
-    answers[q.id]?.isCorrect
-  ).length;
+  const correctCount = wasCompleted && completionStatus 
+    ? completionStatus.score 
+    : requiredQuestions.filter(q => answers[q.id]?.isCorrect).length;
+
+  const totalQuestions = wasCompleted && completionStatus
+    ? completionStatus.totalQuestions
+    : requiredQuestions.length;
 
   const allQuestionsAnswered = requiredQuestions.every(q => 
     answers[q.id]?.checked
   );
 
-  const completionDate = savedProgress?.completedDate 
-    ? new Date(savedProgress.completedDate).toLocaleDateString('en-US', {
+  const completionDate = completionStatus?.completedDate 
+    ? new Date(completionStatus.completedDate).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -186,8 +188,8 @@ export default function AssessmentPage() {
     );
   }
 
-  // Show completion badge (only when first submitted or viewing)
-  if (submitted && viewMode === "review") {
+  // Show completion certificate
+  if (showCertificate) {
     return (
       <div className="container">
         {/* Header */}
@@ -205,7 +207,7 @@ export default function AssessmentPage() {
           <ThemeToggle />
         </div>
 
-        {/* Completion Status Notice */}
+        {/* Previously Completed Notice */}
         {wasCompleted && (
           <div style={{
             background: "var(--bg-secondary)",
@@ -225,8 +227,7 @@ export default function AssessmentPage() {
                 color: "var(--text-secondary)",
                 marginTop: "4px" 
               }}>
-                You completed this assessment on {completionDate}. 
-                You can review your answers or redo the assessment.
+                You completed this assessment on {completionDate}.
               </p>
             </div>
           </div>
@@ -238,7 +239,7 @@ export default function AssessmentPage() {
           moduleName={moduleInfo?.name || moduleId}
           weekId={weekId}
           score={correctCount}
-          totalQuestions={requiredQuestions.length}
+          totalQuestions={totalQuestions}
           completionDate={completionDate}
         />
 
@@ -252,30 +253,33 @@ export default function AssessmentPage() {
         }}>
           <button
             className="button"
-            onClick={handleContinue}
-            style={{ background: "var(--accent-primary)" }}
+            onClick={() => navigate(`/module/${moduleId}`)}
+            style={{ 
+              padding: "14px 32px",
+              fontSize: "16px",
+              background: "var(--accent-primary)" 
+            }}
           >
-            📝 View My Answers
+            📚 Back to Weeks
           </button>
+          
           <button
             className="button"
             onClick={handleRedo}
-            style={{ background: "var(--accent-secondary)" }}
+            style={{
+              padding: "14px 32px",
+              fontSize: "16px",
+              background: "var(--accent-secondary)"
+            }}
           >
             🔄 Redo Assessment
-          </button>
-          <button
-            className="button"
-            onClick={() => navigate(`/module/${moduleId}`)}
-          >
-            📚 Back to Weeks
           </button>
         </div>
       </div>
     );
   }
 
-  // Main assessment view
+  // Show assessment (taking test)
   return (
     <div className="container">
       {/* Header */}
@@ -293,69 +297,42 @@ export default function AssessmentPage() {
         <ThemeToggle />
       </div>
 
-      {/* Title */}
-      <h1 style={{ marginBottom: "8px" }}>
-        {moduleId} Assessment
-      </h1>
-      <h2 style={{
+      {/* Title and Print Button Row */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
         marginBottom: "24px",
-        color: "var(--text-secondary)"
+        gap: "16px"
       }}>
-        Week {weekId}
-      </h2>
-
-      {/* Review Mode Notice */}
-      {wasCompleted && viewMode === "test" && (
-        <div style={{
-          background: "rgba(118, 209, 61, 0.1)",
-          border: "2px solid var(--lush-lime)",
-          borderRadius: "8px",
-          padding: "16px",
-          marginBottom: "24px"
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            marginBottom: "12px"
+        <div>
+          <h1 style={{ marginBottom: "8px" }}>
+            {moduleId} Assessment
+          </h1>
+          <h2 style={{
+            marginBottom: "0",
+            color: "var(--text-secondary)"
           }}>
-            <span style={{ fontSize: "24px" }}>👁️</span>
-            <div style={{ flex: 1 }}>
-              <strong style={{ color: "var(--lush-lime)" }}>Review Mode</strong>
-              <p style={{ 
-                fontSize: "14px", 
-                color: "var(--text-secondary)",
-                marginTop: "4px" 
-              }}>
-                You're viewing your previous answers. Questions are locked.
-              </p>
-            </div>
-          </div>
-          <div style={{
-            display: "flex",
-            gap: "12px",
-            marginTop: "12px"
-          }}>
-            <button
-              className="button"
-              onClick={() => setViewMode("review")}
-              style={{ background: "var(--lush-lime)" }}
-            >
-              📜 View Certificate
-            </button>
-            <button
-              className="button"
-              onClick={handleRedo}
-              style={{ background: "var(--accent-secondary)" }}
-            >
-              🔄 Redo Assessment
-            </button>
-          </div>
+            Week {weekId}
+          </h2>
         </div>
-      )}
+        
+        <button
+          className="button"
+          onClick={() => setShowPrintView(true)}
+          style={{
+            padding: "12px 24px",
+            fontSize: "14px",
+            background: "var(--accent-secondary)",
+            whiteSpace: "nowrap"
+          }}
+        >
+          🖨️ Print Questions
+        </button>
+      </div>
 
       {/* In Progress Notice */}
-      {!wasCompleted && Object.keys(answers).length > 0 && !submitted && (
+      {savedProgress && Object.keys(answers).length > 0 && !submitted && (
         <div style={{
           background: "rgba(244, 169, 0, 0.1)",
           border: "2px solid var(--golden-amber)",
@@ -426,115 +403,53 @@ export default function AssessmentPage() {
           key={question.id}
           question={question}
           index={index}
-          onAnswerChange={wasCompleted ? null : handleAnswerChange}
+          onAnswerChange={handleAnswerChange}
           savedAnswer={answers[question.id]}
-          locked={wasCompleted}
+          locked={false}
         />
       ))}
 
       {/* Submit/Action buttons */}
-      {!wasCompleted && (
+      <div style={{
+        marginTop: "32px",
+        padding: "24px",
+        background: "var(--bg-secondary)",
+        borderRadius: "8px",
+        textAlign: "center"
+      }}>
         <div style={{
-          marginTop: "32px",
-          padding: "24px",
-          background: "var(--bg-secondary)",
-          borderRadius: "8px",
-          textAlign: "center"
+          display: "flex",
+          gap: "12px",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          marginBottom: "12px"
         }}>
-          <div style={{
-            display: "flex",
-            gap: "12px",
-            justifyContent: "center",
-            flexWrap: "wrap",
-            marginBottom: "12px"
-          }}>
-            <button
-              className="button"
-              onClick={() => setShowPrintView(true)}
-              style={{
-                padding: "14px 32px",
-                fontSize: "16px",
-                background: "var(--accent-secondary)"
-              }}
-            >
-              🖨️ Print Questions
-            </button>
-
-            <button
-              className="button"
-              onClick={handleRedo}
-              style={{
-                padding: "14px 32px",
-                fontSize: "16px",
-                background: "var(--accent-primary)"
-              }}
-            >
-              🔄 Redo Assessment
-            </button>
-            
-            <button
-              className="button"
-              onClick={handleSubmit}
-              disabled={!allQuestionsAnswered}
-              style={{
-                padding: "14px 48px",
-                fontSize: "18px",
-                opacity: allQuestionsAnswered ? 1 : 0.5,
-                cursor: allQuestionsAnswered ? "pointer" : "not-allowed",
-                background: allQuestionsAnswered ? "var(--lush-lime)" : "var(--accent-primary)"
-              }}
-            >
-              {allQuestionsAnswered ? "✓ Submit Assessment" : `○ Answer all questions (${requiredQuestions.length - Object.keys(answers).filter(id => answers[id]?.checked).length} remaining)`}
-            </button>
-          </div>
-          
-          {!allQuestionsAnswered && (
-            <p style={{
-              marginTop: "12px",
-              fontSize: "14px",
-              color: "var(--text-secondary)"
-            }}>
-              Check your answers before submitting
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Review Mode Actions */}
-      {wasCompleted && (
-        <div style={{
-          marginTop: "32px",
-          padding: "24px",
-          background: "var(--bg-secondary)",
-          borderRadius: "8px",
-          textAlign: "center"
-        }}>
-          <div style={{
-            display: "flex",
-            gap: "12px",
-            justifyContent: "center",
-            flexWrap: "wrap"
-          }}>
-            <button
+          <button
             className="button"
-            onClick={() => navigate(`/module/${moduleId}`)}
+            onClick={handleSubmit}
+            disabled={!allQuestionsAnswered}
+            style={{
+              padding: "14px 48px",
+              fontSize: "18px",
+              opacity: allQuestionsAnswered ? 1 : 0.5,
+              cursor: allQuestionsAnswered ? "pointer" : "not-allowed",
+              background: allQuestionsAnswered ? "var(--lush-lime)" : "var(--accent-primary)"
+            }}
           >
-            📚 Back to Weeks
+            {allQuestionsAnswered ? "✓ Submit Assessment" : `○ Answer all questions (${requiredQuestions.length - Object.keys(answers).filter(id => answers[id]?.checked).length} remaining)`}
           </button>
-            <button
-              className="button"
-              onClick={handleRedo}
-              style={{
-                padding: "14px 32px",
-                fontSize: "16px",
-                background: "var(--accent-secondary)"
-              }}
-            >
-              🔄 Redo Assessment
-            </button>
-          </div>
         </div>
-      )}
+        
+        {!allQuestionsAnswered && (
+          <p style={{
+            marginTop: "12px",
+            fontSize: "14px",
+            color: "var(--text-secondary)"
+          }}>
+            Check your answers before submitting
+          </p>
+        )}
+      </div>
     </div>
   );
 }

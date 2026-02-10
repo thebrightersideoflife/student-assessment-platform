@@ -1,45 +1,52 @@
 /**
  * Local Storage Service for Assessment Progress
- * Stores completion status, answers, and scores for each week's assessment
+ * Stores in-progress answers (cleared on completion) and completion status with scores
  */
 
-const STORAGE_KEY_PREFIX = "assessment_progress_";
+const STORAGE_KEY_PREFIX = "assessment_completion_";
+const PROGRESS_KEY_PREFIX = "assessment_progress_";
 const STORAGE_EVENT = "assessmentStorageUpdate";
 
 class AssessmentStorage {
   /**
-   * Get storage key for a specific module and week
+   * Get storage key for completion data
    */
-  static getKey(moduleId, weekId) {
+  static getCompletionKey(moduleId, weekId) {
     return `${STORAGE_KEY_PREFIX}${moduleId}_${weekId}`;
+  }
+
+  /**
+   * Get storage key for in-progress data
+   */
+  static getProgressKey(moduleId, weekId) {
+    return `${PROGRESS_KEY_PREFIX}${moduleId}_${weekId}`;
   }
 
   /**
    * Dispatch custom event to notify components of storage changes
    */
-  static notifyChange(moduleId, weekId) {
+  static notifyChange(moduleId, weekId, clearAll = false) {
     window.dispatchEvent(new CustomEvent(STORAGE_EVENT, {
-      detail: { moduleId, weekId }
+      detail: { moduleId, weekId, clearAll }
     }));
   }
 
   /**
-   * Save assessment progress
+   * Save in-progress answers (temporary, cleared on completion)
    * @param {string} moduleId - Module identifier
    * @param {string} weekId - Week identifier
-   * @param {object} progressData - Progress data to save
+   * @param {object} answers - Answer data to save
    */
-  static saveProgress(moduleId, weekId, progressData) {
+  static saveProgress(moduleId, weekId, answers) {
     try {
-      const key = this.getKey(moduleId, weekId);
+      const key = this.getProgressKey(moduleId, weekId);
       const data = {
-        ...progressData,
+        answers,
         lastUpdated: new Date().toISOString(),
         moduleId,
         weekId
       };
       localStorage.setItem(key, JSON.stringify(data));
-      this.notifyChange(moduleId, weekId);
       return true;
     } catch (error) {
       console.error("Error saving progress:", error);
@@ -48,18 +55,87 @@ class AssessmentStorage {
   }
 
   /**
-   * Load assessment progress
+   * Load in-progress answers
    * @param {string} moduleId - Module identifier
    * @param {string} weekId - Week identifier
    * @returns {object|null} Progress data or null if not found
    */
   static loadProgress(moduleId, weekId) {
     try {
-      const key = this.getKey(moduleId, weekId);
+      const key = this.getProgressKey(moduleId, weekId);
       const data = localStorage.getItem(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
       console.error("Error loading progress:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Clear in-progress data (called after completion)
+   * @param {string} moduleId - Module identifier
+   * @param {string} weekId - Week identifier
+   */
+  static clearProgress(moduleId, weekId) {
+    try {
+      const key = this.getProgressKey(moduleId, weekId);
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error("Error clearing progress:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Mark assessment as completed with score
+   * This also clears any in-progress data
+   * @param {string} moduleId - Module identifier
+   * @param {string} weekId - Week identifier
+   * @param {number} score - Score achieved
+   * @param {number} totalQuestions - Total number of questions
+   */
+  static markCompleted(moduleId, weekId, score, totalQuestions) {
+    try {
+      const key = this.getCompletionKey(moduleId, weekId);
+      const data = {
+        completed: true,
+        score,
+        totalQuestions,
+        percentage: Math.round((score / totalQuestions) * 100),
+        completedDate: new Date().toISOString(),
+        moduleId,
+        weekId
+      };
+      localStorage.setItem(key, JSON.stringify(data));
+      
+      // Clear in-progress data after completion
+      this.clearProgress(moduleId, weekId);
+      
+      this.notifyChange(moduleId, weekId);
+      return true;
+    } catch (error) {
+      console.error("Error saving completion:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Get completion status with score
+   * @param {string} moduleId - Module identifier
+   * @param {string} weekId - Week identifier
+   * @returns {object|null} Status object with score info or null if not completed
+   */
+  static getCompletionStatus(moduleId, weekId) {
+    try {
+      const key = this.getCompletionKey(moduleId, weekId);
+      const data = localStorage.getItem(key);
+      if (!data) return null;
+      
+      const parsed = JSON.parse(data);
+      return parsed.completed ? parsed : null;
+    } catch (error) {
+      console.error("Error loading completion status:", error);
       return null;
     }
   }
@@ -71,54 +147,22 @@ class AssessmentStorage {
    * @returns {boolean} True if completed
    */
   static isCompleted(moduleId, weekId) {
-    const progress = this.loadProgress(moduleId, weekId);
-    return progress?.completed === true;
+    return this.getCompletionStatus(moduleId, weekId) !== null;
   }
 
   /**
-   * Get completion status with score
-   * @param {string} moduleId - Module identifier
-   * @param {string} weekId - Week identifier
-   * @returns {object|null} Status object with score info
-   */
-  static getCompletionStatus(moduleId, weekId) {
-    const progress = this.loadProgress(moduleId, weekId);
-    if (!progress || !progress.completed) return null;
-
-    return {
-      completed: true,
-      score: progress.score,
-      totalQuestions: progress.totalQuestions,
-      percentage: Math.round((progress.score / progress.totalQuestions) * 100),
-      completedDate: progress.completedDate,
-      answers: progress.answers
-    };
-  }
-
-  /**
-   * Mark assessment as completed
-   * @param {string} moduleId - Module identifier
-   * @param {string} weekId - Week identifier
-   * @param {object} completionData - Completion data (score, answers, etc.)
-   */
-  static markCompleted(moduleId, weekId, completionData) {
-    const data = {
-      completed: true,
-      completedDate: new Date().toISOString(),
-      ...completionData
-    };
-    return this.saveProgress(moduleId, weekId, data);
-  }
-
-  /**
-   * Reset assessment (clear all progress)
+   * Reset assessment (clear both completion and progress)
    * @param {string} moduleId - Module identifier
    * @param {string} weekId - Week identifier
    */
   static resetAssessment(moduleId, weekId) {
     try {
-      const key = this.getKey(moduleId, weekId);
-      localStorage.removeItem(key);
+      const completionKey = this.getCompletionKey(moduleId, weekId);
+      const progressKey = this.getProgressKey(moduleId, weekId);
+      
+      localStorage.removeItem(completionKey);
+      localStorage.removeItem(progressKey);
+      
       this.notifyChange(moduleId, weekId);
       return true;
     } catch (error) {
@@ -130,7 +174,7 @@ class AssessmentStorage {
   /**
    * Get all completed assessments for a module
    * @param {string} moduleId - Module identifier
-   * @returns {array} Array of completed week IDs
+   * @returns {array} Array of completed week data
    */
   static getCompletedWeeks(moduleId) {
     const completed = [];
@@ -140,13 +184,7 @@ class AssessmentStorage {
         if (key.startsWith(STORAGE_KEY_PREFIX) && key.includes(moduleId)) {
           const data = JSON.parse(localStorage.getItem(key));
           if (data.completed && data.weekId) {
-            completed.push({
-              weekId: data.weekId,
-              score: data.score,
-              totalQuestions: data.totalQuestions,
-              percentage: Math.round((data.score / data.totalQuestions) * 100),
-              completedDate: data.completedDate
-            });
+            completed.push(data);
           }
         }
       }
@@ -158,7 +196,7 @@ class AssessmentStorage {
 
   /**
    * Get all stored assessments (for debugging/admin)
-   * @returns {array} All assessment data
+   * @returns {array} All assessment completion data
    */
   static getAllAssessments() {
     const assessments = [];
@@ -177,19 +215,19 @@ class AssessmentStorage {
   }
 
   /**
-   * Clear all assessment data
+   * Clear all assessment data (both completion and progress)
    */
   static clearAll() {
     try {
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key.startsWith(STORAGE_KEY_PREFIX)) {
+        if (key.startsWith(STORAGE_KEY_PREFIX) || key.startsWith(PROGRESS_KEY_PREFIX)) {
           keysToRemove.push(key);
         }
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
-      window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: { clearAll: true } }));
+      this.notifyChange(null, null, true);
       return true;
     } catch (error) {
       console.error("Error clearing all assessments:", error);
@@ -213,8 +251,13 @@ class AssessmentStorage {
     try {
       const assessments = JSON.parse(jsonData);
       assessments.forEach(assessment => {
-        if (assessment.moduleId && assessment.weekId) {
-          this.saveProgress(assessment.moduleId, assessment.weekId, assessment);
+        if (assessment.moduleId && assessment.weekId && assessment.score !== undefined) {
+          this.markCompleted(
+            assessment.moduleId, 
+            assessment.weekId, 
+            assessment.score, 
+            assessment.totalQuestions
+          );
         }
       });
       return true;

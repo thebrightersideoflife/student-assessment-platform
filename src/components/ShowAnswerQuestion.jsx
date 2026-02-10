@@ -11,7 +11,7 @@ export default function ShowAnswerQuestion({ question, index }) {
         <em>Reference question - no answer required</em>
       </p>
       <p style={{ marginBottom: "12px" }}>
-        {question.question}
+        {question.text}
       </p>
       
       {!showAnswer ? (
@@ -22,7 +22,7 @@ export default function ShowAnswerQuestion({ question, index }) {
           Show Answer
         </button>
       ) : (
-        <AnswerReveal answer={question.answer} />
+        <AnswerReveal answer={question.correctAnswers[0]} />
       )}
     </div>
   );

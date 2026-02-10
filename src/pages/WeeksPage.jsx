@@ -37,17 +37,17 @@ export default function WeeksPage() {
 
       {weeks.map(week => {
         const hasQuestions =
-            questions[moduleId]?.[week.id]?.length > 0;
+          questions[moduleId]?.[week.id]?.length > 0;
 
         return (
-            <WeekCard
+          <WeekCard
             key={`${week.id}-${pageKey}`}
             moduleId={moduleId}
             week={week}
             hasQuestions={hasQuestions}
-            />
+          />
         );
-        })}
+      })}
     </div>
   );
 }
