@@ -10,6 +10,12 @@ export const modules = [
     id: "ITNSA",
     name: "Network Security",
     description: "Learn network protection, encryption, and cybersecurity principles."
+  },
+
+    {
+    id: "ITJVA",
+    name: "Introduction to Java",
+    description: "Master Java fundamentals, OOP, GUIs, databases, and testing."
   }
 
 ];
