@@ -19,9 +19,9 @@ export default function PrintableQuestions({
   const sections = examData?.sections || [];
   const allQuestions = examData?.questions || questions || [];
   
-  // Filter printable questions (exclude show-answer type)
+  // Include all question types in printable version
   const printableQuestions = allQuestions.filter(q => 
-    q.type === "open-ended" || q.type === "multiple-choice"
+    q.type === "open-ended" || q.type === "multiple-choice" || q.type === "show-answer"
   );
 
   const totalMarks = examData?.totalMarks || printableQuestions.reduce((sum, q) => sum + (q.points || 1), 0);
@@ -460,7 +460,9 @@ export default function PrintableQuestions({
                       fontSize: "10pt",
                       fontWeight: "bold"
                     }}>
-                      [{question.points || 1} mark{(question.points || 1) !== 1 ? 's' : ''}]
+                      {question.type === "show-answer" 
+                        ? "[Reference - No marks]" 
+                        : `[${question.points || 1} mark${(question.points || 1) !== 1 ? 's' : ''}]`}
                     </div>
                   </div>
 
@@ -489,10 +491,26 @@ export default function PrintableQuestions({
                         background: "white",
                         padding: "15px"
                       }}>
+                        <img
+                          src={question.image.src}
+                          alt={question.image.alt}
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "400px",
+                            height: "auto",
+                            objectFit: "contain"
+                          }}
+                          onError={(e) => {
+                            // Fallback if image fails to load
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
+                        />
                         <div style={{
                           fontSize: "9pt",
                           color: "var(--text-secondary)",
-                          fontStyle: "italic"
+                          fontStyle: "italic",
+                          display: "none"
                         }}>
                           [Image: {question.image.alt || question.image.caption}]
                         </div>
@@ -549,6 +567,33 @@ export default function PrintableQuestions({
                         </div>
                       ))}
                     </div>
+                  ) : question.type === "show-answer" ? (
+                    <div style={{
+                      marginTop: "15px",
+                      padding: "15px",
+                      border: "2px solid var(--border-color)",
+                      borderRadius: "4px",
+                      background: "rgba(118, 209, 61, 0.05)"
+                    }}>
+                      <div style={{
+                        fontSize: "9pt",
+                        color: "var(--text-secondary)",
+                        fontStyle: "italic",
+                        marginBottom: "10px",
+                        fontWeight: "bold"
+                      }}>
+                        Reference Answer (For Study):
+                      </div>
+                      <div style={{
+                        fontSize: "11pt",
+                        lineHeight: "1.6",
+                        color: "var(--text-primary)"
+                      }}>
+                        {Array.isArray(question.correctAnswers) 
+                          ? question.correctAnswers[0] 
+                          : question.correctAnswers}
+                      </div>
+                    </div>
                   ) : (
                     <div style={{
                       marginTop: "15px",
@@ -580,24 +625,26 @@ export default function PrintableQuestions({
                     </div>
                   )}
 
-                  {/* Grading Box */}
-                  <div style={{
-                    marginTop: "15px",
-                    padding: "10px 15px",
-                    background: "var(--bg-card)",
-                    border: "1px dashed var(--border-color)",
-                    borderRadius: "4px",
-                    fontSize: "9pt",
-                    color: "var(--text-secondary)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}>
-                    <span style={{ fontStyle: "italic" }}>For Examiner Use Only:</span>
-                    <div style={{ display: "flex", gap: "20px", fontWeight: "bold" }}>
-                      <span>Mark: _______</span>
+                  {/* Grading Box - only for gradable questions */}
+                  {question.type !== "show-answer" && (
+                    <div style={{
+                      marginTop: "15px",
+                      padding: "10px 15px",
+                      background: "var(--bg-card)",
+                      border: "1px dashed var(--border-color)",
+                      borderRadius: "4px",
+                      fontSize: "9pt",
+                      color: "var(--text-secondary)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}>
+                      <span style={{ fontStyle: "italic" }}>For Examiner Use Only:</span>
+                      <div style={{ display: "flex", gap: "20px", fontWeight: "bold" }}>
+                        <span>Mark: _______</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>

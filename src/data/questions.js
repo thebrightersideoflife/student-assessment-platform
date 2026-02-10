@@ -391,6 +391,10 @@ export const questions = {
       // Part 1: Importance & The Data-Information Transition (4 questions)
       // ========================================
       
+      // IMAGE NEEDED: Diagram showing "Data vs Information" transformation
+      // - Left side: Raw data (numbers, unorganized facts)
+      // - Middle: DBMS processing (indexing, query engine)
+      // - Right side: Meaningful information (reports, insights)
       {
         id: "ITDSA_W1_Q1",
         type: "multiple-choice",
@@ -402,9 +406,19 @@ export const questions = {
           "Business Intelligence"
         ],
         correctAnswers: ["Raw Data"],
-        points: 4
+        points: 4,
+        image: {
+          src: "/images/ITDSA_W1_Q1.png",
+          alt: "Data vs Information transformation diagram showing DBMS processing",
+          caption: "Figure: The transformation from raw data to meaningful information"
+        }
       },
       
+      // IMAGE NEEDED: Figure 1.4 - Database Structure diagram
+      // - Show DBMS in center
+      // - Metadata repository (structure definition) on one side
+      // - End-user data (Customers, Invoices, Products) on other side
+      // - Arrows showing interaction between components
       {
         id: "ITDSA_W1_Q2",
         type: "multiple-choice",
@@ -416,9 +430,19 @@ export const questions = {
           "Unaffected"
         ],
         correctAnswers: ["Unrecoverable / Meaningless"],
-        points: 4
+        points: 4,
+        image: {
+          src: "/images/ITDSA_W1_Q2.png",
+          alt: "Database Structure diagram showing DBMS, Metadata, and End-user data components",
+          caption: "Figure 1.4: Database Structure and Component Interaction"
+        }
       },
       
+      // IMAGE NEEDED: Screenshot of a Data Dictionary / Metadata entry
+      // - Show table: "Product"
+      // - Column: "Status" (Integer)
+      // - Values: 1 = "Active", 2 = "Pending", 99 = "Discontinued"
+      // - Highlight the metadata description explaining what 99 means
       {
         id: "ITDSA_W1_Q3",
         type: "open-ended",
@@ -429,9 +453,19 @@ export const questions = {
           requiredTerms: ["metadata"],
           caseSensitive: false,
           allowPartialMatch: false
+        },
+        image: {
+          src: "/images/ITDSA_W1_Q3.png",
+          alt: "Data Dictionary showing Status column metadata definitions",
+          caption: "Example: Product table metadata showing Status code meanings"
         }
       },
       
+      // IMAGE NEEDED: High-frequency trading scenario diagram
+      // - Show raw trade log entries (timestamps, prices, symbols without context)
+      // - Metadata layer showing definitions (timestamp format, currency codes, transaction types)
+      // - DBMS transforming raw data into meaningful trading information
+      // - Compare with file system (just storing bytes without interpretation)
       {
         id: "ITDSA_W1_Q4",
         type: "show-answer",
@@ -439,13 +473,22 @@ export const questions = {
         correctAnswers: [
           "In a high-frequency trading scenario, the End-User Data (the raw trade logs) is meaningless without the Metadata (the description of the data structure, such as timestamp formats, currency codes, and transaction types). The DBMS is the critical engine that manages the interaction between this \"End-user data\" and the \"Database structure\" (metadata). A file system would merely store the bytes; the DBMS uses the metadata to interpret those bytes, transforming raw data into a \"Single Integrated View\" that provides meaningful information."
         ],
-        points: 10
+        points: 10,
+        image: {
+          src: "/images/ITDSA_W1_Q4.png",
+          alt: "High-frequency trading data flow showing metadata's role in context provision",
+          caption: "Figure: How DBMS uses metadata to transform raw trade logs into actionable information"
+        }
       },
       
       // ========================================
       // Part 2: Historical Evolution & File Systems (4 questions)
       // ========================================
       
+      // IMAGE NEEDED: Comparison diagram of File System vs DBMS security
+      // - File System: Multiple scattered files with individual permissions
+      // - DBMS: Centralized security policy with single integrated view
+      // - Show security officer trying to manage both
       {
         id: "ITDSA_W1_Q5",
         type: "multiple-choice",
@@ -457,9 +500,9 @@ export const questions = {
           "File systems rely on the internet"
         ],
         correctAnswers: ["Data is scattered across multiple locations/files"],
-        points: 4
+        points: 4,        
       },
-      
+
       {
         id: "ITDSA_W1_Q6",
         type: "open-ended",
@@ -470,9 +513,10 @@ export const questions = {
           requiredTerms: ["update", "anomaly"],
           caseSensitive: false,
           allowPartialMatch: false
-        }
+        },
       },
       
+      // No image needed - conceptual question about volume/speed
       {
         id: "ITDSA_W1_Q7",
         type: "open-ended",
@@ -492,12 +536,8 @@ export const questions = {
         correctAnswers: [
           "This illustrates Structural Dependence. In a file system (manual or computerized), the data structure is often hard-coded into the application programs. Adding Email_Address would require rewriting and recompiling all 50 programs to recognize the new file layout. A DBMS solves this by separating the \"Application request\" from the \"End-user data\" via the DBMS engine, allowing the \"Database structure\" to change without breaking the external applications."
         ],
-        points: 10
+        points: 10,
       },
-      
-      // ========================================
-      // Part 3: Key Components of Database Systems (4 questions)
-      // ========================================
       
       {
         id: "ITDSA_W1_Q9",
@@ -510,9 +550,9 @@ export const questions = {
           "Data Generation"
         ],
         correctAnswers: ["Security & Integration"],
-        points: 4
+        points: 4,
       },
-      
+
       {
         id: "ITDSA_W1_Q10",
         type: "open-ended",
@@ -523,9 +563,15 @@ export const questions = {
           requiredTerms: ["dbms"],
           caseSensitive: false,
           allowPartialMatch: false
+        },
+        image: {
+          src: "/images/ITDSA_W1_Q2.png",
+          alt: "DBMS providing Single Integrated View despite physical data distribution",
+          caption: "Figure 1.4: DBMS abstracting physical data complexity into a single view"
         }
       },
       
+      // No image needed - role-based question
       {
         id: "ITDSA_W1_Q11",
         type: "open-ended",
@@ -546,12 +592,13 @@ export const questions = {
         correctAnswers: [
           "The Cloud Computing Data Architect designs \"infrastructure for next-generation cloud database systems\". Unlike the traditional centralized view in Figure 1.4, a cloud architecture distributes the \"Database Structure\" across the \"Internet technologies\" and \"Cloud storage technologies.\" The \"Integrated View\" becomes a logical construct spanning potentially global infrastructure, requiring distinct skills in \"distributed systems\" and \"performance tuning\"."
         ],
-        points: 10
+        points: 10,
+        image: {
+          src: "/images/ITDSA_W1_Q2.png",
+          alt: "Comparison of traditional centralized vs cloud distributed database architecture",
+          caption: "Figure: Traditional Architecture vs Cloud Database Infrastructure"
+        }
       },
-      
-      // ========================================
-      // Part 4: Data Models & Design Significance (4 questions)
-      // ========================================
       
       {
         id: "ITDSA_W1_Q13",
@@ -562,9 +609,9 @@ export const questions = {
           "No"
         ],
         correctAnswers: ["No"],
-        points: 4
+        points: 4,
       },
-      
+
       {
         id: "ITDSA_W1_Q14",
         type: "multiple-choice",
@@ -576,9 +623,17 @@ export const questions = {
           "External"
         ],
         correctAnswers: ["Logical"],
-        points: 4
+        points: 4,
+        image: {
+          src: "/images/ITDSA_W1_Q14.png",
+          alt: "Logical ERD showing MODULE, ASSESSMENT, STUDENT, and CAMPUS entities",
+          caption: "Page 12: Logical Data Model with entities, attributes, and relationships"
+        }
       },
       
+      // IMAGE NEEDED: Figure 1.4 Application Request flow
+      // - Show flow: User → Application Request → DBMS Engine → Database
+      // - Highlight where duplicate student ID gets rejected (at DBMS Engine/Application Request)
       {
         id: "ITDSA_W1_Q15",
         type: "open-ended",
@@ -588,9 +643,15 @@ export const questions = {
         validationOptions: {
           caseSensitive: false,
           allowPartialMatch: false
+        },
+        image: {
+          src: "/images/ITDSA_W1_Q2.png",
+          alt: "Application request flow showing where duplicate entries are rejected",
+          caption: "Figure 1.4: Duplicate detection at the Application Request/DBMS Engine layer"
         }
       },
       
+      // No image needed - role-based question
       {
         id: "ITDSA_W1_Q16",
         type: "open-ended",
@@ -608,6 +669,11 @@ export const questions = {
       // Part 5: Building Blocks of Data Models (5 questions)
       // ========================================
       
+      // IMAGE NEEDED: MODULE to ASSESSMENT relationship in Crow's Foot notation
+      // - MODULE entity (1..1 on MODULE side)
+      // - Relationship line with cardinality markers
+      // - ASSESSMENT entity (0..* on ASSESSMENT side)
+      // - Highlight that 0 assessments is allowed (optional relationship)
       {
         id: "ITDSA_W1_Q17",
         type: "multiple-choice",
@@ -617,9 +683,20 @@ export const questions = {
           "No"
         ],
         correctAnswers: ["Yes"],
-        points: 4
+        points: 4,
+        image: {
+          src: "/images/ITDSA_W1_Q14.png",
+          alt: "MODULE to ASSESSMENT relationship showing 1..1 to 0..* cardinality",
+          caption: "Figure: Crow's Foot notation showing MODULE can exist with zero assessments"
+        }
       },
       
+      // IMAGE NEEDED: Supertype/Subtype hierarchy from Page 12
+      // - MODULE (supertype) with moduleName, moduleCode attributes
+      // - Triangle/arrow pointing down to subtypes
+      // - CERTIFICATE (subtype) with numOfMonths
+      // - DEGREE_MODULE (subtype) with numOfYears
+      // - Highlight that shared attributes (moduleName) live in MODULE
       {
         id: "ITDSA_W1_Q18",
         type: "multiple-choice",
@@ -631,7 +708,12 @@ export const questions = {
           "The Metadata only"
         ],
         correctAnswers: ["The MODULE table"],
-        points: 4
+        points: 4,
+        image: {
+          src: "/images/ITDSA_W1_Q14.png",
+          alt: "Supertype/Subtype hierarchy showing MODULE, CERTIFICATE, and DEGREE_MODULE",
+          caption: "Page 12: Inheritance hierarchy - shared attributes stored in supertype (MODULE)"
+        }
       },
       
       {
@@ -645,9 +727,14 @@ export const questions = {
           "As a foreign key"
         ],
         correctAnswers: ["As separate attributes: Street, City, Zip (Simple/Atomic)"],
-        points: 4
+        points: 4,
       },
       
+      // IMAGE NEEDED: Relationship transformation diagram
+      // - Current: STUDENT (1..1) -------- (1..1) CAMPUS
+      // - Arrow showing transformation
+      // - New: STUDENT (*) -------- (*) CAMPUS with intersection table ENROLLMENT
+      // - Label as "Many-to-Many relationship with associative entity"
       {
         id: "ITDSA_W1_Q20",
         type: "open-ended",
@@ -658,6 +745,11 @@ export const questions = {
           requiredTerms: ["many"],
           caseSensitive: false,
           allowPartialMatch: false
+        },
+        image: {
+          src: "/images/ITDSA_W1_Q14.png",
+          alt: "Transformation from one-to-one to many-to-many relationship",
+          caption: "Figure: Converting 1..1 relationship to Many-to-Many for multi-campus support"
         }
       },
       
@@ -668,13 +760,14 @@ export const questions = {
         correctAnswers: [
           "This requires a Self-Referencing Relationship on the User entity. In the context of the \"Group Activity\" (WhatsApp), a User is related to other Users (Contacts). This would be drawn as a line looping from the User entity back to itself. This is distinct from the User-Group relationship, which is a standard one-to-many or many-to-many."
         ],
-        points: 10
+        points: 10,
       },
       
       // ========================================
       // Part 6: Business Rules & Data Modelling (4 questions)
       // ========================================
       
+      // No image needed - conceptual ERD vs Process logic question
       {
         id: "ITDSA_W1_Q22",
         type: "multiple-choice",
@@ -696,6 +789,11 @@ export const questions = {
         validationOptions: {
           caseSensitive: false,
           allowPartialMatch: false
+        },
+        image: {
+          src: "/images/ITDSA_W1_Q14.png",
+          alt: "ASSESSMENT entity showing check constraint for percentage sum validation",
+          caption: "Figure: Check Constraint enforcing business rule (testPerc + projectPerc + examPerc = 100)"
         }
       },
       
@@ -706,7 +804,7 @@ export const questions = {
         correctAnswers: [
           "To model Rule C (Reply to Comment), you need a Recursive Relationship on the COMMENT entity. Impact: The COMMENT entity will have a foreign key (e.g., Parent_Comment_ID) that references its own Primary Key (Comment_ID). This changes the \"Building Block\" by adding a self-looping relationship line to the entity."
         ],
-        points: 10
+        points: 10,
       },
       
       {
@@ -716,7 +814,12 @@ export const questions = {
         correctAnswers: [
           "Based on the Invoice image: Rule 1: An Invoice is issued to exactly one Client (Mr. J Moncho). Rule 2: An Invoice must have at least one Line Item (it lists Oil Filter, Wiper, Service). Rule 3: An Invoice is issued by exactly one Branch (Bellville)."
         ],
-        points: 10
+        points: 10,
+        image: {
+          src: "/images/ITDSA_W1_Q25.png",
+          alt: "Sample invoice showing client, branch, and line items with business rules",
+          caption: "Invoice Example: Visual representation of three core business rules"
+        }
       }
     ],
         
