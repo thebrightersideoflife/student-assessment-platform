@@ -1,202 +1,178 @@
 import { useState, useEffect } from "react";
 
-export default function MultipleChoiceQuestion({ 
-  question, 
-  index, 
+export default function MultipleChoiceQuestion({
+  question,
+  index,
   onAnswerChange,
   savedAnswer = null,
-  locked = false 
+  locked = false,
+  submitted = false,
 }) {
   const [selected, setSelected] = useState(savedAnswer?.answer || null);
 
-  // Support both old (answer) and new (correctAnswers) structure
-  const correctAnswer = Array.isArray(question.correctAnswers) 
-    ? question.correctAnswers[0] 
+  const correctAnswer = Array.isArray(question.correctAnswers)
+    ? question.correctAnswers[0]
     : question.correctAnswers || question.answer;
 
-  // Load saved answer on mount
   useEffect(() => {
-    if (savedAnswer?.answer) {
-      setSelected(savedAnswer.answer);
-    }
+    if (savedAnswer?.answer) setSelected(savedAnswer.answer);
   }, [savedAnswer]);
 
   function handleSelect(option) {
-    if (selected !== null || locked) return; // Lock after selection or if in review mode
-    
+    if (selected !== null || locked) return;
     setSelected(option);
     const isCorrect = option === correctAnswer;
-    
-    // Report answer to parent (if not locked)
     if (onAnswerChange && !locked) {
-      onAnswerChange(question.id, {
-        answer: option,
-        isCorrect,
-        checked: true
-      });
+      onAnswerChange(question.id, { answer: option, isCorrect, checked: true });
     }
   }
 
   const isCorrect = selected === correctAnswer;
+  const revealed = submitted || selected !== null;
 
   return (
     <div className="card" style={{ marginBottom: "16px" }}>
-      {/* Locked indicator */}
-      {locked && (
-        <div style={{
-          background: "rgba(118, 209, 61, 0.1)",
-          border: "1px solid var(--lush-lime)",
-          borderRadius: "6px",
-          padding: "8px 12px",
-          marginBottom: "12px",
-          fontSize: "13px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px"
-        }}>
-          <span>🔒</span>
-          <span style={{ color: "var(--lush-lime)", fontWeight: "500" }}>
-            Review Mode - Your previous answer
-          </span>
-        </div>
-      )}
 
-      <h3>Question {index + 1}</h3>
-      <p style={{ marginBottom: "12px" }}>
+      {/* Header row */}
+      <div style={{
+        display: "flex", justifyContent: "space-between",
+        alignItems: "flex-start", marginBottom: "12px",
+      }}>
+        <div>
+          <h3 style={{ margin: "0 0 4px" }}>
+            {question.sectionLabel
+              ? `${question.sectionLabel} — Question ${index + 1}`
+              : `Question ${index + 1}`}
+          </h3>
+          {locked && (
+            <span style={{
+              fontSize: "12px", fontWeight: 500,
+              color: "var(--lush-lime)",
+              background: "rgba(118,209,61,0.1)",
+              border: "1px solid rgba(118,209,61,0.35)",
+              borderRadius: "999px", padding: "2px 10px",
+            }}>
+              Review Mode
+            </span>
+          )}
+        </div>
+        {question.points && (
+          <span style={{
+            fontSize: "12px", fontWeight: 600,
+            color: "var(--text-secondary)",
+            background: "rgba(var(--bg-secondary-rgb), 0.7)",
+            border: "1px solid rgba(var(--border-color-rgb), 0.4)",
+            borderRadius: "999px", padding: "2px 10px",
+            flexShrink: 0,
+          }}>
+            {question.points} {question.points === 1 ? "mark" : "marks"}
+          </span>
+        )}
+      </div>
+
+      <p style={{ marginBottom: "16px", lineHeight: "1.65", fontSize: "16px" }}>
         {question.text || question.question}
       </p>
-      
-      {/* Image if present */}
+
+      {/* Image */}
       {question.image && (
         <div style={{
-          marginBottom: "16px",
-          textAlign: "center",
-          padding: "12px",
-          background: "var(--bg-secondary)",
-          borderRadius: "8px",
-          border: "1px solid var(--border-color)"
+          marginBottom: "16px", textAlign: "center", padding: "12px",
+          background: "rgba(var(--bg-secondary-rgb), 0.5)",
+          borderRadius: "10px", border: "1px solid rgba(var(--border-color-rgb), 0.35)",
         }}>
-          <img 
-            src={question.image.src} 
-            alt={question.image.alt || "Question diagram"}
-            style={{
-              maxWidth: "100%",
-              maxHeight: "300px",
-              objectFit: "contain"
-            }}
-          />
+          <img src={question.image.src} alt={question.image.alt || "Question diagram"}
+            style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "contain" }} />
           {question.image.caption && (
-            <p style={{
-              fontSize: "13px",
-              fontStyle: "italic",
-              color: "var(--text-secondary)",
-              marginTop: "8px"
-            }}>
+            <p style={{ fontSize: "13px", fontStyle: "italic", color: "var(--text-secondary)", marginTop: "8px" }}>
               {question.image.caption}
             </p>
           )}
         </div>
       )}
-      
-      {/* Multiple Choice Options */}
-      <div style={{ marginTop: "16px" }}>
+
+      {/* Options */}
+      <div>
         {question.options.map((option, i) => {
           const isThisOption = selected === option;
           const isCorrectOption = selected !== null && option === correctAnswer;
           const isWrongSelection = selected !== null && isThisOption && !isCorrect;
-          
-          let borderColor = "var(--border-color)";
-          let backgroundColor = "var(--bg-card)";
+
+          let borderColor = "rgba(var(--border-color-rgb), 0.5)";
+          let backgroundColor = "rgba(var(--bg-card-rgb), 0.5)";
           let textColor = "var(--text-primary)";
-          
-          if (selected !== null) {
+
+          if (revealed) {
             if (isCorrectOption) {
               borderColor = "var(--lush-lime)";
-              backgroundColor = "rgba(118, 209, 61, 0.1)";
+              backgroundColor = "rgba(118, 209, 61, 0.10)";
               textColor = "var(--lush-lime)";
             } else if (isWrongSelection) {
               borderColor = "var(--poppy-red)";
-              backgroundColor = "rgba(255, 64, 64, 0.1)";
+              backgroundColor = "rgba(255, 64, 64, 0.10)";
               textColor = "var(--poppy-red)";
             }
-          } else if (isThisOption) {
-            borderColor = "var(--accent-primary)";
-            backgroundColor = "rgba(42, 92, 167, 0.05)";
           }
-          
+
           return (
-            <div 
-              key={i} 
+            <div
+              key={i}
               onClick={() => !locked && handleSelect(option)}
-              style={{ 
-                marginBottom: "10px",
-                padding: "14px 16px",
-                borderRadius: "8px",
-                border: `2px solid ${borderColor}`,
+              style={{
+                marginBottom: "10px", padding: "14px 16px",
+                borderRadius: "10px",
+                border: `1px solid ${borderColor}`,
                 backgroundColor,
+                backdropFilter: "blur(8px)",
                 cursor: (selected !== null || locked) ? "default" : "pointer",
-                transition: "all 0.2s ease",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
+                transition: "all 0.18s ease",
+                display: "flex", alignItems: "center", gap: "12px",
                 userSelect: "none",
-                opacity: locked ? 0.95 : 1
               }}
               onMouseEnter={(e) => {
                 if (selected === null && !locked) {
                   e.currentTarget.style.transform = "translateX(4px)";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+                  e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.9)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (selected === null && !locked) {
                   e.currentTarget.style.transform = "translateX(0)";
-                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.borderColor = borderColor;
                 }
               }}
             >
-              {/* Custom Radio Button */}
+              {/* Radio dot */}
               <div style={{
-                width: "24px",
-                height: "24px",
-                borderRadius: "50%",
-                border: `2px solid ${selected !== null && isCorrectOption ? "var(--lush-lime)" : selected !== null && isWrongSelection ? "var(--poppy-red)" : isThisOption ? "var(--accent-primary)" : "var(--border-color)"}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                background: "var(--bg-card)",
-                transition: "all 0.2s ease"
+                width: "22px", height: "22px", borderRadius: "50%", flexShrink: 0,
+                border: `2px solid ${
+                  selected !== null && isCorrectOption ? "var(--lush-lime)"
+                  : selected !== null && isWrongSelection ? "var(--poppy-red)"
+                  : isThisOption ? "var(--accent-primary)"
+                  : "rgba(var(--border-color-rgb), 0.6)"}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(var(--bg-card-rgb), 0.6)",
+                transition: "all 0.18s ease",
               }}>
                 {isThisOption && (
                   <div style={{
-                    width: "14px",
-                    height: "14px",
-                    borderRadius: "50%",
-                    background: selected !== null 
+                    width: "12px", height: "12px", borderRadius: "50%",
+                    background: selected !== null
                       ? (isCorrect ? "var(--lush-lime)" : "var(--poppy-red)")
                       : "var(--accent-primary)",
-                    transition: "all 0.2s ease"
                   }} />
                 )}
               </div>
-              
-              {/* Option Text */}
-              <span style={{ 
-                flex: 1,
-                color: textColor,
-                fontWeight: selected !== null && (isCorrectOption || isWrongSelection) ? "500" : "normal",
-                fontSize: "15px"
+
+              <span style={{
+                flex: 1, color: textColor, fontSize: "15px",
+                fontWeight: selected !== null && (isCorrectOption || isWrongSelection) ? 500 : 400,
               }}>
                 {String.fromCharCode(65 + i)}. {option}
               </span>
-              
-              {/* Status Icon */}
-              {selected !== null && (
-                <span style={{ 
-                  fontSize: "18px",
-                  flexShrink: 0
-                }}>
+
+              {revealed && (
+                <span style={{ fontSize: "17px", flexShrink: 0, fontWeight: 700 }}>
                   {isCorrectOption ? "✓" : isWrongSelection ? "✗" : ""}
                 </span>
               )}
@@ -205,35 +181,23 @@ export default function MultipleChoiceQuestion({
         })}
       </div>
 
-      {/* Feedback Message */}
-      {selected && (
-        <div style={{ marginTop: "16px" }}>
+      {/* Feedback */}
+      {revealed && (
+        <div style={{ marginTop: "14px" }}>
           <p style={{
             color: isCorrect ? "var(--lush-lime)" : "var(--poppy-red)",
-            fontWeight: "bold",
-            fontSize: "16px"
+            fontWeight: 700, fontSize: "15px",
           }}>
             {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
           </p>
-          
-          {/* Show correct answer if incorrect */}
-          {!isCorrect && (
-            <div style={{
-              background: "var(--bg-secondary)",
-              padding: "12px",
-              borderRadius: "6px",
-              marginTop: "10px",
-              border: "1px solid var(--border-color)"
-            }}>
-              <strong style={{ color: "var(--lush-lime)" }}>Correct Answer:</strong>
-              <p style={{ 
-                marginTop: "6px",
-                color: "var(--text-primary)"
-              }}>
-                {correctAnswer}
-              </p>
-            </div>
-          )}
+          <div style={{
+            background: "rgba(var(--bg-secondary-rgb), 0.6)",
+            padding: "12px", borderRadius: "8px", marginTop: "10px",
+            border: "1px solid rgba(var(--border-color-rgb), 0.35)",
+          }}>
+            <strong style={{ color: "var(--lush-lime)" }}>Correct Answer:</strong>
+            <p style={{ marginTop: "6px", color: "var(--text-primary)" }}>{correctAnswer}</p>
+          </div>
         </div>
       )}
     </div>

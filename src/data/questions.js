@@ -1,17 +1,4 @@
 // src/data/questions.js
-/**
- * Questions Database
- * Organized by Module ID and Week ID
- * 
- * ITDSA Week 1: Database Concepts and Data Models
- * Assessment Criteria Coverage:
- * 1.1 - Importance of databases and data to information (Q1-5)
- * 1.2 - Historical evolution and file system problems (Q6-10)
- * 1.3 - Key components of database systems (Q11-15)
- * 1.4 - Data models and their significance (Q16-20)
- * 1.5 - Basic building blocks of data models (Q21-23)
- * 1.6 - Business rules in data modelling (Q24-25)
- */
 
 const rawQuestions = {
   ITNSA: {
@@ -1191,6 +1178,7 @@ const rawQuestions = {
         correctAnswers: ["Volume", "Access Speed", "Retrieval Time", "Concurrency"],
         points: 4,
         validationOptions: {
+          requiredTerms: ["volume", "access speed", "retrieval time", "concurrency"],
           caseSensitive: false,
           allowPartialMatch: false
         }
@@ -2310,6 +2298,27 @@ const rawQuestions = {
         "7":[],
     },
 };
+ 
+export const weeks = [
+
+  { id: "1",
+    name: "Week 1",
+    moduleAudio: {
+      ITDSA: {
+        audioUrl: "/audio/itdsa-week1-intro.mp3",
+        audioDescription: "A short overview of Week 1 topics for the Data Structures and Algorithms module."
+      }
+    }
+  },
+
+  { id: "2", name: "Week 2" },
+  { id: "3", name: "Week 3" },
+  { id: "4", name: "Week 4" },
+  { id: "5", name: "Week 5" },
+  { id: "6", name: "Week 6" },
+  { id: "7", name: "Week 7" }
+
+];
 
 function normalizePoints(questionsObj) {
   const clone = JSON.parse(JSON.stringify(questionsObj));

@@ -1,242 +1,562 @@
-/* Print styles for completion badge and question sheets */
-@media print {
-  /* Reset everything for clean printing */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
-  
-  /* Set page margins for proper spacing */
-  @page {
-    margin: 20mm 15mm;
-    size: A4;
-  }
-  
-  /* Hide navigation and controls */
-  .no-print,
-  .button,
-  button,
-  nav,
-  header:not(.print-header) {
-    display: none !important;
-  }
-  
-  body {
-    background: white !important;
-    margin: 0;
-    padding: 0;
-  }
-  
-  /* Print completion badge */
-  .completion-badge {
-    display: block !important;
-    page-break-inside: avoid;
-    margin: 0 auto !important;
-    padding: 40px !important;
-    border: 3px solid #333 !important;
-    background: white !important;
-    max-width: 100% !important;
-  }
-  
-  /* Keep button hidden in certificate but show content */
-  .completion-badge .button {
-    display: none !important;
-  }
-  
-  /* Print question sheet */
-  #printable-questions {
-    display: block !important;
-    background: white !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
-  }
-  
-  /* Add spacing to each page section */
-  #printable-questions > div {
-    padding-top: 60px !important;
-  }
-  
-  /* Keep first page as is */
-  #printable-questions > div:first-child {
-    padding-top: 40px !important;
-  }
-  
-  /* Ensure text is visible */
-  #printable-questions * {
-    color: #000 !important;
-    background: transparent !important;
-  }
-  
-  /* Keep borders visible */
-  #printable-questions div[style*="border"] {
-    border-color: #333 !important;
-  }
-  
-  /* Keep question numbers visible */
-  #printable-questions div[style*="background: var(--accent-primary)"] {
-    background: #333 !important;
-    color: white !important;
-  }
-  
-  /* Page breaks */
-  .page-break {
-    page-break-before: always;
-  }
-  
-  /* Avoid breaking questions across pages */
-  .question-block {
-    page-break-inside: avoid;
-  }
-  
-  /* Hide elements marked as no-print */
-  .no-print {
-    display: none !important;
-  }
+/* ============================================================
+   Print Stylesheet — Week 4 Online Quiz visual style
+   Font: Times New Roman (body, per original PrintableQuestions)
+         Source Sans 3 (labels, meta, tables)
+   ============================================================ */
 
-  /* ===== ROADMAP PRINT STYLES ===== */
-  
-  /* Roadmap container */
-  .roadmap-print-container {
-    background: white !important;
-    color: #000 !important;
-    padding: 0 !important;
-    max-width: 100% !important;
-  }
-  
-  /* Roadmap header */
-  .roadmap-print-header {
-    background: linear-gradient(135deg, #2563eb, #1e40af) !important;
-    color: white !important;
-    padding: 30px !important;
-    margin-bottom: 40px !important;
-    margin-top: 0 !important;
-    border-radius: 8px !important;
-    page-break-inside: avoid;
-    page-break-after: avoid;
-  }
-  
-  .roadmap-print-header h1 {
-    color: white !important;
-    font-size: 28px !important;
-    margin-bottom: 12px !important;
-  }
-  
-  .roadmap-print-header p {
-    color: white !important;
-    font-size: 14px !important;
-    opacity: 0.95;
-  }
-  
-  /* Section headers */
-  .roadmap-section {
-    page-break-inside: avoid;
-    margin-bottom: 30px !important;
-    margin-top: 20px !important;
-  }
-  
-  /* Add extra space before sections that start a new page */
-  .roadmap-section:not(:first-of-type) {
-    padding-top: 10px !important;
-  }
-  
-  .roadmap-section h2 {
-    color: #1e293b !important;
-    font-size: 20px !important;
-    border-left: 4px solid #2563eb !important;
-    padding-left: 12px !important;
-    margin-bottom: 16px !important;
-    page-break-after: avoid;
-  }
-  
-  /* Cards */
-  .roadmap-card {
-    background: white !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    padding: 16px !important;
-    margin-bottom: 16px !important;
-    page-break-inside: avoid;
-  }
-  
-  .roadmap-card h3 {
-    color: #0f172a !important;
-    font-size: 16px !important;
-    margin-bottom: 8px !important;
-  }
-  
-  .roadmap-card p {
-    color: #475569 !important;
-    font-size: 13px !important;
-    line-height: 1.6 !important;
-    margin: 6px 0 !important;
-  }
-  
-  /* Links in print */
-  .roadmap-card a {
-    color: #2563eb !important;
-    text-decoration: none !important;
-    font-weight: 600 !important;
-  }
-  
-  /* Show URLs after links */
-  .roadmap-card a[href^="http"]::after {
-    content: " (" attr(href) ")" !important;
-    font-size: 11px !important;
-    color: #64748b !important;
-    font-weight: normal !important;
-  }
-  
-  /* Tags */
-  .roadmap-tag {
-    display: inline-block !important;
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #334155 !important;
-    padding: 4px 10px !important;
-    border-radius: 12px !important;
-    font-size: 11px !important;
-    margin-right: 6px !important;
-    margin-bottom: 4px !important;
-    font-weight: 500 !important;
-  }
-  
-  /* Highlight box */
-  .roadmap-highlight {
-    background: #fef3c7 !important;
-    border: 1px solid #fbbf24 !important;
-    border-left: 4px solid #f59e0b !important;
-    padding: 16px !important;
-    border-radius: 8px !important;
-    margin-top: 30px !important;
-    page-break-inside: avoid;
-  }
-  
-  .roadmap-highlight strong {
-    color: #92400e !important;
-    font-size: 14px !important;
-  }
-  
-  .roadmap-highlight p {
-    color: #78350f !important;
-    font-size: 13px !important;
-    margin: 8px 0 0 0 !important;
-  }
-  
-  /* Footer */
-  .roadmap-footer {
-    border-top: 1px solid #cbd5e1 !important;
-    margin-top: 40px !important;
-    padding-top: 20px !important;
-    text-align: center !important;
-    page-break-inside: avoid;
-  }
-  
-  .roadmap-footer p {
-    color: #64748b !important;
-    font-size: 12px !important;
-    margin: 4px 0 !important;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Source+Code+Pro:wght@400;500&display=swap');
+
+/* ── Design tokens ─────────────────────────────────────────── */
+.print-root {
+  --p-main:        #174275;
+  --p-main-dark:   #0d2a4a;
+  --p-main-mid:    #2a5fa8;
+  --p-main-light:  #d9e8f5;
+  --p-main-xlight: #edf4fc;
+
+  --p-gold:        #B5955C;
+  --p-gold-light:  #fdf4e7;
+  --p-gold-dark:   #8a6e3a;
+
+  --p-green:       #7DBA38;
+  --p-green-light: #edf9e0;
+  --p-green-dark:  #4e7a22;
+
+  --p-teal:        #008F46;
+  --p-teal-light:  #e6f4ec;
+  --p-teal-dark:   #00572b;
+
+  --p-black:  #0a0a0a;
+  --p-dark:   #1a1a1a;
+  --p-light:  #777;
+  --p-border: #bbb;
+  --p-border-light: #ddd;
+  --p-bg:     #f7f9fc;
+  --p-white:  #ffffff;
+
+  --p-serif: 'Times New Roman', Georgia, serif;
+  --p-sans:  'Source Sans 3', Helvetica, sans-serif;
+  --p-mono:  'Source Code Pro', monospace;
+}
+
+/* ── Suppress hero glow + app header while print view is active
+   AssessmentPage sets data-print="active" on <html> on mount
+   and cleans it up on unmount. @media print fires for real printing.
+   ─────────────────────────────────────────────────────────── */
+html[data-print="active"] body::before,
+html[data-print="active"] body::after {
+  display: none !important;
+}
+html[data-print="active"] .app-header {
+  display: none !important;
+}
+
+/* ── Screen wrapper ────────────────────────────────────────── */
+.print-root {
+  background: #cfd8e8;
+  font-family: var(--p-serif);
+  color: var(--p-black);
+  font-size: 16px;
+  line-height: 1.65;
+  min-height: 100vh;
+  padding-bottom: 60px;
+  /* Cancel the app body padding-top so cover starts at top of viewport */
+  margin-top: -68px;
+  padding-top: 0;
+}
+
+/* ── Print bar (screen only) ───────────────────────────────── */
+.print-bar {
+  position: fixed;
+  top: 68px; /* sits below the app header */
+  left: 0; right: 0;
+  background: var(--p-main-dark);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 28px;
+  z-index: 900;
+  font-family: var(--p-sans);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.print-bar span { opacity: 0.65; }
+.print-bar-btn {
+  background: var(--p-gold);
+  color: #fff;
+  border: none;
+  padding: 8px 22px;
+  font-family: var(--p-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.print-bar-btn:hover { background: var(--p-gold-dark); }
+
+/* ── Back button ───────────────────────────────────────────── */
+.print-back-btn {
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 6px 16px;
+  font-family: var(--p-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.print-back-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+/* ── Page wrap ─────────────────────────────────────────────── */
+.page-wrap {
+  max-width: 900px;
+  margin: 112px auto 60px; /* space for fixed bars */
+  background: var(--p-white);
+  box-shadow: 0 6px 48px rgba(23,66,117,0.2);
+}
+
+/* ── Cover ─────────────────────────────────────────────────── */
+.exam-cover { border-bottom: 4px solid var(--p-main); }
+
+.cover-top {
+  background: var(--p-main);
+  color: #fff;
+  padding: 28px 48px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.cover-top .institution {
+  font-family: var(--p-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+.cover-top .exam-title {
+  font-family: var(--p-serif);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.cover-top .exam-code {
+  font-family: var(--p-mono);
+  font-size: 11px;
+  opacity: 0.5;
+  margin-top: 8px;
+  letter-spacing: 0.1em;
+}
+.cover-meta-right {
+  text-align: right;
+  font-family: var(--p-sans);
+  font-size: 12px;
+  opacity: 0.7;
+  line-height: 1.9;
+  flex-shrink: 0;
+  margin-left: 40px;
+}
+
+/* ── Student details band ──────────────────────────────────── */
+.student-details-band {
+  background: var(--p-main-dark);
+  padding: 18px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  border-top: 1px solid #1a4f8a;
+}
+.student-field { display: flex; flex-direction: column; gap: 5px; }
+.student-field .field-label {
+  font-family: var(--p-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+}
+.student-field .field-input {
+  background: #f5f7fa;
+  border: 1px solid #c8d6e8;
+  border-bottom: 2px solid var(--p-gold);
+  padding: 8px 12px;
+  font-family: var(--p-serif);
+  font-size: 15px;
+  color: var(--p-dark);
+  min-height: 36px;
+}
+
+/* ── Instructions bar ──────────────────────────────────────── */
+.instructions-bar {
+  background: var(--p-main-xlight);
+  border-top: 3px solid var(--p-main);
+  border-bottom: 3px solid var(--p-main);
+  padding: 18px 48px;
+}
+.instructions-bar h3 {
+  font-family: var(--p-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--p-main);
+  margin-bottom: 8px;
+}
+.instructions-bar ol {
+  padding-left: 20px;
+  font-size: 13.5px;
+  font-family: var(--p-sans);
+  color: var(--p-dark);
+  line-height: 1.7;
+}
+.instructions-bar ol li + li { margin-top: 2px; }
+
+/* ── Total marks bar ───────────────────────────────────────── */
+.total-marks-bar {
+  background: var(--p-main);
+  color: #fff;
+  text-align: center;
+  padding: 14px;
+  font-family: var(--p-sans);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.total-marks-bar strong {
+  font-size: 22px;
+  letter-spacing: 0;
+  margin-left: 10px;
+  font-family: var(--p-serif);
+  font-weight: 400;
+}
+
+/* ── Exam body ─────────────────────────────────────────────── */
+.exam-body { padding: 0 48px 48px; }
+
+/* ── Section header ────────────────────────────────────────── */
+.section-header {
+  margin: 40px -48px 0;
+  padding: 12px 48px 10px;
+  background: var(--p-main);
+  color: #fff;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+}
+.section-header .sec-label {
+  font-family: var(--p-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+.section-header .sec-title {
+  font-family: var(--p-serif);
+  font-size: 19px;
+  font-weight: 500;
+  flex: 1;
+  line-height: 1.3;
+}
+.section-header .sec-marks {
+  font-family: var(--p-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--p-gold);
+  white-space: nowrap;
+}
+
+/* ── Scenario box ──────────────────────────────────────────── */
+.scenario-box {
+  margin-top: 24px;
+  border: 1.5px solid var(--p-border);
+  border-left: 5px solid var(--p-main);
+}
+.scenario-box .scenario-label {
+  background: var(--p-main);
+  color: #fff;
+  font-family: var(--p-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  display: inline-block;
+}
+.scenario-box .scenario-content {
+  padding: 18px 22px;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.scenario-box .scenario-content p + p { margin-top: 10px; }
+
+/* ── Question block ────────────────────────────────────────── */
+.question-block {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--p-border-light);
+}
+.q-number-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.q-number {
+  background: var(--p-main);
+  color: #fff;
+  font-family: var(--p-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.q-text {
+  font-size: 15.5px;
+  line-height: 1.6;
+  font-family: var(--p-serif);
+  flex: 1;
+}
+.q-marks {
+  font-family: var(--p-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--p-main);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* ── Answer area ───────────────────────────────────────────── */
+.answer-area {
+  margin-top: 12px;
+  background: var(--p-bg);
+  border: 1px solid var(--p-border-light);
+}
+.answer-area .answer-label {
+  background: var(--p-main-light);
+  border-bottom: 1px solid #c0d6ec;
+  font-family: var(--p-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--p-main);
+  padding: 5px 14px;
+}
+.answer-area .answer-label.memo-label {
+  background: var(--p-teal-light);
+  border-bottom-color: #99d4b8;
+  color: var(--p-teal-dark);
+}
+.answer-area .answer-label.marking-label {
+  background: var(--p-gold-light);
+  border-bottom-color: #e8d4ae;
+  color: var(--p-gold-dark);
+}
+.answer-content {
+  padding: 18px 22px;
+  font-size: 14.5px;
+  line-height: 1.75;
+}
+.answer-content p + p { margin-top: 11px; }
+.answer-content h4 {
+  font-family: var(--p-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--p-main);
+  margin: 18px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--p-main-light);
+}
+.answer-content h4:first-child { margin-top: 0; }
+
+/* ── MC options (student paper) ────────────────────────────── */
+.mc-options { margin-top: 14px; }
+.mc-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 14px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--p-border-light);
+  background: var(--p-white);
+}
+.mc-bubble {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--p-dark);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mc-label {
+  font-family: var(--p-serif);
+  font-size: 14.5px;
+}
+
+/* ── Fill-in-the-blank (student paper) ────────────────────── */
+.fitb-text {
+  font-size: 15px;
+  line-height: 2.2;
+  font-family: var(--p-serif);
+  padding: 14px 0 6px;
+}
+.fitb-blank {
+  display: inline-block;
+  min-width: 140px;
+  border-bottom: 2px solid var(--p-main);
+  margin: 0 6px;
+  padding: 0 4px;
+  vertical-align: bottom;
+  font-family: var(--p-sans);
+  font-size: 11px;
+  color: var(--p-light);
+  letter-spacing: 0.06em;
+}
+
+/* ── Writing lines (open-ended / essay) ────────────────────── */
+.writing-area {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--p-white);
+  border: 1px solid var(--p-border-light);
+  min-height: 130px;
+}
+.writing-hint {
+  font-family: var(--p-sans);
+  font-size: 9px;
+  color: var(--p-light);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+.writing-line {
+  border-bottom: 1px solid var(--p-border-light);
+  margin-bottom: 14px;
+  min-height: 20px;
+}
+
+/* ── Examiner box ──────────────────────────────────────────── */
+.examiner-box {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border: 1px dashed var(--p-border);
+  background: var(--p-white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--p-sans);
+  font-size: 9px;
+  color: var(--p-light);
+}
+
+/* ── Show-answer reference box ─────────────────────────────── */
+.ref-box {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1.5px solid var(--p-teal-light);
+  border-left: 5px solid var(--p-teal);
+  background: var(--p-teal-light);
+}
+.ref-box .ref-label {
+  font-family: var(--p-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--p-teal-dark);
+  margin-bottom: 8px;
+}
+.ref-box .ref-content {
+  font-family: var(--p-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--p-dark);
+}
+
+/* ── Marking guide box ─────────────────────────────────────── */
+.marking-box {
+  margin-top: 10px;
+  padding: 14px 18px;
+  border: 1.5px solid var(--p-gold-light);
+  border-left: 5px solid var(--p-gold);
+  background: var(--p-gold-light);
+  font-family: var(--p-sans);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--p-gold-dark);
+}
+.marking-box .mg-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  color: var(--p-gold-dark);
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.exam-footer {
+  border-top: 3px solid var(--p-main);
+  padding: 14px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--p-sans);
+  font-size: 11px;
+  color: var(--p-light);
+  letter-spacing: 0.06em;
+}
+.exam-footer strong { color: var(--p-main); }
+
+/* ── Print media ───────────────────────────────────────────── */
+@media print {
+  @page { size: A4; margin: 14mm 16mm; }
+
+  body { background: white !important; font-size: 10pt; }
+  body::before, body::after { display: none !important; }
+
+  .print-bar   { display: none !important; }
+  .no-print    { display: none !important; }
+  .app-header  { display: none !important; }
+
+  .print-root  { background: white; padding: 0; margin-top: 0; }
+  .page-wrap   { max-width: 100%; margin: 0; box-shadow: none; }
+  .exam-body   { padding: 0 0 24px; }
+
+  .section-header  { margin-left: 0; margin-right: 0; padding-left: 14px; padding-right: 14px; break-after: avoid; }
+  .question-block  { break-inside: avoid; }
+  .answer-area     { break-inside: avoid; }
+  .mc-option       { break-inside: avoid; }
+  .writing-area    { break-inside: avoid; }
+  .scenario-box    { break-inside: avoid; }
+  .ref-box         { break-inside: avoid; }
+  .marking-box     { break-inside: avoid; }
+  .exam-footer     { padding: 10px 0; }
+  .student-details-band { padding: 18px 0; }
 }

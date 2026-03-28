@@ -1,0 +1,90 @@
+/* ============================================================
+   Hero Background — SoBrief-inspired cinematic glow
+   Pure CSS, no image file required.
+
+   HOW IT WORKS:
+   A fixed pseudo-element sits behind everything, painting a
+   large soft radial glow (like a light source behind the page)
+   plus a subtle noise grain overlay for texture depth.
+   Works in both dark and light modes — the glow colour adapts.
+
+   USAGE:
+   Import this file in global.css:
+     @import "./hero.css";
+   That's it. No JSX changes needed.
+   ============================================================ */
+
+/* ── The glow layer ───────────────────────────────────────── */
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Dark mode: golden amber glow centred-top, matching accent */
+  background:
+    radial-gradient(
+      ellipse 80% 55% at 50% -5%,
+      rgba(244, 169, 0, 0.13) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 15% 20%,
+      rgba(0, 191, 255, 0.06) 0%,
+      transparent 90%
+    );
+
+  transition: opacity 0.4s ease;
+}
+
+/* Light mode: softer royal-blue glow */
+[data-theme="light"] body::before,
+body[data-theme="light"]::before {
+  background:
+    radial-gradient(
+      ellipse 80% 55% at 50% -5%,
+      rgba(42, 92, 167, 0.274) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 15% 20%,
+      rgba(255, 127, 36, 0.100) 0%,
+      transparent 90%
+    );
+}
+
+/* ── Noise grain overlay ──────────────────────────────────── */
+/*
+   A very subtle SVG noise texture layered on top of the glow.
+   Gives the same "film grain" depth SoBrief has.
+   Opacity is deliberately low — you should barely notice it
+   consciously, but it removes the "flat digital" feeling.
+*/
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+/* ── Ensure page content sits above both layers ───────────── */
+/*
+   The header and all page content need z-index > 0 so they
+   render above the body::before / ::after glow layers.
+   The header already has z-index: 1000.
+   The container just needs z-index: 1 with relative positioning.
+*/
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Cards already have backdrop-filter so they naturally sit
+   above the glow — no extra z-index needed there. */

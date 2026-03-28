@@ -1,19 +1,26 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Header from "../components/Header";
+import HomePage from "../pages/HomePage";
 import ModulesPage from "../pages/ModulesPage";
 import WeeksPage from "../pages/WeeksPage";
 import AssessmentPage from "../pages/AssessmentPage";
 import RoadmapPage from "../pages/RoadmapPage";
+import ProgressPage from "../pages/ProgressPage";
 
 export default function AppRouter() {
-
   return (
-
     <BrowserRouter>
+      <Header />
 
       <Routes>
+        {/* Home — new landing page */}
+        <Route path="/" element={<HomePage />} />
 
-        <Route path="/" element={<ModulesPage />} />
+        {/* Full module listing */}
+        <Route path="/modules" element={<ModulesPage />} />
+
+        <Route path="/progress" element={<ProgressPage />} />
 
         <Route path="/module/:moduleId" element={<WeeksPage />} />
 
@@ -26,11 +33,7 @@ export default function AppRouter() {
           path="/module/:moduleId/roadmap"
           element={<RoadmapPage />}
         />
-
       </Routes>
-
     </BrowserRouter>
-
   );
-
 }

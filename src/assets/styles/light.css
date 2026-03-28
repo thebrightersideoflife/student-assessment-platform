@@ -1,15 +1,19 @@
 [data-theme="light"] {
-
-  --bg-primary: #F7FAFF;
+  /* Frosted-glass RGB variables (used for rgba(...) effects) */
+  --bg-primary-rgb:    247, 250, 255;
+  --bg-secondary-rgb:  255, 255, 255;
+  --bg-card-rgb:       255, 255, 255;
+  --border-color-rgb:  214, 224, 245;
+ 
+  --bg-primary:   #F7FAFF;
   --bg-secondary: #FFFFFF;
-  --bg-card: #FFFFFF;
-
-  --text-primary: #0B0F1A;
+  --bg-card:      #FFFFFF;
+ 
+  --text-primary:   #0B0F1A;
   --text-secondary: #4A5A75;
-
-  --accent-primary: var(--royal-blue);
+ 
+  --accent-primary:   var(--royal-blue);
   --accent-secondary: var(--sunset-orange);
-
+ 
   --border-color: #D6E0F5;
-
 }

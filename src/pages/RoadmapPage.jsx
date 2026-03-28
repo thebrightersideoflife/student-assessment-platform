@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import ThemeToggle from "../components/ThemeToggle";
+import Breadcrumb from "../components/Breadcrumb";
+// ThemeToggle is now provided by the global header
 
 export default function RoadmapPage() {
   const { moduleId } = useParams();
@@ -11,36 +12,12 @@ export default function RoadmapPage() {
 
   return (
     <div className="container roadmap-print-container">
-      {/* Header - Hidden on print */}
-      <div 
-        className="no-print"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "24px"
-        }}
-      >
-        <button
-          className="button"
-          onClick={() => navigate(`/module/${moduleId}`)}
-        >
-          ← Back to Weeks
-        </button>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <button
-            className="button"
-            onClick={handlePrint}
-            style={{
-              background: "var(--accent-secondary)",
-              padding: "10px 20px"
-            }}
-          >
-            🖨️ Print Roadmap
-          </button>
-          <ThemeToggle />
-        </div>
-      </div>
+      <Breadcrumb items={[
+        { label: "Modules", path: "/modules" },
+        { label: moduleId, path: `/module/${moduleId}` },
+        { label: "Roadmap" },
+      ]} />
+      {/* Header removed: navigation provided by global header */}
 
       {/* Page Header */}
       <header 

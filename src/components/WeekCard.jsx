@@ -5,121 +5,139 @@ import AssessmentStorage from "../utils/assessmentStorage";
 
 export default function WeekCard({ moduleId, week, hasQuestions }) {
   const navigate = useNavigate();
-  
-  // Use state to track completion status so it updates when localStorage changes
   const [completionStatus, setCompletionStatus] = useState(null);
   const [isCompleted, setIsCompleted] = useState(false);
-  
-  // Check completion status and subscribe to storage updates
+
   useEffect(() => {
     const checkCompletion = () => {
       const status = AssessmentStorage.getCompletionStatus(moduleId, week.id);
       setCompletionStatus(status);
       setIsCompleted(status !== null);
     };
-    
-    // Check immediately on mount
+
     checkCompletion();
-    
-    // Subscribe to storage changes
+
     const unsubscribe = AssessmentStorage.subscribe((event) => {
-      // Re-check completion if this week's data changed or if all data was cleared
-      if (event.detail.clearAll || 
-          (event.detail.moduleId === moduleId && event.detail.weekId === week.id)) {
+      if (
+        event.detail.clearAll ||
+        (event.detail.moduleId === moduleId && event.detail.weekId === week.id)
+      ) {
         checkCompletion();
       }
     });
-    
-    // Cleanup subscription
+
     return unsubscribe;
   }, [moduleId, week.id]);
-  
+
   function handleClick() {
     if (!hasQuestions) return;
     navigate(`/module/${moduleId}/week/${week.id}`);
   }
 
+  /* ── Derived style tokens ─────────────────────────────────── */
+  const borderColor = isCompleted
+    ? "rgba(118, 209, 61, 0.6)"          // lush-lime, semi-transparent
+    : "rgba(var(--border-color-rgb), 0.45)";
+
+  const bgOverlay = !hasQuestions
+    ? "repeating-linear-gradient(45deg, rgba(var(--bg-card-rgb),0.7), rgba(var(--bg-card-rgb),0.7) 10px, rgba(var(--bg-card-rgb),0.55) 10px, rgba(var(--bg-card-rgb),0.55) 20px)"
+    : isCompleted
+      ? "linear-gradient(135deg, rgba(118,209,61,0.08), rgba(var(--bg-card-rgb),0.82))"
+      : "rgba(var(--bg-card-rgb), 0.72)";
+
   return (
     <div
-      className="card"
       onClick={handleClick}
       style={{
-        cursor: hasQuestions ? "pointer" : "not-allowed",
+        /* Matt frosted-glass base */
+        background: bgOverlay,
+        backdropFilter: "blur(12px) saturate(160%)",
+        WebkitBackdropFilter: "blur(12px) saturate(160%)",
+        border: `1px solid ${borderColor}`,
+        borderRadius: "14px",
+        padding: "20px",
         marginBottom: "16px",
         position: "relative",
         opacity: hasQuestions ? 1 : 0.45,
-        border: isCompleted
-          ? "2px solid var(--lush-lime)"
-          : "1px solid var(--border-color)",
-        background: !hasQuestions
-          ? "repeating-linear-gradient(45deg, var(--bg-card), var(--bg-card) 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px)"
-          : isCompleted
-            ? "linear-gradient(135deg, rgba(118, 209, 61, 0.05), transparent)"
-            : "var(--bg-card)",
-        pointerEvents: hasQuestions ? "auto" : "none"
+        cursor: hasQuestions ? "pointer" : "not-allowed",
+        pointerEvents: hasQuestions ? "auto" : "none",
+        /* Smooth hover transition */
+        transition: "transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s ease, border-color 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (!hasQuestions) return;
+        e.currentTarget.style.transform = "translateY(-3px)";
+        e.currentTarget.style.background = isCompleted
+          ? "linear-gradient(135deg, rgba(118,209,61,0.13), rgba(var(--bg-card-rgb),0.93))"
+          : "rgba(var(--bg-card-rgb), 0.90)";
+        e.currentTarget.style.borderColor = isCompleted
+          ? "rgba(118,209,61,0.85)"
+          : "rgba(var(--border-color-rgb),0.75)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.background = bgOverlay;
+        e.currentTarget.style.borderColor = borderColor;
       }}
     >
-      {/* Completion Badge */}
+      {/* Completion badge */}
       {isCompleted && (
         <div style={{
           position: "absolute",
-          top: "12px",
-          right: "12px",
-          background: "var(--lush-lime)",
-          color: "white",
-          padding: "6px 12px",
+          top: "14px",
+          right: "14px",
+          background: "rgba(118, 209, 61, 0.18)",
+          backdropFilter: "blur(8px)",
+          color: "var(--lush-lime)",
+          border: "1px solid rgba(118,209,61,0.4)",
+          padding: "5px 12px",
           borderRadius: "20px",
           fontSize: "12px",
-          fontWeight: "bold",
+          fontWeight: "600",
           display: "flex",
           alignItems: "center",
-          gap: "6px"
+          gap: "5px"
         }}>
-          <span>✓</span>
-          <span>Completed</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Completed
         </div>
       )}
 
-      <h3 style={{ 
-        marginBottom: isCompleted ? "8px" : "0"
-      }}>
+      <h3 style={{ marginBottom: isCompleted ? "8px" : "0" }}>
         {week.name}
       </h3>
-      
+
       {isCompleted && completionStatus && (
         <div style={{
           marginTop: "12px",
           paddingTop: "12px",
-          borderTop: "1px solid var(--border-color)",
+          borderTop: "1px solid rgba(var(--border-color-rgb), 0.35)",
           display: "flex",
           gap: "16px",
           fontSize: "14px",
           color: "var(--text-secondary)"
         }}>
-          <div>
-            <strong>Score:</strong> {completionStatus.score}/{completionStatus.totalQuestions}
-          </div>
-          <div>
-            <strong>Grade:</strong> {completionStatus.percentage}%
-          </div>
+          <div><strong>Score:</strong> {completionStatus.score}/{completionStatus.totalQuestions}</div>
+          <div><strong>Grade:</strong> {completionStatus.percentage}%</div>
           <div style={{
             marginLeft: "auto",
-            color: completionStatus.percentage >= 70 ? "var(--lush-lime)" : "var(--golden-amber)"
+            color: completionStatus.percentage >= 70 ? "var(--lush-lime)" : "var(--golden-amber)",
+            fontWeight: "600"
           }}>
             {completionStatus.percentage >= 70 ? "Passed" : "Completed"}
           </div>
         </div>
       )}
-      
+
       {!isCompleted && (
-        <p style={{ 
+        <p style={{
           marginTop: "8px",
           fontSize: "14px",
-          color: "var(--text-secondary)" 
+          color: "var(--text-secondary)"
         }}>
-          {hasQuestions
-            ? "Click to start assessment"
-            : "Assessment not yet available"}
+          {hasQuestions ? "Click to start assessment" : "Assessment not yet available"}
         </p>
       )}
     </div>

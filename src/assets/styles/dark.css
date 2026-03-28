@@ -1,4 +1,11 @@
+[root],
 [data-theme="dark"] {
+
+  /* Frosted-glass RGB variables (used for rgba(...) effects) */
+  --bg-primary-rgb:    11, 15, 26;
+  --bg-secondary-rgb:  18, 24, 38;
+  --bg-card-rgb:       26, 34, 54;
+  --border-color-rgb:  42, 53, 80;
 
   --bg-primary: #0B0F1A;
   --bg-secondary: #121826;
