@@ -48,12 +48,14 @@ export default function Header() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [overallProgress, setOverallProgress] = useState({ completed: 0, total: 0 });
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   // Lazy-import modules to avoid circular deps — same pattern as rest of app
   const [searchIndex, setSearchIndex] = useState([]);
@@ -182,6 +184,17 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchOpen]);
 
+  // Click outside to close mobile dropdown
+  useEffect(() => {
+    const hideOnOutside = (e) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setMobileMenuOpen(false);
+      }
+    };
+    if (mobileMenuOpen) document.addEventListener("mousedown", hideOnOutside);
+    return () => document.removeEventListener("mousedown", hideOnOutside);
+  }, [mobileMenuOpen]);
+
   const openSearch = () => {
     setSearchOpen(true);
     setTimeout(() => searchInputRef.current?.focus(), 50);
@@ -196,6 +209,7 @@ export default function Header() {
 
   const navigateTo = (path) => {
     closeSearch();
+    setMobileMenuOpen(false);
     navigate(path);
   };
 
@@ -253,8 +267,8 @@ export default function Header() {
 
         {/* Navigation */}
         <nav className="header-nav">
-          <Link to="/" className={`nav-link ${isActive("/") ? "active" : ""}`}>
-            Home
+          <Link to="/resources" className={`nav-link ${isActive("/resources") ? "active" : ""}`}>
+            Resources
           </Link>
           <Link to="/modules" className={`nav-link ${isActive("/modules") ? "active" : ""}`}>
             Modules
@@ -303,16 +317,17 @@ export default function Header() {
 
           {/* Theme Toggle */}
           <ThemeToggle />
-
-          {/* Settings — horizontal sliders icon */}
-          <button className="action-button" title="Settings (coming soon)" disabled>
+          {/* Mobile menu (hamburger) — visible only on small screens */}
+          <button
+            className={`action-button mobile-menu-button ${mobileMenuOpen ? 'active' : ''}`}
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-expanded={mobileMenuOpen}
+            aria-label="Open menu"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4"  y1="6"  x2="20" y2="6"/>
-              <line x1="4"  y1="12" x2="20" y2="12"/>
-              <line x1="4"  y1="18" x2="20" y2="18"/>
-              <circle cx="9"  cy="6"  r="2.5" fill="var(--bg-primary)"/>
-              <circle cx="15" cy="12" r="2.5" fill="var(--bg-primary)"/>
-              <circle cx="9"  cy="18" r="2.5" fill="var(--bg-primary)"/>
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
         </div>
@@ -387,6 +402,16 @@ export default function Header() {
               <span className="search-shortcut-hint">↑↓ navigate &nbsp;·&nbsp; ↵ open &nbsp;·&nbsp; ESC close</span>
             </div>
           )}
+        </div>
+      )}
+      {/* Mobile menu panel */}
+      {mobileMenuOpen && (
+        <div className="mobile-menu-container" ref={mobileMenuRef}>
+          <div className="mobile-menu">
+            <button className={`nav-link`} onClick={() => navigateTo('/resources')}>Resources</button>
+            <button className={`nav-link`} onClick={() => navigateTo('/modules')}>Modules</button>
+            <button className={`nav-link`} onClick={() => navigateTo('/progress')}>My Progress</button>
+          </div>
         </div>
       )}
     </header>

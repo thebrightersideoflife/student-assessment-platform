@@ -398,6 +398,50 @@
   letter-spacing: 0.01em;
 }
 
+/* Mobile menu styles */
+.mobile-menu-button {
+  display: none;
+}
+
+.mobile-menu-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(var(--bg-primary-rgb), 0.96);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid rgba(var(--border-color-rgb), 0.4);
+  padding: 10px 20px;
+  animation: slideDown 0.18s cubic-bezier(0.4,0,0.2,1);
+}
+
+.mobile-menu {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mobile-menu .nav-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: transparent;
+}
+
+@media (max-width: 768px) {
+  .header-nav {
+    display: none;
+  }
+  .mobile-menu-button {
+    display: flex;
+  }
+}
+
 /* ── Body offset for fixed header ────────────────────────── */
 
 body {

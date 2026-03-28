@@ -2,63 +2,21 @@ import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext";
 import { modules } from "../data/modules";
-
-/* ── Icon set ─────────────────────────────────────────────── */
-const ArrowRightIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12"/>
-    <polyline points="12 5 19 12 12 19"/>
-  </svg>
-);
-const GridIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-  </svg>
-);
-const ShieldIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-  </svg>
-);
-const DatabaseIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-  </svg>
-);
-const CodeIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="16 18 22 12 16 6"/>
-    <polyline points="8 6 2 12 8 18"/>
-  </svg>
-);
-const CheckCircleIcon = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-    <polyline points="22 4 12 14.01 9 11.01"/>
-  </svg>
-);
+import { weeks as weekRegistry } from "../data/weeks";
+import { MODULE_META, DEFAULT_META, ArrowRightIcon, CheckCircleIcon, GridIcon } from "../components/moduleMeta";
 
 /* Module accent colours & icons */
-const MODULE_META = {
-  ITNSA: { icon: <ShieldIcon />,   accent: "var(--vibrant-cyan)",  accentRgb: "0,191,255",  label: "Network Security" },
-  ITDSA: { icon: <DatabaseIcon />, accent: "var(--golden-amber)",  accentRgb: "244,169,0",  label: "Database Systems" },
-  ITJVA: { icon: <CodeIcon />,     accent: "var(--lush-lime)",     accentRgb: "118,209,61", label: "Java Programming" },
+// Helper: derive week count from canonical registry
+const getWeekCount = (moduleId) => {
+  const w = weekRegistry[moduleId];
+  return Array.isArray(w) ? w.length : 7; // fallback to 7 for older modules
 };
-const DEFAULT_META = { icon: <CodeIcon />, accent: "var(--accent-primary)", accentRgb: "42,92,167", label: "" };
 
 /* ── Sub-components ───────────────────────────────────────── */
 
 function ModuleFeatureCard({ module, onClick }) {
   const meta = MODULE_META[module.id] || DEFAULT_META;
+  const weekCount = getWeekCount(module.id);
 
   return (
     <div
@@ -127,7 +85,7 @@ function ModuleFeatureCard({ module, onClick }) {
           margin: 0, fontSize: "16px", color: "var(--text-secondary)",
           lineHeight: "1.6",
         }}>
-          {module.description || `7 weekly practice assessments covering ${meta.label || module.name}.`}
+          {module.description || `${weekCount} weekly practice assessment${weekCount !== 1 ? "s" : ""} covering ${meta.label || module.name}.`}
         </p>
       </div>
 
@@ -143,7 +101,7 @@ function ModuleFeatureCard({ module, onClick }) {
           border: "1px solid rgba(var(--border-color-rgb), 0.3)",
           borderRadius: "999px", padding: "3px 10px",
         }}>
-          7 weeks
+          {weekCount} week{weekCount !== 1 ? "s" : ""}
         </span>
         <span style={{
           fontSize: "15px", fontWeight: 600, color: meta.accent,
@@ -162,6 +120,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
   const featured = modules.slice(0, 3);
+  const totalWeeks = modules.reduce((sum, m) => sum + getWeekCount(m.id), 0);
 
   return (
     <div style={{ overflowX: "hidden" }}>
@@ -171,7 +130,7 @@ export default function HomePage() {
           ════════════════════════════════════════════════════ */}
       <section style={{
         position: "relative",
-        minHeight: "92vh",
+        minHeight: "80vh",
         display: "flex",
         alignItems: "center",
         overflow: "hidden",
@@ -202,7 +161,7 @@ export default function HomePage() {
           position: "relative", zIndex: 1,
           width: "100%", maxWidth: "1280px",
           margin: "0 auto",
-          padding: "80px 40px 80px",
+          padding: "56px 40px 64px",
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "64px",
@@ -304,7 +263,7 @@ export default function HomePage() {
               <span style={{ color: "var(--lush-lime)" }}><CheckCircleIcon /></span>
               <div>
                 <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1 }}>
-                  {modules.length * 7}+
+                  {totalWeeks}+
                 </div>
                 <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px" }}>
                   Practice assessments
@@ -460,7 +419,7 @@ export default function HomePage() {
               margin: "6px 0 0", fontSize: "17px",
               color: "var(--text-secondary)",
             }}>
-              Weekly practice assessments across {modules.length} IT disciplines.
+              Weekly practice assessments across {modules.length} IT discipline{modules.length !== 1 ? "s" : ""} ({totalWeeks} weeks total).
             </p>
           </div>
 
@@ -543,12 +502,12 @@ export default function HomePage() {
           .hero-grid {
             grid-template-columns: 1fr !important;
             gap: 40px !important;
-            padding: 80px 24px 60px !important;
+            padding: 56px 24px 48px !important;
           }
         }
         @media (max-width: 480px) {
           .hero-grid {
-            padding: 70px 20px 50px !important;
+            padding: 56px 20px 44px !important;
           }
         }
       `}</style>

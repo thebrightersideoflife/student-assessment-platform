@@ -6,6 +6,7 @@ import ModulesPage from "../pages/ModulesPage";
 import WeeksPage from "../pages/WeeksPage";
 import AssessmentPage from "../pages/AssessmentPage";
 import RoadmapPage from "../pages/RoadmapPage";
+import ResourcesPage from "../pages/ResourcesPage";
 import ProgressPage from "../pages/ProgressPage";
 
 export default function AppRouter() {
@@ -19,6 +20,8 @@ export default function AppRouter() {
 
         {/* Full module listing */}
         <Route path="/modules" element={<ModulesPage />} />
+
+        <Route path="/resources" element={<ResourcesPage />} />
 
         <Route path="/progress" element={<ProgressPage />} />
 

@@ -1,9 +1,9 @@
 // src/pages/WeeksPage.jsx
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { weeks } from "../data/questions";
+import { weeks } from "../data/weeks";               // CHANGED: was ../data/questions
+import { questions } from "../data/questions/index.js"; // CHANGED: was ../data/questions
 import WeekCard from "../components/WeekCard";
 import Breadcrumb from "../components/Breadcrumb";
-import { questions } from "../data/questions";
 
 const BookIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,6 +25,21 @@ export default function WeeksPage() {
   const location = useLocation();
   const pageKey = location.key || "default";
 
+  // CHANGED: weeks is now per-module — weeks[moduleId] instead of flat weeks array
+  const moduleWeeks = weeks[moduleId] || [];
+
+  // Group weeks by block for optional block-header rendering
+  // e.g. { 1: [...weeks], 2: [...weeks] }
+  const blocks = moduleWeeks.reduce((acc, week) => {
+    const block = week.block ?? "other";
+    if (!acc[block]) acc[block] = [];
+    acc[block].push(week);
+    return acc;
+  }, {});
+
+  const blockKeys = Object.keys(blocks).sort((a, b) => Number(a) - Number(b));
+  const hasBlocks = blockKeys.length > 1 || (blockKeys.length === 1 && blockKeys[0] !== "other");
+
   return (
     <div className="container">
       <Breadcrumb items={[
@@ -39,7 +54,6 @@ export default function WeeksPage() {
         <div
           onClick={() => navigate(`/module/${moduleId}/roadmap`)}
           style={{
-            /* Matt frosted-glass */
             background: "rgba(var(--bg-card-rgb), 0.72)",
             backdropFilter: "blur(12px) saturate(160%)",
             WebkitBackdropFilter: "blur(12px) saturate(160%)",
@@ -62,40 +76,29 @@ export default function WeeksPage() {
           }}
         >
           <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px"
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between", gap: "16px",
           }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
               <div style={{
-                width: "42px",
-                height: "42px",
-                borderRadius: "10px",
+                width: "42px", height: "42px", borderRadius: "10px",
                 background: "rgba(var(--bg-secondary-rgb), 0.7)",
                 border: "1px solid rgba(var(--border-color-rgb), 0.4)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--accent-primary)",
-                flexShrink: 0
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "var(--accent-primary)", flexShrink: 0,
               }}>
                 <BookIcon />
               </div>
               <div>
                 <h3 style={{
-                  margin: "0 0 6px 0",
-                  color: "var(--accent-primary)",
-                  fontSize: "1.15rem",
-                  fontWeight: "600"
+                  margin: "0 0 6px 0", color: "var(--accent-primary)",
+                  fontSize: "1.15rem", fontWeight: 600,
                 }}>
                   Accelerated Learning Roadmap
                 </h3>
                 <p style={{
-                  margin: 0,
-                  color: "var(--text-secondary)",
-                  fontSize: "14px",
-                  lineHeight: "1.5"
+                  margin: 0, color: "var(--text-secondary)",
+                  fontSize: "14px", lineHeight: "1.5",
                 }}>
                   Curated resources and learning paths for mastering Java efficiently
                 </p>
@@ -108,17 +111,57 @@ export default function WeeksPage() {
         </div>
       )}
 
-      {weeks.map(week => {
-        const hasQuestions = questions[moduleId]?.[week.id]?.length > 0;
-        return (
-          <WeekCard
-            key={`${week.id}-${pageKey}`}
-            moduleId={moduleId}
-            week={week}
-            hasQuestions={hasQuestions}
-          />
-        );
-      })}
+      {/*
+        If the module has multiple blocks, render a subtle block header
+        before each group. If all weeks share one block (or have no block),
+        render flat — same as before.
+      */}
+      {hasBlocks
+        ? blockKeys.map((blockKey) => (
+            <div key={blockKey}>
+              {/* Block divider header */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                margin: "8px 0 14px",
+              }}>
+                <span style={{
+                  fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em",
+                  textTransform: "uppercase", color: "var(--text-secondary)",
+                  whiteSpace: "nowrap",
+                }}>
+                  Block {blockKey}
+                </span>
+                <div style={{
+                  flex: 1, height: "1px",
+                  background: "rgba(var(--border-color-rgb), 0.3)",
+                }} />
+              </div>
+
+              {blocks[blockKey].map((week) => {
+                const hasQuestions = questions[moduleId]?.[week.id]?.length > 0;
+                return (
+                  <WeekCard
+                    key={`${week.id}-${pageKey}`}
+                    moduleId={moduleId}
+                    week={week}
+                    hasQuestions={hasQuestions}
+                  />
+                );
+              })}
+            </div>
+          ))
+        : moduleWeeks.map((week) => {
+            const hasQuestions = questions[moduleId]?.[week.id]?.length > 0;
+            return (
+              <WeekCard
+                key={`${week.id}-${pageKey}`}
+                moduleId={moduleId}
+                week={week}
+                hasQuestions={hasQuestions}
+              />
+            );
+          })
+      }
     </div>
   );
 }

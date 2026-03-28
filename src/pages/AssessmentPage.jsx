@@ -1,3 +1,4 @@
+// src/pages/AssessmentPage.jsx
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import QuestionRenderer from "../components/QuestionRenderer";
@@ -5,9 +6,10 @@ import Breadcrumb from "../components/Breadcrumb";
 import CompletionBadge from "../components/CompletionBadge";
 import PrintableQuestions from "../components/PrintableQuestions";
 import AssessmentStorage from "../utils/assessmentStorage";
-import { questions } from "../data/questions";
+import { getWeekLabel, getWeekKindConfig, getRequiredQuestions } from "../utils/questionHelpers";
+import { questions } from "../data/questions/index.js";
 import { modules } from "../data/modules";
-import { weeks as allWeeks } from "../data/questions";
+import { weeks as allWeeks } from "../data/weeks";
 import { notifyAssessmentCompleted } from "../utils/assessmentEvents";
 
 /* ══════════════════════════════════════════════════════════════
@@ -280,20 +282,31 @@ export default function AssessmentPage() {
   const { moduleId, weekId } = useParams();
   const navigate = useNavigate();
 
+  // ── Data resolution ──────────────────────────────────────
   const moduleQuestions = questions[moduleId]?.[weekId] || [];
-  const moduleInfo = modules.find((m) => m.id === moduleId);
-  const weekInfo = allWeeks.find((w) => String(w.id) === String(weekId));
-  const moduleAudio = weekInfo?.moduleAudio?.[moduleId];
-  const audioUrl = moduleAudio?.audioUrl || weekInfo?.audioUrl || null;
-  const audioDescription = moduleAudio?.audioDescription || weekInfo?.audioDescription || null;
+  const moduleInfo      = modules.find((m) => m.id === moduleId);
 
+  // CHANGED: allWeeks is now per-module → use [moduleId] lookup
+  const weekInfo        = allWeeks[moduleId]?.find((w) => String(w.id) === String(weekId));
+
+  // Week kind + label — derived from weekInfo via shared helpers
+  const weekKind        = weekInfo?.kind ?? null;          // "quiz" | "exam" | null
+  const weekLabel       = weekInfo ? getWeekLabel(weekInfo) : `Week ${weekId}`;
+  const kindConfig      = getWeekKindConfig(weekKind);
+
+  // Audio — still nested on the week object under moduleAudio
+  const moduleAudio     = weekInfo?.moduleAudio;
+  const audioUrl        = moduleAudio?.audioUrl    ?? weekInfo?.audioUrl    ?? null;
+  const audioDescription = moduleAudio?.audioDescription ?? weekInfo?.audioDescription ?? null;
+
+  // ── Storage ──────────────────────────────────────────────
   const completionStatus = AssessmentStorage.getCompletionStatus(moduleId, weekId);
-  const wasCompleted = completionStatus !== null;
-  const savedProgress = AssessmentStorage.loadProgress(moduleId, weekId);
+  const wasCompleted     = completionStatus !== null;
+  const savedProgress    = AssessmentStorage.loadProgress(moduleId, weekId);
 
-  const [answers, setAnswers] = useState(savedProgress?.answers || {});
-  const [submitted, setSubmitted] = useState(false);
-  const [showPrintView, setShowPrintView] = useState(false);
+  const [answers,         setAnswers]         = useState(savedProgress?.answers || {});
+  const [submitted,       setSubmitted]       = useState(false);
+  const [showPrintView,   setShowPrintView]   = useState(false);
   const [showCertificate, setShowCertificate] = useState(wasCompleted);
 
   useEffect(() => {
@@ -306,16 +319,8 @@ export default function AssessmentPage() {
     document.documentElement.removeAttribute("data-print");
   }, [showPrintView]);
 
-  /*
-    "Required" questions = those that need an answer for the assessment
-    to be considered complete. Scenario blocks and show-answer questions
-    are excluded — they carry no student input.
-  */
-  const requiredQuestions = moduleQuestions.filter(
-    (q) => q.type === "open-ended" ||
-           q.type === "multiple-choice" ||
-           q.type === "fill-in-the-blank"
-  );
+  // CHANGED: getRequiredQuestions() from questionHelpers replaces the inline filter
+  const requiredQuestions = getRequiredQuestions(moduleQuestions);
 
   useEffect(() => {
     if (!wasCompleted && !submitted && Object.keys(answers).length > 0) {
@@ -324,22 +329,12 @@ export default function AssessmentPage() {
   }, [answers, moduleId, weekId, wasCompleted, submitted]);
 
   function handleAnswerChange(questionId, answerData) {
-    /*
-      ─ No auto-submit logic here anymore. ─
-      We record each answer as it comes in, but NEVER automatically
-      trigger the completion screen. Only the explicit "Submit & Finish"
-      button does that.
-    */
     setAnswers((prev) => ({ ...prev, [questionId]: answerData }));
   }
 
   function handleSubmitAndFinish() {
-    // Count only auto-gradable questions
-    const gradable = requiredQuestions.filter(
-      (q) => q.type !== "fill-in-the-blank"
-    );
+    const gradable     = requiredQuestions.filter((q) => q.type !== "fill-in-the-blank");
     const correctCount = gradable.filter((q) => answers[q.id]?.isCorrect).length;
-
     AssessmentStorage.markCompleted(moduleId, weekId, correctCount, gradable.length);
     notifyAssessmentCompleted();
     setSubmitted(true);
@@ -364,12 +359,9 @@ export default function AssessmentPage() {
     ? completionStatus.totalQuestions
     : requiredQuestions.filter((q) => q.type !== "fill-in-the-blank").length;
 
-  // How many required questions have been answered (checked/filled)
   const answeredCount = requiredQuestions.filter((q) => answers[q.id]?.checked).length;
-  const allAnswered = answeredCount === requiredQuestions.length;
-
-  // How many still need answering
-  const remaining = requiredQuestions.length - answeredCount;
+  const allAnswered   = answeredCount === requiredQuestions.length;
+  const remaining     = requiredQuestions.length - answeredCount;
 
   const completionDate = completionStatus?.completedDate
     ? new Date(completionStatus.completedDate).toLocaleDateString("en-US", {
@@ -436,8 +428,6 @@ export default function AssessmentPage() {
   }
 
   /* ── Assessment view ────────────────────────────────────── */
-
-  // Track question display index (skip scenario blocks from numbering)
   let questionIndex = 0;
 
   return (
@@ -446,18 +436,51 @@ export default function AssessmentPage() {
       <Breadcrumb items={[
         { label: "Modules", path: "/modules" },
         { label: moduleInfo?.name || moduleId, path: `/module/${moduleId}` },
-        { label: `Week ${weekId}` },
+        { label: weekLabel },
       ]} />
 
-      {/* Title + Print row */}
+      {/* ── Title + Print row ─────────────────────────────── */}
       <div style={{
         display: "flex", justifyContent: "space-between",
         alignItems: "flex-start", marginBottom: "24px", gap: "16px",
       }}>
         <div>
-          <h1 style={{ marginBottom: "8px" }}>{moduleId} Assessment</h1>
-          <h2 style={{ marginBottom: 0, color: "var(--text-secondary)" }}>Week {weekId}</h2>
+          {/* Kind badge — only rendered for quiz/exam weeks */}
+          {kindConfig && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              marginBottom: "10px",
+              background: kindConfig.bgColor,
+              border: `1px solid ${kindConfig.borderColor}`,
+              color: kindConfig.color,
+              borderRadius: "999px", padding: "4px 12px",
+              fontSize: "13px", fontWeight: 600,
+            }}>
+              {kindConfig.icon} {kindConfig.label}
+            </div>
+          )}
+
+          <h1 style={{ marginBottom: "6px" }}>{moduleId} Assessment</h1>
+
+          {/* Week label uses block-aware string: "Block 1, Week 4" */}
+          <h2 style={{
+            marginBottom: 0,
+            color: kindConfig?.color ?? "var(--text-secondary)",
+          }}>
+            {weekLabel}
+          </h2>
+
+          {/* Kind description line — only for quiz/exam */}
+          {kindConfig && (
+            <p style={{
+              marginTop: "6px", fontSize: "14px",
+              color: kindConfig.color, fontWeight: 500,
+            }}>
+              {kindConfig.description}
+            </p>
+          )}
         </div>
+
         <button className="button" onClick={() => setShowPrintView(true)}
           style={{ padding: "11px 20px", fontSize: "14px", whiteSpace: "nowrap" }}>
           <PrintIcon /> Print Questions
@@ -509,10 +532,9 @@ export default function AssessmentPage() {
         </div>
       </div>
 
-      {/* Questions — scenario blocks don't consume a question number */}
+      {/* Questions */}
       {moduleQuestions.map((question) => {
-        const isScenario = question.type === "scenario";
-        const isShowAnswer = question.type === "show-answer";
+        const isScenario  = question.type === "scenario";
         const currentIndex = isScenario ? null : questionIndex;
         if (!isScenario) questionIndex++;
 
@@ -538,7 +560,6 @@ export default function AssessmentPage() {
         borderRadius: "14px", textAlign: "center",
       }}>
 
-        {/* Unanswered warning */}
         {!allAnswered && (
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -557,10 +578,6 @@ export default function AssessmentPage() {
         )}
 
         <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-          {/*
-            Submit & Finish is always visible but disabled until all required
-            questions have been answered. This replaces the old auto-submit.
-          */}
           <button
             className={allAnswered ? "button solid" : "button"}
             onClick={handleSubmitAndFinish}
