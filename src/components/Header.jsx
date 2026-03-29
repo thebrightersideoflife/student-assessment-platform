@@ -67,22 +67,56 @@ export default function Header() {
 
   // Calculate overall progress from localStorage
   useEffect(() => {
-    const calculateProgress = () => {
-      const moduleIds = ["ITJVA", "ITDSA", "ITNSA"];
-      const weekIds = ["1", "2", "3", "4", "5", "6", "7"];
+    const calculateProgress = async () => {
+      try {
+        const [mods, weeksMod, questionsMod] = await Promise.all([
+          import("../data/modules"),
+          import("../data/weeks"),
+          import("../data/questions/index.js"),
+        ]);
 
-      let completed = 0;
-      const total = moduleIds.length * weekIds.length;
+        const modules = mods.modules || [];
+        const weeks = weeksMod.weeks || {};
+        const questions = questionsMod.questions || {};
 
-      moduleIds.forEach((moduleId) => {
-        weekIds.forEach((weekId) => {
-          if (localStorage.getItem(`assessment_completion_${moduleId}_${weekId}`)) {
-            completed++;
+        let completed = 0;
+        let total = 0;
+
+        for (const mod of modules) {
+          const allWeeks = weeks[mod.id] || [];
+          const activeWeeks = allWeeks.filter((w) => {
+            const qForMod = questions[mod.id] || {};
+            const qForWeek = qForMod[String(w.id)];
+            return Array.isArray(qForWeek) && qForWeek.length > 0;
+          });
+
+          for (const w of activeWeeks) {
+            total++;
+            const key = `assessment_completion_${mod.id}_${w.id}`;
+            if (localStorage.getItem(key)) completed++;
           }
-        });
-      });
+        }
 
-      setOverallProgress({ completed, total });
+        setOverallProgress({ completed, total });
+      } catch (err) {
+        // Fallback: if imports fail, keep existing values
+        // but still attempt a naive scan of localStorage keys
+        let completed = 0;
+        let total = 0;
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("assessment_completion_")) {
+              total++;
+              const data = localStorage.getItem(key);
+              if (data) completed++;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+        setOverallProgress({ completed, total });
+      }
     };
 
     calculateProgress();

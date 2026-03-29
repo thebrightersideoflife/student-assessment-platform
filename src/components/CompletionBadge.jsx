@@ -254,16 +254,20 @@ export default function CompletionBadge({
             borderTop: "2px solid var(--border-color)"
           }}
         >
-          <p 
+          <a
+            href="https://student-assessment-platform.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
             className="secondary-text"
             style={{
               fontSize: "12px",
               color: "var(--text-secondary)",
-              fontStyle: "italic"
+              fontStyle: "italic",
+              textDecoration: "none",
             }}
           >
             Student Assessment Platform
-          </p>
+          </a>
         </div>
       </div>
     </>
