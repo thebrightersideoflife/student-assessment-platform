@@ -14,56 +14,133 @@ export default function ProgressPage() {
   });
 
   useEffect(() => {
-    const weeks = ['1', '2', '3', '4', '5', '6', '7'];
-    const moduleProgress = [];
-    
-    let totalCompleted = 0;
-    let totalScore = 0;
-    let scoreCount = 0;
-    const totalAssessments = modules.length * weeks.length;
+    const computeProgress = async () => {
+      try {
+        const [weeksMod, questionsMod] = await Promise.all([
+          import("../data/weeks"),
+          import("../data/questions/index.js"),
+        ]);
 
-    modules.forEach(module => {
-      const weekData = weeks.map(weekId => {
-        const key = `assessment_completion_${module.id}_${weekId}`;
-        const completion = localStorage.getItem(key);
-        
-        if (completion) {
-          const data = JSON.parse(completion);
-          totalCompleted++;
-          totalScore += (data.score / data.totalQuestions) * 100;
-          scoreCount++;
-          
-          return {
-            weekId,
-            completed: true,
-            score: data.score,
-            totalQuestions: data.totalQuestions,
-            percentage: Math.round((data.score / data.totalQuestions) * 100),
-            completedDate: data.completedDate
-          };
+        const weeksByModule = weeksMod.weeks || {};
+        const questions = questionsMod.questions || {};
+
+        const moduleProgress = [];
+        let totalCompleted = 0;
+        let totalScore = 0;
+        let scoreCount = 0;
+        let totalAssessments = 0;
+
+        for (const module of modules) {
+          const allWeeks = weeksByModule[module.id] || [];
+          const activeWeeks = allWeeks.filter((w) => {
+            const qForMod = questions[module.id] || {};
+            const qForWeek = qForMod[String(w.id)];
+            return Array.isArray(qForWeek) && qForWeek.length > 0;
+          });
+
+          const weekData = activeWeeks.map((w) => {
+            const key = `assessment_completion_${module.id}_${w.id}`;
+            const completion = localStorage.getItem(key);
+
+            if (completion) {
+              try {
+                const data = JSON.parse(completion);
+                totalCompleted++;
+                totalScore += (data.score / data.totalQuestions) * 100;
+                scoreCount++;
+
+                return {
+                  weekId: String(w.id),
+                  completed: true,
+                  score: data.score,
+                  totalQuestions: data.totalQuestions,
+                  percentage: Math.round((data.score / data.totalQuestions) * 100),
+                  completedDate: data.completedDate,
+                };
+              } catch (e) {
+                // malformed stored data, treat as incomplete
+              }
+            }
+
+            return {
+              weekId: String(w.id),
+              completed: false,
+            };
+          });
+
+          totalAssessments += activeWeeks.length;
+
+          moduleProgress.push({
+            module,
+            weeks: weekData,
+            completedCount: weekData.filter((w) => w.completed).length,
+            totalWeeks: activeWeeks.length,
+          });
         }
-        
-        return {
-          weekId,
-          completed: false
-        };
-      });
 
-      moduleProgress.push({
-        module,
-        weeks: weekData,
-        completedCount: weekData.filter(w => w.completed).length,
-        totalWeeks: weeks.length
-      });
-    });
+        setProgressData(moduleProgress);
+        setOverallStats({
+          totalCompleted,
+          totalAssessments,
+          averageScore: scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0,
+          completionRate: totalAssessments > 0 ? Math.round((totalCompleted / totalAssessments) * 100) : 0,
+        });
+      } catch (err) {
+        // Fallback: original behavior (static weeks) if imports fail
+        const weeks = ["1", "2", "3", "4", "5", "6", "7"];
+        const moduleProgress = [];
 
-    setProgressData(moduleProgress);
-    setOverallStats({
-      totalCompleted,
-      totalAssessments,
-      averageScore: scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0,
-      completionRate: Math.round((totalCompleted / totalAssessments) * 100)
-    });
+        let totalCompleted = 0;
+        let totalScore = 0;
+        let scoreCount = 0;
+        const totalAssessments = modules.length * weeks.length;
+
+        modules.forEach((module) => {
+          const weekData = weeks.map((weekId) => {
+            const key = `assessment_completion_${module.id}_${weekId}`;
+            const completion = localStorage.getItem(key);
+
+            if (completion) {
+              const data = JSON.parse(completion);
+              totalCompleted++;
+              totalScore += (data.score / data.totalQuestions) * 100;
+              scoreCount++;
+
+              return {
+                weekId,
+                completed: true,
+                score: data.score,
+                totalQuestions: data.totalQuestions,
+                percentage: Math.round((data.score / data.totalQuestions) * 100),
+                completedDate: data.completedDate,
+              };
+            }
+
+            return {
+              weekId,
+              completed: false,
+            };
+          });
+
+          moduleProgress.push({
+            module,
+            weeks: weekData,
+            completedCount: weekData.filter((w) => w.completed).length,
+            totalWeeks: weeks.length,
+          });
+        });
+
+        setProgressData(moduleProgress);
+        setOverallStats({
+          totalCompleted,
+          totalAssessments,
+          averageScore: scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0,
+          completionRate: Math.round((totalCompleted / totalAssessments) * 100),
+        });
+      }
+    };
+
+    computeProgress();
   }, []);
 
   return (
