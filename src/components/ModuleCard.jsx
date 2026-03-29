@@ -33,7 +33,7 @@ export default function ModuleCard({ module }) {
       </div>
 
       <div>
-        <h3 style={{ margin: 0 }}>{module.name}</h3>
+        <h3 style={{ margin: 0 }}>{module.id}: {module.name}</h3>
         <div style={{ color: "var(--text-secondary)", marginTop: 6 }}>{module.description}</div>
       </div>
     </div>

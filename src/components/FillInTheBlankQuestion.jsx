@@ -45,12 +45,14 @@ export default function FillInTheBlankQuestion({
   });
 
   const [revealed, setRevealed] = useState(savedAnswer?.revealed || false);
+  const [checked, setChecked] = useState(savedAnswer?.checked || false);
 
   // Restore saved state
   useEffect(() => {
     if (savedAnswer?.selections) {
       setSelections(savedAnswer.selections);
       setRevealed(savedAnswer.revealed || false);
+      setChecked(savedAnswer.checked || false);
     }
   }, [savedAnswer]);
 
@@ -66,18 +68,16 @@ export default function FillInTheBlankQuestion({
     if (locked || revealed) return;
     const next = { ...selections, [blankId]: value };
     setSelections(next);
-
-    const filled = blanks.every((b) => next[b.id] !== "");
-    const correct =
-      filled && blanks.every((b) => next[b.id] === b.correctAnswer);
+    // Reset checked state when user changes answers
+    if (checked) setChecked(false);
 
     if (onAnswerChange) {
       onAnswerChange(question.id, {
         selections: next,
-        isCorrect: correct,
-        // fill-in-the-blank is "checked" as soon as all blanks are filled
-        checked: filled,
-        revealed,
+        // Do not mark correctness until user clicks Check Answer
+        isCorrect: false,
+        checked: false,
+        revealed: false,
       });
     }
   }
@@ -85,8 +85,8 @@ export default function FillInTheBlankQuestion({
   // Split sentence text on ___ markers
   const parts = (question.text || "").split("___");
 
-  // Colour helpers — only show result colours after submit or when revealed
-  const showResult = submitted || revealed;
+  // Colour helpers — only show result colours after submit or when revealed/checked
+  const showResult = submitted || revealed || checked;
 
   function blankBorderColor(blank) {
     if (!showResult || !selections[blank.id]) return "rgba(var(--border-color-rgb), 0.6)";
@@ -179,7 +179,7 @@ export default function FillInTheBlankQuestion({
       </p>
 
       {/* Result row — only after submit */}
-      {showResult && allFilled && (
+      {showResult && (
         <div style={{ marginTop: "16px" }}>
           <p style={{
             fontWeight: 700, fontSize: "15px",
@@ -221,6 +221,32 @@ export default function FillInTheBlankQuestion({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Action row: Check Answer button when not yet revealed/checked */}
+      {!showResult && !locked && !submitted && (
+        <div style={{ marginTop: "14px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={() => {
+              const correct = blanks.every((b) => selections[b.id] === b.correctAnswer);
+              setRevealed(true);
+              setChecked(true);
+              if (onAnswerChange) {
+                onAnswerChange(question.id, {
+                  selections,
+                  isCorrect: correct,
+                  checked: true,
+                  revealed: true,
+                });
+              }
+            }}
+            className="button solid"
+            disabled={!allFilled || checked}
+            style={{ padding: "8px 14px" }}
+          >
+            Check Answer
+          </button>
         </div>
       )}
     </div>

@@ -161,10 +161,9 @@ export default function OpenEndedQuestion({
 
       {!locked && !submitted && (
         <button
-          className="button"
+          className="button solid"
           onClick={handleCheck}
           disabled={!answer.trim() || checked}
-          style={{ opacity: (!answer.trim() || checked) ? 0.45 : 1 }}
         >
           Check Answer
         </button>

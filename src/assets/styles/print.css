@@ -66,9 +66,22 @@ html[data-print="active"] .app-header {
 }
 
 /* ── Print bar (screen only) ───────────────────────────────── */
+.print-top-strip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px; /* match .header-container height */
+  background: rgba(var(--bg-primary-rgb), 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(var(--border-color-rgb), 0.45);
+  z-index: 995;
+}
+
 .print-bar {
   position: fixed;
-  top: 68px; /* sits below the app header */
+  top: 80px; /* sits under the top strip */
   left: 0; right: 0;
   background: var(--p-main-dark);
   color: #fff;
@@ -127,7 +140,7 @@ html[data-print="active"] .app-header {
 /* ── Page wrap ─────────────────────────────────────────────── */
 .page-wrap {
   max-width: 900px;
-  margin: 112px auto 60px; /* space for fixed bars */
+  margin: 132px auto 60px; /* space for fixed top strip + print bar */
   background: var(--p-white);
   box-shadow: 0 6px 48px rgba(23,66,117,0.2);
 }

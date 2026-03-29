@@ -18,9 +18,8 @@
  */
 export function getWeekLabel(week) {
   if (!week) return "";
-  if (week.block != null) {
-    return `Block ${week.block}, ${week.name}`;
-  }
+  // The UI groups weeks under block headings; cards should only show the week name.
+  // Return the week name regardless of block to avoid repeating the block label.
   return week.name;
 }
 

@@ -64,6 +64,9 @@ export default function PrintLayout({
     <div className="print-root">
 
       {/* ── Sticky print/back bar (screen only) ─────────────── */}
+      {/* Top strip that matches the app header (kept fixed) */}
+      <div className="print-top-strip no-print" />
+
       <div className="print-bar no-print">
         <span>{examTitle}</span>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>

@@ -75,7 +75,7 @@ export default function ShowAnswerQuestion({ question, index, submitted = false 
 
       {/* Reveal memo button / memo content */}
       {!showAnswer ? (
-        <button className="button" onClick={() => setShowAnswer(true)}
+        <button className="button solid" onClick={() => setShowAnswer(true)}
           style={{ marginTop: "4px" }}>
           Reveal Memo / Model Answer
         </button>

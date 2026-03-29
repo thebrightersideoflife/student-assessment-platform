@@ -333,9 +333,24 @@ export default function AssessmentPage() {
   }
 
   function handleSubmitAndFinish() {
-    const gradable     = requiredQuestions.filter((q) => q.type !== "fill-in-the-blank");
-    const correctCount = gradable.filter((q) => answers[q.id]?.isCorrect).length;
-    AssessmentStorage.markCompleted(moduleId, weekId, correctCount, gradable.length);
+    // Compute score and total points. Fill-in-the-blank questions are
+    // worth one point per blank (each correct blank = 1 point).
+    let score = 0;
+    let totalPoints = 0;
+    for (const q of requiredQuestions) {
+      if (q.type === "fill-in-the-blank") {
+        const blanks = q.blanks || [];
+        totalPoints += blanks.length;
+        const sels = answers[q.id]?.selections || {};
+        for (const b of blanks) {
+          if (sels[b.id] === b.correctAnswer) score += 1;
+        }
+      } else {
+        totalPoints += 1;
+        if (answers[q.id]?.isCorrect) score += 1;
+      }
+    }
+    AssessmentStorage.markCompleted(moduleId, weekId, score, totalPoints);
     notifyAssessmentCompleted();
     setSubmitted(true);
     setShowCertificate(true);
@@ -351,13 +366,25 @@ export default function AssessmentPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const correctCount = wasCompleted && completionStatus
-    ? completionStatus.score
-    : requiredQuestions.filter((q) => answers[q.id]?.isCorrect).length;
-
-  const totalGradable = wasCompleted && completionStatus
-    ? completionStatus.totalQuestions
-    : requiredQuestions.filter((q) => q.type !== "fill-in-the-blank").length;
+  // Current score and total points — include per-blank weighting for fill-in-the-blank
+  const { score: correctCount, total: totalGradable } = (function() {
+    if (wasCompleted && completionStatus) return { score: completionStatus.score, total: completionStatus.totalQuestions };
+    let s = 0, t = 0;
+    for (const q of requiredQuestions) {
+      if (q.type === "fill-in-the-blank") {
+        const blanks = q.blanks || [];
+        t += blanks.length;
+        const sels = answers[q.id]?.selections || {};
+        for (const b of blanks) {
+          if (sels[b.id] === b.correctAnswer) s += 1;
+        }
+      } else {
+        t += 1;
+        if (answers[q.id]?.isCorrect) s += 1;
+      }
+    }
+    return { score: s, total: t };
+  })();
 
   const answeredCount = requiredQuestions.filter((q) => answers[q.id]?.checked).length;
   const allAnswered   = answeredCount === requiredQuestions.length;

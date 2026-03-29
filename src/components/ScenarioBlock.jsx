@@ -26,11 +26,9 @@ const FileTextIcon = () => (
 export default function ScenarioBlock({ question }) {
   return (
     <div style={{
-      background: "linear-gradient(135deg, rgba(var(--accent-primary-rgb, 42,92,167), 0.08), rgba(var(--bg-card-rgb), 0.85))",
-      backdropFilter: "blur(12px) saturate(160%)",
-      WebkitBackdropFilter: "blur(12px) saturate(160%)",
+      background: "var(--bg-card)",
       border: "1px solid rgba(var(--border-color-rgb), 0.5)",
-      borderLeft: "4px solid var(--accent-primary)",
+      position: "relative",
       borderRadius: "14px",
       padding: "24px 28px",
       marginBottom: "8px",
@@ -51,6 +49,8 @@ export default function ScenarioBlock({ question }) {
           {question.title || "Scenario Context"}
         </h2>
       </div>
+
+      {/* (corner glow removed per user request) */}
 
       {/* Scenario body */}
       {question.context && (

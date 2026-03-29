@@ -1,46 +1,9 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import "../assets/styles/header.css";
-
-// Search index — all navigable content
-const buildSearchIndex = (modules) => {
-  const index = [];
-
-  modules.forEach((module) => {
-    // Module itself
-    index.push({
-      type: "module",
-      label: module.name,
-      sublabel: module.description,
-      path: `/module/${module.id}`,
-    });
-
-    // Roadmap (ITJVA only for now — extend as roadmaps are added)
-    if (module.id === "ITJVA") {
-      index.push({
-        type: "roadmap",
-        label: `${module.name} — Learning Roadmap`,
-        sublabel: "Accelerated study guide",
-        path: `/module/${module.id}/roadmap`,
-      });
-    }
-
-    // Weeks 1–7
-    for (let w = 1; w <= 7; w++) {
-      index.push({
-        type: "week",
-        label: `${module.name} · Week ${w}`,
-        sublabel: `Assessment — Week ${w}`,
-        path: `/module/${module.id}/week/${w}`,
-        moduleId: module.id,
-        weekId: String(w),
-      });
-    }
-  });
-
-  return index;
-};
+import { buildSearchIndex, queryIndex } from "../utils/search";
 
 export default function Header() {
   const location = useLocation();
@@ -48,20 +11,57 @@ export default function Header() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [overallProgress, setOverallProgress] = useState({ completed: 0, total: 0 });
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
-  const mobileMenuRef = useRef(null);
+  const menuRef = useRef(null);
 
   // Lazy-import modules to avoid circular deps — same pattern as rest of app
   const [searchIndex, setSearchIndex] = useState([]);
   useEffect(() => {
-    import("../data/modules").then(({ modules }) => {
-      setSearchIndex(buildSearchIndex(modules));
+    Promise.all([
+      import("../data/modules"),
+      import("../data/weeks"),
+      import("../data/questions/index.js"),
+      import("../data/roadmaps"),
+    ]).then(([mods, weeksMod, questionsMod, roadmapsMod]) => {
+      const modules = mods.modules || [];
+      const weeks = weeksMod.weeks || {};
+      const questions = questionsMod.questions || {};
+      const roadmaps = roadmapsMod || {};
+
+      // Filter weeks to only those that actually have question data (active)
+      const activeWeeks = {};
+      for (const mod of modules) {
+        const allWeeks = weeks[mod.id] || [];
+        activeWeeks[mod.id] = allWeeks.filter((w) => {
+          const qForMod = questions[mod.id] || {};
+          const qForWeek = qForMod[String(w.id)];
+          return Array.isArray(qForWeek) && qForWeek.length > 0;
+        });
+      }
+
+      // Determine which modules actually expose a roadmap (via central registry)
+      const availableRoadmaps = new Set();
+      if (typeof roadmaps.getRoadmap === "function") {
+        for (const mod of modules) {
+          try {
+            const r = roadmaps.getRoadmap(mod.id);
+            if (r) availableRoadmaps.add(mod.id);
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+
+      setSearchIndex(buildSearchIndex(modules, activeWeeks, availableRoadmaps));
+    }).catch(() => {
+      // fallback: try to build from modules only
+      import("../data/modules").then(({ modules }) => setSearchIndex(buildSearchIndex(modules, {})));
     });
   }, []);
 
@@ -114,7 +114,7 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, searchOpen]);
 
-  // Live search filtering
+  // Live search filtering using centralized search util
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -122,19 +122,8 @@ export default function Header() {
       return;
     }
 
-    const q = searchQuery.toLowerCase();
-    const matches = searchIndex.filter(
-      (item) =>
-        item.label.toLowerCase().includes(q) ||
-        item.sublabel.toLowerCase().includes(q)
-    );
-
-    // Roadmaps first, then modules, then weeks — cap total at 8
-    const roadmaps = matches.filter((i) => i.type === "roadmap").slice(0, 2);
-    const mods = matches.filter((i) => i.type === "module").slice(0, 2);
-    const weeks = matches.filter((i) => i.type === "week").slice(0, 4);
-
-    setSearchResults([...roadmaps, ...mods, ...weeks]);
+    const results = queryIndex(searchIndex, searchQuery, 8);
+    setSearchResults(results);
     setSelectedIndex(-1);
   }, [searchQuery, searchIndex]);
 
@@ -184,16 +173,40 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchOpen]);
 
-  // Click outside to close mobile dropdown
+  // Click outside to close mobile menu
   useEffect(() => {
-    const hideOnOutside = (e) => {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
-        setMobileMenuOpen(false);
+    const handleClickOutsideMenu = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        closeMenu();
       }
     };
-    if (mobileMenuOpen) document.addEventListener("mousedown", hideOnOutside);
-    return () => document.removeEventListener("mousedown", hideOnOutside);
-  }, [mobileMenuOpen]);
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutsideMenu);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutsideMenu);
+  }, [menuOpen]);
+
+  // Close search/menu on Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        if (searchOpen) closeSearch();
+        if (menuOpen) closeMenu();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchOpen, menuOpen]);
+
+  // Prevent body scrolling while mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+    return undefined;
+  }, [menuOpen]);
 
   const openSearch = () => {
     setSearchOpen(true);
@@ -207,9 +220,12 @@ export default function Header() {
     setSelectedIndex(-1);
   };
 
+  const openMenu = () => setMenuOpen(true);
+  const closeMenu = () => setMenuOpen(false);
+
   const navigateTo = (path) => {
     closeSearch();
-    setMobileMenuOpen(false);
+    closeMenu();
     navigate(path);
   };
 
@@ -317,12 +333,14 @@ export default function Header() {
 
           {/* Theme Toggle */}
           <ThemeToggle />
-          {/* Mobile menu (hamburger) — visible only on small screens */}
+
+          {/* Mobile hamburger (hidden on large screens) */}
           <button
-            className={`action-button mobile-menu-button ${mobileMenuOpen ? 'active' : ''}`}
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-expanded={mobileMenuOpen}
+            className={`action-button hamburger-button ${menuOpen ? "active" : ""}`}
+            onClick={() => setMenuOpen((s) => !s)}
+            aria-expanded={menuOpen}
             aria-label="Open menu"
+            title="Menu"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -404,15 +422,26 @@ export default function Header() {
           )}
         </div>
       )}
-      {/* Mobile menu panel */}
-      {mobileMenuOpen && (
-        <div className="mobile-menu-container" ref={mobileMenuRef}>
-          <div className="mobile-menu">
-            <button className={`nav-link`} onClick={() => navigateTo('/resources')}>Resources</button>
-            <button className={`nav-link`} onClick={() => navigateTo('/modules')}>Modules</button>
-            <button className={`nav-link`} onClick={() => navigateTo('/progress')}>My Progress</button>
+      {/* Mobile menu (drops down like search) */}
+      {/* mobile menu renders to document.body to avoid transform containment */}
+      {menuOpen && createPortal(
+        <div className="mobile-menu fullscreen" ref={menuRef} role="menu" aria-label="Mobile navigation">
+          <div className="mobile-menu-top">
+            <button className="action-button close-button" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
           </div>
-        </div>
+
+          <div className="mobile-menu-inner">
+            <button className={`mobile-nav-item ${isActive("/resources") ? "active" : ""}`} onClick={() => navigateTo("/resources")}>Resources</button>
+            <button className={`mobile-nav-item ${isActive("/modules") ? "active" : ""}`} onClick={() => navigateTo("/modules")}>Modules</button>
+            <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>
+          </div>
+        </div>,
+        document.body
       )}
     </header>
   );

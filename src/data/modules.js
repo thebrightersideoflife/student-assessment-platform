@@ -12,10 +12,16 @@ export const modules = [
     description: "Learn network protection, encryption, and cybersecurity principles."
   },
 
-    {
+  {
     id: "ITJVA",
     name: "Introduction to Java",
     description: "Master Java fundamentals, OOP, GUIs, databases, and testing."
-  }
+  },
+
+  {
+    id: "ITSEA",
+    name: "Software Engineering",
+    description: "Explore software processes, engineering principles, ethics, and system design."
+  },
 
 ];

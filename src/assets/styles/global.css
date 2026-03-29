@@ -102,11 +102,27 @@ body {
 .button.solid {
   color: white;
   border-color: transparent;
+  background: var(--accent-primary);
+  box-shadow: 0 8px 28px rgba(var(--accent-primary-rgb, 42,92,167), 0.08);
+  transition: transform 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
 }
 
 .button.solid:hover:not(:disabled) {
-  opacity: 0.88;
   transform: translateY(-1px);
+  /* keep the accent background during hover and slightly darken it */
+  background: var(--accent-primary);
+  filter: brightness(0.92) saturate(1.02);
+  color: white;
+}
+
+/* Disabled / muted primary button (used when conditions not met) */
+.button.solid:disabled,
+.button.solid[disabled] {
+  opacity: 0.65;
+  filter: saturate(0.6) brightness(0.95);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ── Roadmap tag ──────────────────────────────────────────── */

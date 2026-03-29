@@ -398,46 +398,88 @@
   letter-spacing: 0.01em;
 }
 
-/* Mobile menu styles */
-.mobile-menu-button {
+/* ── Mobile hamburger & menu ───────────────────────────────── */
+.hamburger-button {
   display: none;
 }
 
-.mobile-menu-container {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: rgba(var(--bg-primary-rgb), 0.96);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border-bottom: 1px solid rgba(var(--border-color-rgb), 0.4);
-  padding: 10px 20px;
-  animation: slideDown 0.18s cubic-bezier(0.4,0,0.2,1);
+.mobile-menu {
+  position: fixed;
+  inset: 0;
+  /* darker overlay so page content is obscured */
+  background: rgba(0, 0, 0, 0.52);
+  /* strong blur of the backdrop to de-emphasize content */
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  padding: 18px 20px;
+  animation: fadeIn 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
 }
 
-.mobile-menu {
+.mobile-menu-top {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-menu-inner {
   max-width: 720px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
 }
 
-.mobile-menu .nav-link {
-  display: block;
+.mobile-nav-item {
   width: 100%;
-  text-align: left;
-  padding: 12px 14px;
+  max-width: 420px;
+  padding: 16px 20px;
+  font-size: 18px;
+  border-radius: 12px;
+  background: rgba(var(--bg-secondary-rgb), 0.6);
+  color: var(--text-primary);
+  border: 1px solid rgba(var(--border-color-rgb), 0.5);
+  text-align: center;
+}
+
+.mobile-nav-item.active {
+  background: rgba(var(--bg-secondary-rgb), 0.9);
+  color: var(--accent-primary);
+}
+
+.close-button {
+  width: 42px;
+  height: 42px;
   border-radius: 10px;
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make the close icon adapt to theme colors */
+.close-button {
+  color: var(--text-primary);
+  background: rgba(var(--bg-secondary-rgb), 0.6);
+}
+.close-button:hover {
+  background: rgba(var(--bg-secondary-rgb), 0.9);
+  color: var(--accent-primary);
 }
 
 @media (max-width: 768px) {
   .header-nav {
     display: none;
   }
-  .mobile-menu-button {
+  .hamburger-button {
     display: flex;
   }
 }

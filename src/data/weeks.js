@@ -10,8 +10,8 @@
 //   kind        string?  — undefined = normal | "quiz" = formal online quiz | "exam" = official exam
 //   moduleAudio object?  — { audioUrl, audioDescription } if this week has an intro audio
 //
-// Block label ("Block 1, Week 4") is derived at render time via getWeekLabel() in
-// src/utils/questionHelpers.js — never stored as a string here.
+// Block label ("Block 1, Week 4") is derived at render time via getWeekLabel()
+// in src/utils/questionHelpers.js — never stored as a string here.
 
 export const weeks = {
 
@@ -24,7 +24,6 @@ export const weeks = {
     { id: "6", name: "Week 6", block: 1 },
     { id: "7", name: "Week 7", block: 1 },
     { id: "8", name: "Week 8", block: 1, kind: "exam" },
-    // Add more weeks as you build them
   ],
 
   ITDSA: [
@@ -40,21 +39,34 @@ export const weeks = {
     { id: "2", name: "Week 2", block: 1 },
     { id: "3", name: "Week 3", block: 1 },
     { id: "4", name: "Week 4", block: 1, kind: "quiz" },
-    { id: "5", name: "Week 5", block: 2 },
-    { id: "6", name: "Week 6", block: 2 },
-    { id: "7", name: "Week 7", block: 2 },
-    { id: "8", name: "Week 8", block: 2, kind: "exam" },
+    { id: "5", name: "Week 5", block: 1 },
+    { id: "6", name: "Week 6", block: 1 },
+    { id: "7", name: "Week 7", block: 1 },
+    { id: "8", name: "Week 8", block: 1, kind: "exam" },
   ],
 
-  // Template for new modules — copy and adjust:
-  // NEWMOD: [
-  //   { id: "1", name: "Week 1", block: 1 },
-  //   { id: "2", name: "Week 2", block: 1 },
-  //   { id: "3", name: "Week 3", block: 1 },
-  //   { id: "4", name: "Week 4", block: 1, kind: "quiz" },
-  //   { id: "5", name: "Week 5", block: 2 },
-  //   ...
-  //   { id: "8", name: "Week 8", block: 2, kind: "exam" },
-  // ],
+  ITJVA: [
+    { id: "1", name: "Week 1", block: 1 },
+    // add weeks as you build them
+  ],
+
+  ITSEA: [
+    { id: "1", 
+      name: "Week 1", 
+      block: 1, 
+      moduleAudio: {
+      audioUrl: "/audio/itsea-week1-intro.m4a",
+      audioDescription: "An introduction to the Software Engineering module, covering key concepts and expectations for Week 1."
+      } 
+    },
+    { id: "2", name: "Week 2", block: 1 },
+    { id: "3", name: "Week 3", block: 1 },
+    { id: "4", name: "Week 4", block: 1, kind: "quiz" },
+    { id: "5", name: "Week 5", block: 1 },
+    { id: "6", name: "Week 6", block: 1 },
+    { id: "7", name: "Week 7", block: 1 },
+    { id: "8", name: "Week 8", block: 1, kind: "exam" },
+    // add more weeks as you build them
+  ],
 
 };

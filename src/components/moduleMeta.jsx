@@ -52,6 +52,7 @@ export const MODULE_META = {
   ITNSA: { icon: <ShieldIcon />,   accent: "var(--vibrant-cyan)",  accentRgb: "0,191,255",  label: "Network Security" },
   ITDSA: { icon: <DatabaseIcon />, accent: "var(--golden-amber)",  accentRgb: "244,169,0",  label: "Database Systems" },
   ITJVA: { icon: <CodeIcon />,     accent: "var(--lush-lime)",     accentRgb: "118,209,61", label: "Java Programming" },
+  ITSEA: { icon: <CheckCircleIcon />, accent: "var(--poppy-red)", accentRgb: "255,64,64", label: "Software Process, Architecture & QA" },
 };
 
 export const DEFAULT_META = { icon: <CodeIcon />, accent: "var(--accent-primary)", accentRgb: "42,92,167", label: "" };
