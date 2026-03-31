@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ScenarioModal from "./ScenarioModal";
 
 /*
   Fill-in-the-blank question.
@@ -35,7 +36,9 @@ export default function FillInTheBlankQuestion({
   savedAnswer = null,
   locked = false,
   submitted = false,
+  scenario = null,
 }) {
+  const [showScenario, setShowScenario] = useState(false);
   const blanks = question.blanks || [];
 
   // selections: { [blankId]: selectedOption | null }
@@ -107,17 +110,22 @@ export default function FillInTheBlankQuestion({
       {/* Header row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
         <h3 style={{ margin: 0 }}>Question {index + 1}</h3>
-        {question.points && (
-          <span style={{
-            fontSize: "12px", fontWeight: 600,
-            color: "var(--text-secondary)",
-            background: "rgba(var(--bg-secondary-rgb), 0.7)",
-            border: "1px solid rgba(var(--border-color-rgb), 0.4)",
-            borderRadius: "999px", padding: "2px 10px",
-          }}>
-            {question.points} {question.points === 1 ? "mark" : "marks"}
-          </span>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {scenario && scenario.context && (
+            <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario</button>
+          )}
+          {question.points && (
+            <span style={{
+              fontSize: "12px", fontWeight: 600,
+              color: "var(--text-secondary)",
+              background: "rgba(var(--bg-secondary-rgb), 0.7)",
+              border: "1px solid rgba(var(--border-color-rgb), 0.4)",
+              borderRadius: "999px", padding: "2px 10px",
+            }}>
+              {question.points} {question.points === 1 ? "mark" : "marks"}
+            </span>
+          )}
+        </div>
       </div>
 
       <p style={{ fontSize: "14px", color: "var(--text-secondary)", marginBottom: "16px", fontStyle: "italic" }}>
@@ -249,6 +257,9 @@ export default function FillInTheBlankQuestion({
           </button>
         </div>
       )}
+        {scenario && (
+          <ScenarioModal visible={showScenario} onClose={() => setShowScenario(false)} title={scenario.title || "Scenario Context"} context={scenario.context} />
+        )}
     </div>
   );
 }

@@ -55,12 +55,26 @@ export const weeks = {
       name: "Week 1", 
       block: 1, 
       moduleAudio: {
-      audioUrl: "/audio/itsea-week1-intro.m4a",
+      audioUrl: "/audio/itsea-week1-intro.mp3",
       audioDescription: "An introduction to the Software Engineering module, covering key concepts and expectations for Week 1."
       } 
     },
-    { id: "2", name: "Week 2", block: 1 },
-    { id: "3", name: "Week 3", block: 1 },
+    { id: "2", 
+      name: "Week 2", 
+      block: 1,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week2-intro.mp3",
+        audioDescription: "An introduction to Week 2 of the Software Engineering module, outlining the main topics and learning objectives."
+      }
+    },
+    { id: "3", 
+      name: "Week 3", 
+      block: 1,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week3-intro.mp3",
+        audioDescription: "An introduction to Week 3 of the Software Engineering module, outlining the main topics and learning objectives."
+      }
+    },
     { id: "4", name: "Week 4", block: 1, kind: "quiz" },
     { id: "5", name: "Week 5", block: 1 },
     { id: "6", name: "Week 6", block: 1 },

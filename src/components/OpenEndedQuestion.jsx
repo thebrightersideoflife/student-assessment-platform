@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ScenarioModal from "./ScenarioModal";
 import AnswerValidator from "../utils/answerValidator";
 
 export default function OpenEndedQuestion({
@@ -8,7 +9,9 @@ export default function OpenEndedQuestion({
   savedAnswer = null,
   locked = false,
   submitted = false,
+  scenario = null,
 }) {
+  const [showScenario, setShowScenario] = useState(false);
   const [answer, setAnswer] = useState(savedAnswer?.answer || "");
   const [checked, setChecked] = useState(savedAnswer?.checked || false);
   const [validationResult, setValidationResult] = useState(null);
@@ -100,18 +103,24 @@ export default function OpenEndedQuestion({
             </span>
           )}
         </div>
-        {question.points && (
-          <span style={{
-            fontSize: "12px", fontWeight: 600,
-            color: "var(--text-secondary)",
-            background: "rgba(var(--bg-secondary-rgb), 0.7)",
-            border: "1px solid rgba(var(--border-color-rgb), 0.4)",
-            borderRadius: "999px", padding: "2px 10px",
-            flexShrink: 0,
-          }}>
-            {question.points} {question.points === 1 ? "mark" : "marks"}
-          </span>
-        )}
+
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {scenario && scenario.context && (
+            <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario</button>
+          )}
+          {question.points && (
+            <span style={{
+              fontSize: "12px", fontWeight: 600,
+              color: "var(--text-secondary)",
+              background: "rgba(var(--bg-secondary-rgb), 0.7)",
+              border: "1px solid rgba(var(--border-color-rgb), 0.4)",
+              borderRadius: "999px", padding: "2px 10px",
+              flexShrink: 0,
+            }}>
+              {question.points} {question.points === 1 ? "mark" : "marks"}
+            </span>
+          )}
+        </div>
       </div>
 
       <p style={{ marginBottom: "14px", lineHeight: "1.65", fontSize: "16px" }}>
@@ -133,6 +142,9 @@ export default function OpenEndedQuestion({
             </p>
           )}
         </div>
+      )}
+      {scenario && (
+        <ScenarioModal visible={showScenario} onClose={() => setShowScenario(false)} title={scenario.title || "Scenario Context"} context={scenario.context} />
       )}
 
       <input

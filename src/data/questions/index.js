@@ -33,7 +33,7 @@ import ITDSA_W3 from "./ITDSA/week3.js";
 
 // ── ITSEA ──────────────────────────────────────────────────────────────────
 import ITSEA_W1 from "./ITSEA/week1.js";
-// import ITSEA_W2 from "./ITSEA/week2.js";
+import ITSEA_W2 from "./ITSEA/week2.js";
 
 // ── ITJVA ──────────────────────────────────────────────────────────────────
 // import ITJVA_W1 from "./ITJVA/week1.js";
@@ -55,7 +55,7 @@ const rawQuestions = {
   },
   ITSEA: {
     "1": ITSEA_W1,
-    // "2": ITSEA_W2,
+    "2": ITSEA_W2,
   },
   ITJVA: {
     // "1": ITJVA_W1,

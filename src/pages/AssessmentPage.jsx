@@ -5,6 +5,7 @@ import QuestionRenderer from "../components/QuestionRenderer";
 import Breadcrumb from "../components/Breadcrumb";
 import CompletionBadge from "../components/CompletionBadge";
 import PrintableQuestions from "../components/PrintableQuestions";
+import AssessmentGuidance from "../components/AssessmentGuidance";
 import AssessmentStorage from "../utils/assessmentStorage";
 import { getWeekLabel, getWeekKindConfig, getRequiredQuestions } from "../utils/questionHelpers";
 import { questions } from "../data/questions/index.js";
@@ -308,6 +309,7 @@ export default function AssessmentPage() {
   const [submitted,       setSubmitted]       = useState(false);
   const [showPrintView,   setShowPrintView]   = useState(false);
   const [showCertificate, setShowCertificate] = useState(wasCompleted);
+  const [showGuidance,    setShowGuidance]    = useState(true);
 
   useEffect(() => {
     if (showPrintView) {
@@ -460,6 +462,8 @@ export default function AssessmentPage() {
   return (
     <div className="container">
 
+      <AssessmentGuidance visible={showGuidance} onClose={() => setShowGuidance(false)} />
+
       <Breadcrumb items={[
         { label: "Modules", path: "/modules" },
         { label: moduleInfo?.name || moduleId, path: `/module/${moduleId}` },
@@ -560,23 +564,43 @@ export default function AssessmentPage() {
       </div>
 
       {/* Questions */}
-      {moduleQuestions.map((question) => {
-        const isScenario  = question.type === "scenario";
-        const currentIndex = isScenario ? null : questionIndex;
-        if (!isScenario) questionIndex++;
-
-        return (
-          <QuestionRenderer
-            key={question.id}
-            question={question}
-            index={currentIndex}
-            onAnswerChange={handleAnswerChange}
-            savedAnswer={answers[question.id]}
-            locked={false}
-            submitted={submitted}
-          />
-        );
-      })}
+      {(() => {
+        let lastScenario = null;
+        return moduleQuestions.map((question) => {
+          const isScenario = question.type === "scenario";
+          const currentIndex = isScenario ? null : questionIndex;
+          if (isScenario) {
+            lastScenario = question;
+            // scenario blocks are rendered as-is by QuestionRenderer
+            return (
+              <QuestionRenderer
+                key={question.id}
+                question={question}
+                index={null}
+                onAnswerChange={handleAnswerChange}
+                savedAnswer={answers[question.id]}
+                locked={false}
+                submitted={submitted}
+                scenario={null}
+              />
+            );
+          }
+          // non-scenario question — pass nearest scenario context
+          questionIndex++;
+          return (
+            <QuestionRenderer
+              key={question.id}
+              question={question}
+              index={currentIndex}
+              onAnswerChange={handleAnswerChange}
+              savedAnswer={answers[question.id]}
+              locked={false}
+              submitted={submitted}
+              scenario={lastScenario}
+            />
+          );
+        });
+      })()}
 
       {/* ── Submit & Finish area ────────────────────────────── */}
       <div style={{

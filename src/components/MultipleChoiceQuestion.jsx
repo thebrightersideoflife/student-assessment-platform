@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ScenarioModal from "./ScenarioModal";
 
 export default function MultipleChoiceQuestion({
   question,
@@ -7,7 +8,9 @@ export default function MultipleChoiceQuestion({
   savedAnswer = null,
   locked = false,
   submitted = false,
+  scenario = null,
 }) {
+  const [showScenario, setShowScenario] = useState(false);
   const [selected, setSelected] = useState(savedAnswer?.answer || null);
 
   const correctAnswer = Array.isArray(question.correctAnswers)
@@ -56,6 +59,11 @@ export default function MultipleChoiceQuestion({
             </span>
           )}
         </div>
+        {scenario && scenario.context && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+            <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario</button>
+          </div>
+        )}
         {question.points && (
           <span style={{
             fontSize: "12px", fontWeight: 600,
@@ -69,6 +77,10 @@ export default function MultipleChoiceQuestion({
           </span>
         )}
       </div>
+
+      {scenario && (
+        <ScenarioModal visible={showScenario} onClose={() => setShowScenario(false)} title={scenario.title || "Scenario Context"} context={scenario.context} />
+      )}
 
       <p style={{ marginBottom: "16px", lineHeight: "1.65", fontSize: "16px" }}>
         {question.text || question.question}

@@ -11,6 +11,7 @@ export default function QuestionRenderer({
   savedAnswer = null,
   locked = false,
   submitted = false,
+  scenario = null,
 }) {
   switch (question.type) {
 
@@ -27,6 +28,7 @@ export default function QuestionRenderer({
           savedAnswer={savedAnswer}
           locked={locked}
           submitted={submitted}
+          scenario={scenario}
         />
       );
 
@@ -39,6 +41,7 @@ export default function QuestionRenderer({
           savedAnswer={savedAnswer}
           locked={locked}
           submitted={submitted}
+          scenario={scenario}
         />
       );
 
@@ -51,6 +54,7 @@ export default function QuestionRenderer({
           savedAnswer={savedAnswer}
           locked={locked}
           submitted={submitted}
+          scenario={scenario}
         />
       );
 
@@ -60,6 +64,7 @@ export default function QuestionRenderer({
           question={question}
           index={index}
           submitted={submitted}
+          scenario={scenario}
         />
       );
 
