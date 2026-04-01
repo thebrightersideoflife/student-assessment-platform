@@ -1,3 +1,5 @@
+import formatTextToNodes from "../utils/formatText.jsx";
+
 export default function AnswerReveal({ answer }) {
 
   return (
@@ -14,7 +16,9 @@ export default function AnswerReveal({ answer }) {
 
       <strong>Answer:</strong>
 
-      <p>{answer}</p>
+      <div style={{ marginTop: 8 }}>
+        {formatTextToNodes(answer)}
+      </div>
 
     </div>
 

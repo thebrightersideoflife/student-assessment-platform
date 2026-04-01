@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
 import AnswerReveal from "./AnswerReveal";
+import MermaidDiagram from "./MermaidDiagram";
+import formatTextToNodes from "../utils/formatText.jsx";
 
 export default function ShowAnswerQuestion({ question, index, submitted = false, scenario = null }) {
   const [showAnswer, setShowAnswer] = useState(false);
@@ -93,6 +95,16 @@ export default function ShowAnswerQuestion({ question, index, submitted = false,
       ) : (
         <>
           <AnswerReveal answer={question.correctAnswers[0]} />
+
+          {/* Diagram — prefer diagram attached to the model answer, fall back to question-level diagram */}
+          {(() => {
+            const diagram = question.correctAnswers?.[0]?.diagram ?? question.diagram;
+            if (diagram?.type === "mermaid") {
+              return <MermaidDiagram code={diagram.code} />;
+            }
+            return null;
+          })()}
+
           {/* Marking guide — optional extra field */}
           {question.markingGuide && (
             <div style={{
@@ -109,9 +121,9 @@ export default function ShowAnswerQuestion({ question, index, submitted = false,
               }}>
                 Marking Guide
               </p>
-              <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: "1.65", margin: 0 }}>
-                {question.markingGuide}
-              </p>
+              <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: "1.65", margin: 0 }}>
+                {formatTextToNodes(question.markingGuide)}
+              </div>
             </div>
           )}
         </>

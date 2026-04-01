@@ -75,7 +75,18 @@ export default function PrintLayout({
               <BackArrowIcon /> Back
             </button>
           )}
-          <button className="print-bar-btn" onClick={() => window.print()}>
+          <button className="print-bar-btn" onClick={async () => {
+            try {
+              if (window.__MERMAID_PRINT_REGISTRY && typeof window.__MERMAID_PRINT_REGISTRY.prepareAll === 'function') {
+                // wait briefly for diagrams to render (with timeout inside prepareAll)
+                await window.__MERMAID_PRINT_REGISTRY.prepareAll(1500);
+              }
+            } catch (e) {
+              // ignore and proceed to print
+              console.warn('Error while preparing diagrams for print:', e);
+            }
+            window.print();
+          }}>
             <PrintIcon /> Print / Save as PDF
           </button>
         </div>

@@ -10,7 +10,10 @@
     show-answer       → teal reference box + optional marking guide
 */
 
+import { useEffect } from "react";
 import PrintLayout from "./PrintLayout";
+import MermaidDiagram from "./MermaidDiagram";
+import formatTextToNodes from "../utils/formatText.jsx";
 
 /* ── Helpers ──────────────────────────────────────────────── */
 function qLabel(q, displayIndex) {
@@ -221,17 +224,27 @@ function ShowAnswerPrintBlock({ question, displayIndex }) {
       <div className="answer-area">
         <div className="answer-label memo-label">Model Answer / Memo</div>
         <div className="answer-content">
-          <p>{modelAnswer}</p>
+          {formatTextToNodes(typeof modelAnswer === 'string' ? modelAnswer : (modelAnswer?.text || String(modelAnswer)))}
         </div>
       </div>
+
+      {/* Diagram (from model answer or question-level) */}
+      {(() => {
+        const ma = modelAnswer || {};
+        const diagram = (ma && ma.diagram) ? ma.diagram : question.diagram;
+        if (diagram?.type === 'mermaid') {
+          return <MermaidDiagram code={diagram.code} />;
+        }
+        return null;
+      })()}
 
       {/* Marking guide — optional */}
       {question.markingGuide && (
         <div className="answer-area" style={{ marginTop: "6px" }}>
           <div className="answer-label marking-label">Marking Guide</div>
           <div className="answer-content">
-            <p>{question.markingGuide}</p>
-          </div>
+              {formatTextToNodes(question.markingGuide)}
+            </div>
         </div>
       )}
     </div>
@@ -262,6 +275,15 @@ export default function PrintableQuestions({
   examData = null,
   onBack,
 }) {
+  // Force light theme while printing/exporting — restore on unmount
+  useEffect(() => {
+    const prev = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light");
+    return () => {
+      if (prev) document.documentElement.setAttribute("data-theme", prev);
+      else document.documentElement.removeAttribute("data-theme");
+    };
+  }, []);
   /* 
     Determine which question types count for scoring and marks tally.
     scenario and show-answer are display-only.

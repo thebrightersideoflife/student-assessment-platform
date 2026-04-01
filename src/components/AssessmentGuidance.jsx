@@ -37,17 +37,7 @@ export default function AssessmentGuidance({ visible = true, onClose = () => {} 
           </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginTop: "16px" }}>
-
-          <section style={{ padding: "14px", borderRadius: "10px", background: "rgba(var(--accent-primary-rgb, 42,92,167), 0.08)", border: "1px solid rgba(var(--accent-primary-rgb, 42,92,167), 0.12)" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--accent-primary)" }}>What distinguishes an A+ script:</h4>
-            <ul style={{ margin: 0, paddingLeft: "18px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-              <li>Clear application to the scenario (not generic theory) - if provided</li>
-              <li>Balanced explanation + evaluation</li>
-              <li>Use of correct terminology (e.g., incremental delivery, validation, prototyping)</li>
-              <li>Logical structure and concise arguments</li>
-            </ul>
-          </section>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginTop: "16px" }}>          
 
           <section style={{ padding: "14px", borderRadius: "10px", background: "rgba(255,64,64,0.06)", border: "1px solid rgba(255,64,64,0.08)" }}>
             <h4 style={{ margin: "0 0 8px 0", color: "var(--poppy-red)" }}>Common Reasons Students Lose Marks:</h4>
@@ -56,6 +46,16 @@ export default function AssessmentGuidance({ visible = true, onClose = () => {} 
               <li>Not linking answers to the given scenario - if provided</li>
               <li>Missing evaluation/justification parts</li>
               <li>Confusing key concepts (e.g., anticipation vs tolerance)</li>
+            </ul>
+          </section>
+
+          <section style={{ padding: "14px", borderRadius: "10px", background: "rgba(var(--accent-primary-rgb, 42,92,167), 0.08)", border: "1px solid rgba(var(--accent-primary-rgb, 42,92,167), 0.12)" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--accent-primary)" }}>What distinguishes an A+ script:</h4>
+            <ul style={{ margin: 0, paddingLeft: "18px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+              <li>Clear application to the scenario (not generic theory) - if provided</li>
+              <li>Balanced explanation + evaluation</li>
+              <li>Use of correct terminology (e.g., incremental delivery, validation, prototyping)</li>
+              <li>Logical structure and concise arguments</li>
             </ul>
           </section>
 

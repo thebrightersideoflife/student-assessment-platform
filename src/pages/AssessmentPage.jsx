@@ -512,7 +512,7 @@ export default function AssessmentPage() {
           )}
         </div>
 
-        <button className="button" onClick={() => setShowPrintView(true)}
+        <button className="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'auto' }); setShowPrintView(true); }}
           style={{ padding: "11px 20px", fontSize: "14px", whiteSpace: "nowrap" }}>
           <PrintIcon /> Print Questions
         </button>
@@ -627,6 +627,13 @@ export default function AssessmentPage() {
             </span>
           </div>
         )}
+
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+          <button className="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'auto' }); setShowPrintView(true); }}
+            style={{ padding: "11px 20px", fontSize: "14px", whiteSpace: "nowrap" }}>
+            <PrintIcon /> Print Questions
+          </button>
+        </div>
 
         <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
           <button
