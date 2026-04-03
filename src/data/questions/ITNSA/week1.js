@@ -129,10 +129,10 @@ export default [
     options: [
       "DNS",
       "DHCP",
-      "VPN (Virtual Private Network)",
+      "VPN",
       "FTP"
     ],
-    correctAnswers: ["VPN (Virtual Private Network)"],
+    correctAnswers: ["VPN"],
     points: 4
   },
 
@@ -184,11 +184,11 @@ export default [
     text: "How does \"Social Engineering\" differ from a technical exploit?",
     options: [
       "It targets the firewall",
-      "It targets the human user (tricks the victim)",
+      "It targets the human user",
       "It requires expensive software",
       "It only works offline"
     ],
-    correctAnswers: ["It targets the human user (tricks the victim)"],
+    correctAnswers: ["It targets the human user"],
     points: 4
   },
   {

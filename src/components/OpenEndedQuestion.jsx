@@ -75,7 +75,7 @@ export default function OpenEndedQuestion({
   }
 
   const isCorrect = validationResult?.equivalent;
-  const displayAnswer = Array.isArray(correctAnswer) ? correctAnswer[0] : correctAnswer;
+  const displayAnswer = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer];
 
   return (
     <div className="card" style={{ marginBottom: "16px" }}>
@@ -194,8 +194,16 @@ export default function OpenEndedQuestion({
             padding: "12px", borderRadius: "8px", marginTop: "8px",
             border: "1px solid rgba(var(--border-color-rgb), 0.35)",
           }}>
-            <strong style={{ color: "var(--lush-lime)" }}>Correct Answer:</strong>
-            <p style={{ marginTop: "4px", color: "var(--text-primary)" }}>{displayAnswer}</p>
+            <strong style={{ color: "var(--lush-lime)" }}>
+              {displayAnswer.length > 1 ? "Accepted Answers:" : "Correct Answer:"}
+            </strong>
+            {displayAnswer.length > 1 ? (
+              <ul style={{ margin: "4px 0 0", paddingLeft: "20px", color: "var(--text-primary)" }}>
+                {displayAnswer.map((a, i) => <li key={i}>{a}</li>)}
+              </ul>
+            ) : (
+              <p style={{ marginTop: "4px", color: "var(--text-primary)" }}>{displayAnswer[0]}</p>
+            )}
           </div>
 
           {validationResult.hints && validationResult.hints.length > 0 && (

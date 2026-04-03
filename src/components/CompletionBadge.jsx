@@ -10,7 +10,14 @@ export default function CompletionBadge({
   const passed = percentage >= 70;
 
   function handlePrint() {
+    const date = completionDate
+      ? completionDate.replace(/\//g, "-").replace(/,\s*/g, "_")
+      : new Date().toISOString().slice(0, 10);
+    const filename = `${moduleId}_Week${weekId}_Student_Assessment_Platform_${date}`;
+    const prevTitle = document.title;
+    document.title = filename;
     window.print();
+    document.title = prevTitle;
   }
 
   return (

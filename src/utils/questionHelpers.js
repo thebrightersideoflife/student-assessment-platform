@@ -50,7 +50,7 @@ export function getWeekKindConfig(kind) {
         color:       "var(--golden-amber)",
         bgColor:     "rgba(244,169,0,0.10)",
         borderColor: "rgba(244,169,0,0.40)",
-        description: "This week's assessment mirrors the institution's formal online quiz.",
+        description: "This week is when you take the institution's formal online quiz.",
       };
 
     case "exam":
