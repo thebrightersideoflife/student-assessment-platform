@@ -1,4 +1,4 @@
-import formatTextToNodes from "../utils/formatText.jsx";
+import renderWithKatex from "../utils/renderWithKatex.jsx";
 
 export default function AnswerReveal({ answer }) {
   const answers = Array.isArray(answer) ? answer : [answer];
@@ -21,12 +21,12 @@ export default function AnswerReveal({ answer }) {
           <ul style={{ margin: 0, paddingLeft: "20px" }}>
             {answers.map((a, i) => (
               <li key={i} style={{ marginBottom: i < answers.length - 1 ? "4px" : 0 }}>
-                {formatTextToNodes(typeof a === "string" ? a : a?.text ?? "")}
+                {renderWithKatex(a)}
               </li>
             ))}
           </ul>
         ) : (
-          formatTextToNodes(typeof answers[0] === "string" ? answers[0] : answers[0]?.text ?? "")
+          renderWithKatex(answers[0])
         )}
       </div>
     </div>
