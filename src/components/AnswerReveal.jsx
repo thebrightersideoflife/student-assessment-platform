@@ -1,4 +1,12 @@
 import renderWithKatex from "../utils/renderWithKatex.jsx";
+import MermaidDiagram from "./MermaidDiagram";
+
+function renderAnswer(a) {
+  if (a?.diagram?.type === "mermaid") {
+    return <MermaidDiagram code={a.diagram.code} />;
+  }
+  return renderWithKatex(a);
+}
 
 export default function AnswerReveal({ answer }) {
   const answers = Array.isArray(answer) ? answer : [answer];
@@ -21,12 +29,12 @@ export default function AnswerReveal({ answer }) {
           <ul style={{ margin: 0, paddingLeft: "20px" }}>
             {answers.map((a, i) => (
               <li key={i} style={{ marginBottom: i < answers.length - 1 ? "4px" : 0 }}>
-                {renderWithKatex(a)}
+                {renderAnswer(a)}
               </li>
             ))}
           </ul>
         ) : (
-          renderWithKatex(answers[0])
+          renderAnswer(answers[0])
         )}
       </div>
     </div>

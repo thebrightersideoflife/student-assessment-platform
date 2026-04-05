@@ -40,6 +40,7 @@ export default function FillInTheBlankQuestion({
 }) {
   const [showScenario, setShowScenario] = useState(false);
   const blanks = question.blanks || [];
+  const points = blanks.length;
 
   // selections: { [blankId]: selectedOption | null }
   const [selections, setSelections] = useState(() => {
@@ -114,7 +115,7 @@ export default function FillInTheBlankQuestion({
           {scenario && scenario.context && (
             <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario</button>
           )}
-          {question.points && (
+          {points > 0 && (
             <span style={{
               fontSize: "12px", fontWeight: 600,
               color: "var(--text-secondary)",
@@ -122,7 +123,7 @@ export default function FillInTheBlankQuestion({
               border: "1px solid rgba(var(--border-color-rgb), 0.4)",
               borderRadius: "999px", padding: "2px 10px",
             }}>
-              {question.points} {question.points === 1 ? "mark" : "marks"}
+              {points} {points === 1 ? "mark" : "marks"}
             </span>
           )}
         </div>

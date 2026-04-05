@@ -304,20 +304,7 @@ The regional managers have initially proposed running their historical forecasti
     type: "show-answer",
     sectionLabel: "2.2 Part C",
     text: "Design a Star Schema for OmniStream's viewership analysis. Include one central Fact table (FACT_VIEWERSHIP) and at least three distinct Dimension tables. Clearly indicate all Primary Keys (PK) and Foreign Keys (FK). Present your answer as a structural diagram using Mermaid ERD syntax.",
-    correctAnswers: [
-      `FACT_VIEWERSHIP(ViewershipID PK, UserID FK, ContentID FK, DateID FK, DeviceID FK, MinutesWatched, CompletionPercentage, StreamQuality)
-
-DIM_USER(UserID PK, SubscriptionType, JoinDate, Region, AgeGroup)
-DIM_CONTENT(ContentID PK, Title, Genre, ReleaseYear, Rating, Language)
-DIM_DATE(DateID PK, CalendarDate, Month, Quarter, Year, DayOfWeek)
-DIM_DEVICE(DeviceID PK, DeviceType, OperatingSystem, AppVersion)
-
-Relationships — all Dimension PKs appear as FKs in FACT_VIEWERSHIP:
-DIM_USER ||--o{ FACT_VIEWERSHIP : "generates"
-DIM_CONTENT ||--o{ FACT_VIEWERSHIP : "is viewed in"
-DIM_DATE ||--o{ FACT_VIEWERSHIP : "records"
-DIM_DEVICE ||--o{ FACT_VIEWERSHIP : "streamed via"`,
-    ],
+    correctAnswers: ["Schema provided in the diagram field below"],
     markingGuide:
       "Award 3 marks for the central Fact table: must be named FACT_VIEWERSHIP (or equivalent), must contain at least two measurable additive metrics (e.g., MinutesWatched, CompletionPercentage), and must have a composite PK or surrogate PK with FK references to all dimensions. Award 3 marks for at least three valid Dimension tables: each must contain descriptive (non-metric) attributes and a clear PK. Acceptable dimensions include User, Content, Date, Device, Geography, Subscription. Award 3 marks for correct PK/FK relationships: every Dimension PK must appear as an FK in the Fact table, and relationships must be shown as one-to-many (Dimension → Fact). Missing metrics in the Fact table: deduct 1 mark. Fact table with no FK references: deduct all relationship marks.",
     diagram: {

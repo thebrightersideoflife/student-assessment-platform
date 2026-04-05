@@ -283,38 +283,7 @@ CATEGORY(CategoryID, CategoryName)`,
     type: "show-answer",
     sectionLabel: "2.1 Part D",
     text: "Design a complete Entity-Relationship Diagram (ERD) for the online retail platform using Crow's Foot notation. Your design must include all entities, attributes, primary keys, foreign keys, resolved many-to-many relationships, and correct cardinalities. Present your answer using Mermaid.js ERD syntax.",
-    correctAnswers: [
-      `erDiagram
-  CUSTOMER {
-    int CustomerID PK
-    string Name
-    string City
-  }
-  ORDER {
-    int OrderID PK
-    date OrderDate
-    int CustomerID FK
-  }
-  PRODUCT {
-    int ProductID PK
-    string ProductName
-    float Price
-    int CategoryID FK
-  }
-  CATEGORY {
-    int CategoryID PK
-    string CategoryName
-  }
-  ORDER_ITEM {
-    int OrderID FK
-    int ProductID FK
-    int Quantity
-  }
-  CUSTOMER ||--o{ ORDER : "places"
-  ORDER ||--o{ ORDER_ITEM : "contains"
-  PRODUCT ||--o{ ORDER_ITEM : "included_in"
-  CATEGORY ||--o{ PRODUCT : "categorises"`,
-    ],
+    correctAnswers: ["ERD diagram provided in the diagram field below."],
     markingGuide:
       "Award 4 marks for all entities with correct attributes (CUSTOMER, ORDER, PRODUCT, CATEGORY, ORDER_ITEM — 1 mark for each entity with at least its PK and key attributes). Award 3 marks for correct PK/FK notation (PKs on all entities, FKs on ORDER, PRODUCT, ORDER_ITEM). Award 3 marks for correct relationships and cardinalities using Crow's Foot notation (1 mark per correct relationship). Award 2 marks for correctly resolving the M:N between ORDER and PRODUCT using ORDER_ITEM with Quantity placed on the junction table. Missing cardinalities: major mark loss. Quantity on PRODUCT or ORDER instead of ORDER_ITEM: lose resolution marks.",
     diagram: {
