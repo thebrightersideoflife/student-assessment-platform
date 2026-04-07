@@ -67,12 +67,12 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["release", "validation", "architectural", "requirements"],
+        options: ["evolution", "resource", "release", "strategic"],
         correctAnswer: "release",
       },
       {
         id: "b2",
-        options: ["deployment", "re-engineering", "integration", "servicing"],
+        options: ["validation", "deployment", "integration", "maintenance"],
         correctAnswer: "deployment",
       },
     ],
@@ -305,12 +305,12 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["complexity", "availability", "scalability", "interoperability"],
+        options: ["availability", "scalability", "complexity", "interoperability"],
         correctAnswer: "complexity",
       },
       {
         id: "b2",
-        options: ["maintainability", "reliability", "instability", "usability"],
+        options: ["reliability", "instability", "maintainability", "usability"],
         correctAnswer: "maintainability",
       },
     ],

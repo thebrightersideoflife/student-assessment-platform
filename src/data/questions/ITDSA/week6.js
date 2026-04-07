@@ -384,27 +384,27 @@ The regional managers have initially proposed running their historical forecasti
     sectionLabel: "2.3 Part B",
     text: "___ analytics leverages statistical models and machine learning algorithms to forecast future outcomes based on historical data. ___ analytics goes beyond forecasting to recommend specific actions that should be taken to achieve a desired objective. Together, these two forward-looking methodologies move OmniStream from describing ___ to optimising ___.",
     blanks: [
-      {
-        id: "b1",
-        options: ["Predictive", "Prescriptive", "Descriptive", "Diagnostic"],
-        correctAnswer: "Predictive",
-      },
-      {
-        id: "b2",
-        options: ["Predictive", "Prescriptive", "Descriptive", "Diagnostic"],
-        correctAnswer: "Prescriptive",
-      },
-      {
-        id: "b3",
-        options: ["the past", "the future", "current operations", "user behaviour"],
-        correctAnswer: "the past",
-      },
-      {
-        id: "b4",
-        options: ["the future", "the past", "historical trends", "data quality"],
-        correctAnswer: "the future",
-      },
-    ],
+        {
+          id: "b1",
+          options: ["Prescriptive", "Predictive", "Diagnostic", "Automated"],
+          correctAnswer: "Predictive",
+        },
+        {
+          id: "b2",
+          options: ["Augmented", "Diagnostic", "Prescriptive", "Predictive"],
+          correctAnswer: "Prescriptive",
+        },
+        {
+          id: "b3",
+          options: ["raw data", "the past", "latent variables", "anomalies"],
+          correctAnswer: "the past",
+        },
+        {
+          id: "b4",
+          options: ["infrastructure", "the present", "the future", "compliance"],
+          correctAnswer: "the future",
+        },
+      ],
     points: 2,
   },
 

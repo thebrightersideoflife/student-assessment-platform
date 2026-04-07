@@ -120,22 +120,22 @@ export default [
     sectionLabel: "1.3",
     text: "Global Retail Group needs a report showing only regions with total sales exceeding R600, sorted highest first. Fill in the three missing SQL keywords:\n\nSELECT Region, SUM(TotalAmount) AS TotalSales\nFROM Sales\n___ BY Region\n___ SUM(TotalAmount) > 600\n___ BY TotalSales DESC;",
     blanks: [
-      {
-        id: "b1",
-        options: ["GROUP", "ORDER", "HAVING", "WHERE", "SORT"],
-        correctAnswer: "GROUP",
-      },
-      {
-        id: "b2",
-        options: ["HAVING", "WHERE", "GROUP", "FILTER", "ORDER"],
-        correctAnswer: "HAVING",
-      },
-      {
-        id: "b3",
-        options: ["ORDER", "SORT", "GROUP", "HAVING", "LIMIT"],
-        correctAnswer: "ORDER",
-      },
-    ],
+        {
+          id: "b1",
+          options: ["ORDER", "GROUP", "SORT", "HAVING", "CLUSTER"],
+          correctAnswer: "GROUP",
+        },
+        {
+          id: "b2",
+          options: ["WHERE", "FILTER", "QUALIFY", "HAVING", "GROUP"],
+          correctAnswer: "HAVING",
+        },
+        {
+          id: "b3",
+          options: ["SORT", "LIMIT", "ORDER", "ARRANGE", "GROUP"],
+          correctAnswer: "ORDER",
+        },
+      ],
     points: 6,
   },
 

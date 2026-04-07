@@ -330,12 +330,12 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["unit", "integration", "mutation", "white-box"],
+        options: ["integration", "mutation", "unit", "white-box"],
         correctAnswer: "unit",
       },
       {
         id: "b2",
-        options: ["system", "integration", "acceptance", "alpha"],
+        options: ["integration", "system", "acceptance", "alpha"],
         correctAnswer: "system",
       },
     ],

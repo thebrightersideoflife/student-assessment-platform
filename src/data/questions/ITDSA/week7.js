@@ -31,22 +31,22 @@ Management has mandated a transition to a modern Big Data ecosystem using Hadoop
     sectionLabel: "1.1 Part A",
     text: "OmniCart's three data challenges each map to a distinct Big Data characteristic. The accumulation of millions of social media reviews, product images, and chat logs maps to ___. The continuous high-speed IoT sensor streams from warehouse robots that must be processed in near real-time maps to ___. The existence of structured sensor metrics alongside unstructured images and chat logs maps to ___.",
     blanks: [
-      {
-        id: "b1",
-        options: ["Volume", "Velocity", "Variety", "Veracity"],
-        correctAnswer: "Volume",
-      },
-      {
-        id: "b2",
-        options: ["Volume", "Velocity", "Variety", "Veracity"],
-        correctAnswer: "Velocity",
-      },
-      {
-        id: "b3",
-        options: ["Volume", "Velocity", "Variety", "Veracity"],
-        correctAnswer: "Variety",
-      },
-    ],
+        {
+          id: "b1",
+          options: ["Veracity", "Variety", "Volume", "Value"],
+          correctAnswer: "Volume",
+        },
+        {
+          id: "b2",
+          options: ["Volatility", "Velocity", "Veracity", "Volume"],
+          correctAnswer: "Velocity",
+        },
+        {
+          id: "b3",
+          options: ["Value", "Veracity", "Variety", "Velocity"],
+          correctAnswer: "Variety",
+        },
+      ],
     points: 3,
   },
 
@@ -259,22 +259,22 @@ Management has mandated a transition to a modern Big Data ecosystem using Hadoop
     sectionLabel: "2.2 Part B",
     text: "A DTD defines the ___ of an XML document — specifying which tags are permitted, their required nesting, and their hierarchical relationships. It also defines ___, which are named properties attached to XML elements that carry additional metadata. Together, these components allow OmniCart's system to automatically ___ every supplier manifest before it enters the database.",
     blanks: [
-      {
-        id: "b1",
-        options: ["Elements", "Attributes", "Schemas", "Namespaces"],
-        correctAnswer: "Elements",
-      },
-      {
-        id: "b2",
-        options: ["Attributes", "Elements", "Schemas", "Namespaces"],
-        correctAnswer: "Attributes",
-      },
-      {
-        id: "b3",
-        options: ["validate", "encrypt", "compress", "normalise"],
-        correctAnswer: "validate",
-      },
-    ],
+        {
+          id: "b1",
+          options: ["Schemas", "Elements", "Entities", "Namespaces"],
+          correctAnswer: "Elements",
+        },
+        {
+          id: "b2",
+          options: ["Namespaces", "Directives", "Attributes", "Entities"],
+          correctAnswer: "Attributes",
+        },
+        {
+          id: "b3",
+          options: ["normalise", "validate", "serialise", "parse"],
+          correctAnswer: "validate",
+        },
+      ],
     points: 3,
   },
 

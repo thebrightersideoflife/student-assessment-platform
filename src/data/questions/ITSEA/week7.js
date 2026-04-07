@@ -24,12 +24,12 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["fault", "vulnerability", "exception", "anomaly"],
+        options: ["vulnerability", "anomaly", "exception", "fault"],
         correctAnswer: "fault",
       },
       {
         id: "b2",
-        options: ["failure", "crash", "interruption", "deviation"],
+        options: ["interruption", "failure", "deviation", "crash"],
         correctAnswer: "failure",
       },
     ],
@@ -219,22 +219,22 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["instability", "rotation", "exhaustion", "turnover"],
+        options: ["turnover", "rotation", "instability", "attrition"],
         correctAnswer: "instability",
       },
       {
         id: "b2",
-        options: ["documentation", "versioning", "encapsulation", "abstraction"],
+        options: ["encapsulation", "documentation", "modularity", "readability"],
         correctAnswer: "documentation",
       },
       {
         id: "b3",
-        options: ["hardware", "licensing", "procurement", "operational"],
+        options: ["infrastructure", "legacy", "operational", "hardware"],
         correctAnswer: "hardware",
       },
       {
         id: "b4",
-        options: ["program", "database", "logic", "interface"],
+        options: ["structural", "logic", "semantic", "program"],
         correctAnswer: "program",
       },
     ],

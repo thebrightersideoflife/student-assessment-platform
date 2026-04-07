@@ -23,7 +23,11 @@
 import ITNSA_W1 from "./ITNSA/week1.js";
 import ITNSA_W2 from "./ITNSA/week2.js";
 import ITNSA_W3 from "./ITNSA/week3.js";
-// import ITNSA_W4 from "./ITNSA/week4.js";
+import ITNSA_W4 from "./ITNSA/week4.js";
+import ITNSA_W5 from "./ITNSA/week5.js";
+import ITNSA_W6 from "./ITNSA/week6.js";
+import ITNSA_W7 from "./ITNSA/week7.js";
+
 
 // ── ITDSA ──────────────────────────────────────────────────────────────────
 import ITDSA_W1 from "./ITDSA/week1.js";
@@ -54,7 +58,10 @@ const rawQuestions = {
     "1": ITNSA_W1,
     "2": ITNSA_W2,
     "3": ITNSA_W3,
-    // "4": ITNSA_W4,
+    "4": ITNSA_W4,
+    "5": ITNSA_W5,
+    "6": ITNSA_W6,
+    "7": ITNSA_W7,
   },
   ITDSA: {
     "1": ITDSA_W1,

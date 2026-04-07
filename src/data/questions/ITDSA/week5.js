@@ -134,22 +134,22 @@ Incident C: The system completely halted at 14:00. The DBA traced the issue to t
     blanks: [
       {
         id: "b1",
-        options: ["Mutual Exclusion", "Shared Access", "Serialisation", "Prioritisation"],
+        options: ["Atomic Isolation", "Mutual Exclusion", "Exclusive Locking", "Concurrency Control"],
         correctAnswer: "Mutual Exclusion",
       },
       {
         id: "b2",
-        options: ["Wait", "Release", "Commit", "Abort"],
+        options: ["Block", "Queue", "Wait", "Signal"],
         correctAnswer: "Wait",
       },
       {
         id: "b3",
-        options: ["Preemption", "Rollback", "Timeout", "Escalation"],
+        options: ["Preemption", "Mandatory Release", "Resource Revocation", "Transaction Abort"],
         correctAnswer: "Preemption",
       },
       {
         id: "b4",
-        options: ["Wait", "Lock", "Dependency", "Commit"],
+        options: ["Dependency", "Wait", "Blocking Chain", "Recursion"],
         correctAnswer: "Wait",
       },
     ],
@@ -218,12 +218,12 @@ Key details observed:
     blanks: [
       {
         id: "b1",
-        options: ["Data Dictionary", "Transaction Log", "Buffer Pool", "Index File"],
+        options: ["Metadata Schema", "Data Dictionary", "System Catalog", "Schema Definition"],
         correctAnswer: "Data Dictionary",
       },
       {
         id: "b2",
-        options: ["Permissions", "Indexes", "Constraints", "Triggers"],
+        options: ["Authorization Roles", "Privileges", "Access Control Lists", "Permissions"],
         correctAnswer: "Permissions",
       },
     ],
@@ -336,17 +336,17 @@ Key details observed:
     blanks: [
       {
         id: "b1",
-        options: ["first", "last", "left", "right"],
+        options: ["left", "bottom", "right", "last"],
         correctAnswer: "last",
       },
       {
         id: "b2",
-        options: ["first", "last", "left", "right"],
+        options: ["top", "first", "right", "left"],
         correctAnswer: "first",
       },
       {
         id: "b3",
-        options: ["restrictive", "expensive", "indexed", "joined"],
+        options: ["complex", "indexed", "restrictive", "selective"],
         correctAnswer: "restrictive",
       },
     ],

@@ -61,7 +61,7 @@ export default function MultipleChoiceQuestion({
         </div>
         {scenario && scenario.context && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
-            <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario</button>
+            <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario | Instruction</button>
           </div>
         )}
         {question.points && (

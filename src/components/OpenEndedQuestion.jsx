@@ -106,7 +106,7 @@ export default function OpenEndedQuestion({
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {scenario && scenario.context && (
-            <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario</button>
+            <button className="button" onClick={() => setShowScenario(true)} style={{ padding: "6px 10px" }}>View Scenario | Instruction</button>
           )}
           {question.points && (
             <span style={{

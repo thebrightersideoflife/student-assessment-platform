@@ -174,17 +174,17 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["communication", "negotiation", "abstraction", "conceptualization"],
+        options: ["collaboration", "documentation", "communication", "synchronization"],
         correctAnswer: "communication",
       },
       {
         id: "b2",
-        options: ["analysis", "validation", "integration", "evaluation"],
+        options: ["optimization", "analysis", "specification", "validation"],
         correctAnswer: "analysis",
       },
       {
         id: "b3",
-        options: ["reuse", "scaling", "distribution", "refactoring"],
+        options: ["deployment", "modularization", "standardization", "reuse"],
         correctAnswer: "reuse",
       },
     ],
