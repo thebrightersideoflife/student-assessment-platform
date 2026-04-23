@@ -220,7 +220,7 @@ function AudioPlayer({ audioUrl, audioDescription, weekId }) {
                   fontSize: "12px", color: "var(--text-secondary)", fontVariantNumeric: "tabular-nums",
                 }}>
                   <span>{fmt(currentTime)}</span>
-                  <span>{loaded ? fmt(duration) : "—"}</span>
+                  <span>{loaded ? `-${fmt(duration - currentTime)}` : "—"}</span>
                 </div>
               </div>
             </div>
