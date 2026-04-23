@@ -177,7 +177,7 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["obsolete", "distributed", "documented", "standardized"],
+        options: ["distributed", "documented", "obsolete", "standardized"],
         correctAnswer: "obsolete",
       },
     ],

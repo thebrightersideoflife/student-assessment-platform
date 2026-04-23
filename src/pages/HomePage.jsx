@@ -213,7 +213,6 @@ export default function HomePage() {
                   display: "block",
                 }}
                 onError={e => {
-                  /* Fallback: show a typographic placeholder */
                   e.target.style.display = "none";
                   e.target.parentElement.style.background = `
                     linear-gradient(135deg,
@@ -380,6 +379,39 @@ export default function HomePage() {
           background: "linear-gradient(to bottom, transparent, var(--bg-primary))",
           pointerEvents: "none", zIndex: 1,
         }} />
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+          VIDEO SECTION
+          ════════════════════════════════════════════════════ */}
+      <section style={{
+        maxWidth: "900px",
+        margin: "0 auto",
+        padding: "56px 40px 72px",
+        position: "relative", zIndex: 1,
+      }}>
+        {/* 16:9 responsive wrapper — no card, floats on page bg */}
+        <div style={{
+          position: "relative",
+          paddingTop: "56.25%",
+          width: "100%",
+          borderRadius: "16px",
+          overflow: "hidden",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+        }}>
+          <iframe
+            src="https://www.youtube.com/embed/QW6y-F4Pr3Q"
+            title="Student Assessment Platform — Introduction"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            style={{
+              position: "absolute",
+              top: 0, left: 0,
+              width: "100%", height: "100%",
+              border: "none",
+            }}
+          />
+        </div>
       </section>
 
       {/* ════════════════════════════════════════════════════

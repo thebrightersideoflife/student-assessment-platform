@@ -73,15 +73,6 @@ export const weeks = {
         audioDescription: "A short overview of Week 7 topics for the Network and Systems Administration module."
       }
     },
-    { id: "8", 
-      name: "Week 8", 
-      block: 1,
-      kind: "exam",
-      moduleAudio: {
-        audioUrl: "/audio/itnsa-week8-intro.mp3",
-        audioDescription: "A short overview of Week 8 topics for the Network and Systems Administration module."
-      }
-    },
   ],
 
   ITDSA: [

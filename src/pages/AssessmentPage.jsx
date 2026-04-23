@@ -220,7 +220,7 @@ function AudioPlayer({ audioUrl, audioDescription, weekId }) {
                   fontSize: "12px", color: "var(--text-secondary)", fontVariantNumeric: "tabular-nums",
                 }}>
                   <span>{fmt(currentTime)}</span>
-                  <span>{loaded ? `-${fmt(duration - currentTime)}` : "—"}</span>
+                  <span>{loaded ? fmt(duration) : "—"}</span>
                 </div>
               </div>
             </div>
@@ -309,7 +309,9 @@ export default function AssessmentPage() {
   const [submitted,       setSubmitted]       = useState(false);
   const [showPrintView,   setShowPrintView]   = useState(false);
   const [showCertificate, setShowCertificate] = useState(wasCompleted);
-  const [showGuidance,    setShowGuidance]    = useState(true);
+  const [showGuidance,    setShowGuidance]    = useState(
+    () => localStorage.getItem("guidance_seen") !== "true"
+  );
 
   useEffect(() => {
     if (showPrintView) {
@@ -462,7 +464,7 @@ export default function AssessmentPage() {
   return (
     <div className="container">
 
-      <AssessmentGuidance visible={showGuidance} onClose={() => setShowGuidance(false)} />
+      <AssessmentGuidance visible={showGuidance} onClose={() => { localStorage.setItem("guidance_seen", "true"); setShowGuidance(false); }} />
 
       <Breadcrumb items={[
         { label: "Modules", path: "/modules" },
@@ -494,12 +496,34 @@ export default function AssessmentPage() {
           <h1 style={{ marginBottom: "6px" }}>{moduleId} Assessment</h1>
 
           {/* Week label uses block-aware string: "Block 1, Week 4" */}
-          <h2 style={{
-            marginBottom: 0,
-            color: kindConfig?.color ?? "var(--text-secondary)",
-          }}>
-            {weekLabel}
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: 0 }}>
+            <h2 style={{
+              marginBottom: 0,
+              color: kindConfig?.color ?? "var(--text-secondary)",
+            }}>
+              {weekLabel}
+            </h2>
+            <button
+              onClick={() => setShowGuidance(true)}
+              title="Study tips"
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                padding: "4px", display: "flex", alignItems: "center",
+                color: "var(--text-secondary)", opacity: 0.6,
+                transition: "opacity 0.18s ease, color 0.18s ease",
+                borderRadius: "6px",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--accent-primary)"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.color = "var(--text-secondary)"; }}
+              aria-label="Show study guidance"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="9" y1="18" x2="15" y2="18"/>
+                <line x1="10" y1="22" x2="14" y2="22"/>
+                <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+              </svg>
+            </button>
+          </div>
 
           {/* Kind description line — only for quiz/exam */}
           {kindConfig && (
