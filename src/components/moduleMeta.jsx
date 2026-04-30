@@ -48,11 +48,25 @@ export const CheckCircleIcon = () => (
   </svg>
 );
 
+export const EngineeringShieldIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    {/* Shield outline */}
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    {/* Code brackets inside shield */}
+    <polyline points="9 12 7 14 9 16"/>
+    <polyline points="15 12 17 14 15 16"/>
+    {/* Center dot representing engineering/system */}
+    <circle cx="12" cy="14" r="1.5"/>
+  </svg>
+);
+
 export const MODULE_META = {
   ITNSA: { icon: <ShieldIcon />,   accent: "var(--vibrant-cyan)",  accentRgb: "0,191,255",  label: "Network Security" },
   ITDSA: { icon: <DatabaseIcon />, accent: "var(--golden-amber)",  accentRgb: "244,169,0",  label: "Database Systems" },
   ITJVA: { icon: <CodeIcon />,     accent: "var(--lush-lime)",     accentRgb: "118,209,61", label: "Java Programming" },
   ITSEA: { icon: <CheckCircleIcon />, accent: "var(--poppy-red)", accentRgb: "255,64,64", label: "Software Process, Architecture & QA" },
+  ITSSA: { icon: <EngineeringShieldIcon />, accent: "var(--vibrant-cyan)",  accentRgb: "0,191,255",  label: "Software and Security Engineering" },
 };
 
 export const DEFAULT_META = { icon: <CodeIcon />, accent: "var(--accent-primary)", accentRgb: "42,92,167", label: "" };

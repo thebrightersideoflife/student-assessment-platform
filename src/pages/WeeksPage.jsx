@@ -37,6 +37,19 @@ export default function WeeksPage() {
     return acc;
   }, {});
 
+  // For each week, compute its 1-based position within its block.
+  // Used to show "Week 8 (Block 2's Week 1)" when the block counter restarts.
+  // weekBlockPosition[weekId] = { blockNum, blockWeekNumber }
+  const weekBlockPosition = {};
+  Object.entries(blocks).forEach(([blockKey, blockWeeks]) => {
+    blockWeeks.forEach((week, i) => {
+      weekBlockPosition[week.id] = {
+        blockNum: blockKey,
+        blockWeekNumber: i + 1,
+      };
+    });
+  });
+
   const blockKeys = Object.keys(blocks).sort((a, b) => Number(a) - Number(b));
   const hasBlocks = blockKeys.length > 1 || (blockKeys.length === 1 && blockKeys[0] !== "other");
 
@@ -145,6 +158,7 @@ export default function WeeksPage() {
                     moduleId={moduleId}
                     week={week}
                     hasQuestions={hasQuestions}
+                    blockWeekNumber={weekBlockPosition[week.id]?.blockWeekNumber}
                   />
                 );
               })}
@@ -158,6 +172,7 @@ export default function WeeksPage() {
                 moduleId={moduleId}
                 week={week}
                 hasQuestions={hasQuestions}
+                blockWeekNumber={weekBlockPosition[week.id]?.blockWeekNumber}
               />
             );
           })

@@ -3,6 +3,7 @@ import ScenarioModal from "./ScenarioModal";
 import AnswerReveal from "./AnswerReveal";
 import MermaidDiagram from "./MermaidDiagram";
 import formatTextToNodes from "../utils/formatText.jsx";
+import renderWithKatex from "../utils/renderWithKatex.jsx";
 
 export default function ShowAnswerQuestion({ question, index, submitted = false, scenario = null }) {
   const [showAnswer, setShowAnswer] = useState(false);
@@ -57,9 +58,9 @@ export default function ShowAnswerQuestion({ question, index, submitted = false,
       </div>
 
       {/* Prompt */}
-      <p style={{ marginBottom: "12px", lineHeight: "1.7", fontSize: "16px" }}>
-        {question.text}
-      </p>
+      <div style={{ marginBottom: "12px", lineHeight: "1.7", fontSize: "16px" }}>
+        {renderWithKatex(question.text)}
+      </div>
 
       {/* Image */}
       {question.image && (

@@ -24,4 +24,10 @@ export const modules = [
     description: "Explore software processes, engineering principles, ethics, and system design."
   },
 
+  {
+    id: "ITSSA",
+    name: "Software and Security Engineering",
+    description: "Learn about secure software development practices and cybersecurity principles."
+  },
+
 ];

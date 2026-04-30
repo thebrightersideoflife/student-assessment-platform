@@ -1,9 +1,13 @@
 import renderWithKatex from "../utils/renderWithKatex.jsx";
-import MermaidDiagram from "./MermaidDiagram";
 
 function renderAnswer(a) {
-  if (a?.diagram?.type === "mermaid") {
-    return <MermaidDiagram code={a.diagram.code} />;
+  // Render only the text content, not diagrams
+  // (ShowAnswerQuestion handles all diagram rendering to avoid duplication)
+  if (typeof a === 'string') {
+    return renderWithKatex(a);
+  }
+  if (a?.text) {
+    return renderWithKatex(a.text);
   }
   return renderWithKatex(a);
 }

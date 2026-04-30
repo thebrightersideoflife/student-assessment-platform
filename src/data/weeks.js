@@ -142,6 +142,30 @@ export const weeks = {
         audioDescription: "A short overview of Week 8 topics for the Data Structures and Algorithms module."
       }
     },
+    { id: "9", 
+      name: "Week 9", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itdsa-week9-intro.mp3",
+        audioDescription: "A short overview of Week 9 topics for the Data Structures and Algorithms module."
+      }
+    },
+    { id: "10", 
+      name: "Week 10", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itdsa-week10-intro.mp3",
+        audioDescription: "A short overview of Week 10 topics for the Data Structures and Algorithms module."
+      }
+    },
+    { id: "11", 
+      name: "Week 11", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itdsa-week11-intro.mp3",
+        audioDescription: "A short overview of Week 11 topics for the Data Structures and Algorithms module."
+      }
+    }
   ],
 
   ITJVA: [
@@ -208,6 +232,11 @@ export const weeks = {
       }
     },
     // add more weeks as you build them
+  ],
+
+  ITSSA: [
+    //{ id: "1", name: "Week 1", block: 1 },
+    // add weeks as you build them
   ],
 
 };

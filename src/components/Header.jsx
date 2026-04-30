@@ -207,43 +207,16 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchOpen]);
 
-  // Click outside to close mobile menu
-  useEffect(() => {
-    const handleClickOutsideMenu = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        closeMenu();
-      }
-    };
-    if (menuOpen) {
-      document.addEventListener("mousedown", handleClickOutsideMenu);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutsideMenu);
-  }, [menuOpen]);
+  const isActive = (path) => location.pathname === path;
 
-  // Close search/menu on Escape
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        if (searchOpen) closeSearch();
-        if (menuOpen) closeMenu();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [searchOpen, menuOpen]);
-
-  // Prevent body scrolling while mobile menu is open
-  useEffect(() => {
-    if (menuOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = prev; };
-    }
-    return undefined;
-  }, [menuOpen]);
+  const progressPercentage =
+    overallProgress.total > 0
+      ? Math.round((overallProgress.completed / overallProgress.total) * 100)
+      : 0;
 
   const openSearch = () => {
     setSearchOpen(true);
+    setMenuOpen(false);
     setTimeout(() => searchInputRef.current?.focus(), 50);
   };
 
@@ -254,33 +227,18 @@ export default function Header() {
     setSelectedIndex(-1);
   };
 
-  const openMenu = () => setMenuOpen(true);
-  const closeMenu = () => setMenuOpen(false);
-
   const navigateTo = (path) => {
-    closeSearch();
-    closeMenu();
     navigate(path);
+    setMenuOpen(false);
+    closeSearch();
   };
 
-  const progressPercentage =
-    overallProgress.total > 0
-      ? Math.round((overallProgress.completed / overallProgress.total) * 100)
-      : 0;
-
-  const isActive = (path) => {
-    if (path === "/" && location.pathname === "/") return true;
-    if (path !== "/" && location.pathname.startsWith(path)) return true;
-    return false;
-  };
-
-  // Icon: type indicator in search results
   const ResultIcon = ({ type }) => {
     if (type === "roadmap") {
       return (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
         </svg>
       );
     }
@@ -326,13 +284,17 @@ export default function Header() {
           <Link to="/progress" className={`nav-link ${isActive("/progress") ? "active" : ""}`}>
             My Progress
           </Link>
+          <Link to="/support" className={`nav-link ${isActive("/support") ? "active" : ""}`}>
+            Support
+          </Link>
         </nav>
 
         {/* Actions */}
         <div className="header-actions">
           {/* Progress Circle */}
           <div
-            className="progress-indicator"
+            className="progress-indicator action-button"
+            onClick={() => navigateTo("/progress")}
             title={`${overallProgress.completed} of ${overallProgress.total} assessments completed`}
           >
             <div className="progress-circle">
@@ -456,8 +418,8 @@ export default function Header() {
           )}
         </div>
       )}
-      {/* Mobile menu (drops down like search) */}
-      {/* mobile menu renders to document.body to avoid transform containment */}
+
+      {/* Mobile menu (renders to document.body to avoid transform containment) */}
       {menuOpen && createPortal(
         <div className="mobile-menu fullscreen" ref={menuRef} role="menu" aria-label="Mobile navigation">
           <div className="mobile-menu-top">
@@ -473,6 +435,7 @@ export default function Header() {
             <button className={`mobile-nav-item ${isActive("/resources") ? "active" : ""}`} onClick={() => navigateTo("/resources")}>Resources</button>
             <button className={`mobile-nav-item ${isActive("/modules") ? "active" : ""}`} onClick={() => navigateTo("/modules")}>Modules</button>
             <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>
+            <button className={`mobile-nav-item ${isActive("/support") ? "active" : ""}`} onClick={() => navigateTo("/support")}>Support</button>
           </div>
         </div>,
         document.body

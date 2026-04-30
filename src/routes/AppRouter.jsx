@@ -8,6 +8,7 @@ import AssessmentPage from "../pages/AssessmentPage";
 import RoadmapPage from "../pages/RoadmapPage";
 import ResourcesPage from "../pages/ResourcesPage";
 import ProgressPage from "../pages/ProgressPage";
+import SupportPage from "../pages/SupportPage";
 
 export default function AppRouter() {
   return (
@@ -24,6 +25,8 @@ export default function AppRouter() {
         <Route path="/resources" element={<ResourcesPage />} />
 
         <Route path="/progress" element={<ProgressPage />} />
+
+        <Route path="/support" element={<SupportPage />} />
 
         <Route path="/module/:moduleId" element={<WeeksPage />} />
 

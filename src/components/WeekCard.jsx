@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AssessmentStorage from "../utils/assessmentStorage";
 import { getWeekLabel, getWeekKindConfig } from "../utils/questionHelpers";
 
-export default function WeekCard({ moduleId, week, hasQuestions }) {
+export default function WeekCard({ moduleId, week, hasQuestions, blockWeekNumber }) {
   const navigate = useNavigate();
   const [completionStatus, setCompletionStatus] = useState(null);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -115,9 +115,20 @@ export default function WeekCard({ moduleId, week, hasQuestions }) {
         </div>
       )}
 
-      {/* Title — block label */}
+      {/* Title — sequential week name + optional block-week sub-label */}
       <h3 style={{ marginBottom: "4px" }}>
         {getWeekLabel(week)}
+        {blockWeekNumber && blockWeekNumber !== parseInt(week.id) && (
+          <span style={{
+            marginLeft: "10px",
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "var(--text-secondary)",
+            opacity: 0.75,
+          }}>
+            (Block {week.block}'s Week {blockWeekNumber})
+          </span>
+        )}
       </h3>
 
       {/* Kind description */}
