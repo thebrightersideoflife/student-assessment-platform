@@ -34,7 +34,6 @@ export default function WeekCard({ moduleId, week, hasQuestions, blockWeekNumber
 
   const kindConfig = getWeekKindConfig(week.kind);
 
-  // Border: completion wins over kind, kind wins over default
   const borderColor = isCompleted
     ? "rgba(118,209,61,0.6)"
     : kindConfig
@@ -48,6 +47,28 @@ export default function WeekCard({ moduleId, week, hasQuestions, blockWeekNumber
       : kindConfig
         ? `linear-gradient(135deg, ${kindConfig.bgColor}, rgba(var(--bg-card-rgb),0.82))`
         : "rgba(var(--bg-card-rgb),0.72)";
+
+  // ─── Attempt history helpers ──────────────────────────────────────────────
+  const attempts = completionStatus?.attempts ?? [];
+  const hasMultipleAttempts = attempts.length > 1;
+
+  // Compute per-attempt delta vs the previous attempt
+  function getDelta(attempts, index) {
+    if (index === 0) return null;
+    return attempts[index].percentage - attempts[index - 1].percentage;
+  }
+
+  function deltaColor(delta) {
+    if (delta > 0) return "var(--lush-lime)";
+    if (delta < 0) return "var(--poppy-red)";
+    return "var(--golden-amber)";
+  }
+
+  function deltaLabel(delta) {
+    if (delta === null) return null;
+    if (delta === 0) return "→ same";
+    return `${delta > 0 ? "↑" : "↓"} ${delta > 0 ? "+" : ""}${delta}%`;
+  }
 
   return (
     <div
@@ -112,10 +133,19 @@ export default function WeekCard({ moduleId, week, hasQuestions, blockWeekNumber
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           Completed
+          {hasMultipleAttempts && (
+            <span style={{
+              marginLeft: "4px",
+              opacity: 0.75,
+              fontWeight: 500,
+            }}>
+              · {attempts.length} attempts
+            </span>
+          )}
         </div>
       )}
 
-      {/* Title — sequential week name + optional block-week sub-label */}
+      {/* Title */}
       <h3 style={{ marginBottom: "4px" }}>
         {getWeekLabel(week)}
         {blockWeekNumber && blockWeekNumber !== parseInt(week.id) && (
@@ -138,23 +168,78 @@ export default function WeekCard({ moduleId, week, hasQuestions, blockWeekNumber
         </p>
       )}
 
-      {/* Completion stats */}
+      {/* Completion stats — latest attempt */}
       {isCompleted && completionStatus && (
         <div style={{
           marginTop: "12px", paddingTop: "12px",
           borderTop: "1px solid rgba(var(--border-color-rgb),0.35)",
-          display: "flex", gap: "16px",
-          fontSize: "14px", color: "var(--text-secondary)",
         }}>
-          <div><strong>Score:</strong> {completionStatus.score}/{completionStatus.totalQuestions}</div>
-          <div><strong>Grade:</strong> {completionStatus.percentage}%</div>
+          {/* Score row */}
           <div style={{
-            marginLeft: "auto",
-            color: completionStatus.percentage >= 70 ? "var(--lush-lime)" : "var(--golden-amber)",
-            fontWeight: 600,
+            display: "flex", gap: "16px",
+            fontSize: "14px", color: "var(--text-secondary)",
           }}>
-            {completionStatus.percentage >= 70 ? "Passed" : "Completed"}
+            <div><strong>Score:</strong> {completionStatus.score}/{completionStatus.totalQuestions}</div>
+            <div><strong>Grade:</strong> {completionStatus.percentage}%</div>
+            <div style={{
+              marginLeft: "auto",
+              color: completionStatus.percentage >= 70 ? "var(--lush-lime)" : "var(--golden-amber)",
+              fontWeight: 600,
+            }}>
+              {completionStatus.percentage >= 70 ? "Passed" : "Completed"}
+            </div>
           </div>
+
+          {/* Attempt progression row — only when more than one attempt */}
+          {hasMultipleAttempts && (
+            <div
+              onClick={(e) => e.stopPropagation()} // prevent card nav on row click
+              style={{
+                marginTop: "10px",
+                paddingTop: "8px",
+                borderTop: "1px solid rgba(var(--border-color-rgb),0.2)",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                flexWrap: "wrap",
+              }}
+            >
+              <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>
+                History
+              </span>
+              {attempts.map((a, i) => {
+                const delta = getDelta(attempts, i);
+                return (
+                  <span key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    {/* Attempt bubble */}
+                    <span style={{
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: i === attempts.length - 1 ? "var(--text-primary)" : "var(--text-secondary)",
+                      background: i === attempts.length - 1
+                        ? "rgba(var(--bg-secondary-rgb), 0.9)"
+                        : "rgba(var(--border-color-rgb), 0.2)",
+                      border: `1px solid rgba(var(--border-color-rgb), ${i === attempts.length - 1 ? "0.6" : "0.3"})`,
+                      borderRadius: "6px",
+                      padding: "2px 7px",
+                    }}>
+                      {a.percentage}%
+                    </span>
+                    {/* Delta label between attempts */}
+                    {delta !== null && (
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: deltaColor(delta), flexShrink: 0 }}>
+                        {deltaLabel(delta)}
+                      </span>
+                    )}
+                    {/* Arrow between attempts */}
+                    {i < attempts.length - 1 && (
+                      <span style={{ fontSize: "11px", color: "var(--text-secondary)", opacity: 0.5 }}>→</span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
+import ExplanationPanel from "./ExplanationPanel";
 
 export default function MultipleChoiceQuestion({
   question,
@@ -210,6 +211,9 @@ export default function MultipleChoiceQuestion({
             <strong style={{ color: "var(--lush-lime)" }}>Correct Answer:</strong>
             <p style={{ marginTop: "6px", color: "var(--text-primary)" }}>{correctAnswer}</p>
           </div>
+
+          {/* Explanation — only visible once the student has committed an answer */}
+          <ExplanationPanel explanation={question.explanation} submitted={submitted} />
         </div>
       )}
     </div>

@@ -1,11 +1,15 @@
 // src/pages/AssessmentPage.jsx
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import QuestionRenderer from "../components/QuestionRenderer";
 import Breadcrumb from "../components/Breadcrumb";
 import CompletionBadge from "../components/CompletionBadge";
 import PrintableQuestions from "../components/PrintableQuestions";
 import AssessmentGuidance from "../components/AssessmentGuidance";
+import AssessmentGate from "../components/AssessmentGate";
+import CountdownTimer from "../components/CountdownTimer";
+import FloatingTimer from "../components/FloatingTimer";
+import useCountdownTimer from "../utils/useCountdownTimer";
 import AssessmentStorage from "../utils/assessmentStorage";
 import { getWeekLabel, getWeekKindConfig, getRequiredQuestions } from "../utils/questionHelpers";
 import { questions } from "../data/questions/index.js";
@@ -14,7 +18,7 @@ import { weeks as allWeeks } from "../data/weeks";
 import { notifyAssessmentCompleted } from "../utils/assessmentEvents";
 
 /* ══════════════════════════════════════════════════════════════
-   Icons
+   Icons (unchanged)
 ══════════════════════════════════════════════════════════════ */
 const PrintIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -100,7 +104,7 @@ const FlagIcon = () => (
 );
 
 /* ══════════════════════════════════════════════════════════════
-   Audio Player
+   Audio Player (unchanged)
 ══════════════════════════════════════════════════════════════ */
 function AudioPlayer({ audioUrl, audioDescription, weekId }) {
   const audioRef = useRef(null);
@@ -286,19 +290,31 @@ export default function AssessmentPage() {
   // ── Data resolution ──────────────────────────────────────
   const moduleQuestions = questions[moduleId]?.[weekId] || [];
   const moduleInfo      = modules.find((m) => m.id === moduleId);
-
-  // CHANGED: allWeeks is now per-module → use [moduleId] lookup
   const weekInfo        = allWeeks[moduleId]?.find((w) => String(w.id) === String(weekId));
 
-  // Week kind + label — derived from weekInfo via shared helpers
-  const weekKind        = weekInfo?.kind ?? null;          // "quiz" | "exam" | null
+  const weekKind        = weekInfo?.kind ?? null;
   const weekLabel       = weekInfo ? getWeekLabel(weekInfo) : `Week ${weekId}`;
   const kindConfig      = getWeekKindConfig(weekKind);
 
-  // Audio — still nested on the week object under moduleAudio
   const moduleAudio     = weekInfo?.moduleAudio;
-  const audioUrl        = moduleAudio?.audioUrl    ?? weekInfo?.audioUrl    ?? null;
+  const audioUrl        = moduleAudio?.audioUrl        ?? weekInfo?.audioUrl        ?? null;
   const audioDescription = moduleAudio?.audioDescription ?? weekInfo?.audioDescription ?? null;
+
+  // ── Timed mode — resolve effective duration ──────────────
+  // Prefer the week data's explicit `duration`; fall back to kind default.
+  const effectiveDuration =
+    weekInfo?.duration ??
+    kindConfig?.defaultDuration ??
+    null;
+
+  // Gate is shown for quiz/exam weeks that have a resolvable duration.
+  const showGate = !!kindConfig && effectiveDuration !== null;
+
+  // ── Gate state ───────────────────────────────────────────
+  // "practice" | "timed" | null (not chosen yet)
+  const [selectedMode, setSelectedMode] = useState(null);
+  const gateCleared = selectedMode !== null;
+  const timedMode   = selectedMode === "timed";
 
   // ── Storage ──────────────────────────────────────────────
   const completionStatus = AssessmentStorage.getCompletionStatus(moduleId, weekId);
@@ -313,17 +329,17 @@ export default function AssessmentPage() {
     () => localStorage.getItem("guidance_seen") !== "true"
   );
 
+  // Track whether this submission was in timed mode (for CompletionBadge)
+  const [wasTimedMode, setWasTimedMode] = useState(false);
+
   useEffect(() => {
     if (showPrintView) {
       document.documentElement.setAttribute("data-print", "active");
-      return () => {
-        document.documentElement.removeAttribute("data-print");
-      };
+      return () => { document.documentElement.removeAttribute("data-print"); };
     }
     document.documentElement.removeAttribute("data-print");
   }, [showPrintView]);
 
-  // CHANGED: getRequiredQuestions() from questionHelpers replaces the inline filter
   const requiredQuestions = getRequiredQuestions(moduleQuestions);
 
   useEffect(() => {
@@ -336,9 +352,8 @@ export default function AssessmentPage() {
     setAnswers((prev) => ({ ...prev, [questionId]: answerData }));
   }
 
-  function handleSubmitAndFinish() {
-    // Compute score and total points. Fill-in-the-blank questions are
-    // worth one point per blank (each correct blank = 1 point).
+  // Wrap in useCallback so useCountdownTimer's onExpire ref stays stable
+  const handleSubmitAndFinish = useCallback(() => {
     let score = 0;
     let totalPoints = 0;
     for (const q of requiredQuestions) {
@@ -356,21 +371,33 @@ export default function AssessmentPage() {
     }
     AssessmentStorage.markCompleted(moduleId, weekId, score, totalPoints);
     notifyAssessmentCompleted();
+    setWasTimedMode(timedMode);
     setSubmitted(true);
     setShowCertificate(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requiredQuestions, answers, moduleId, weekId, timedMode]);
+
+  // ── Countdown timer hook ─────────────────────────────────
+  // Dormant in practice mode, dormant for normal weeks.
+  const { timeRemaining, hasExpired } = useCountdownTimer({
+    duration: effectiveDuration ?? 0,
+    enabled: timedMode && gateCleared && !submitted,
+    sessionKey: `timer_${moduleId}_${weekId}`,
+    onExpire: handleSubmitAndFinish,
+  });
 
   function handleRedo() {
-    if (!window.confirm("Are you sure you want to redo this assessment? Your previous score will be lost.")) return;
+    if (!window.confirm("Are you sure you want to redo this assessment? Your previous score will be saved to your history.")) return;
     AssessmentStorage.resetAssessment(moduleId, weekId);
     setAnswers({});
     setSubmitted(false);
     setShowCertificate(false);
+    setSelectedMode(null);   // re-show gate on redo for timed weeks
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Current score and total points — include per-blank weighting for fill-in-the-blank
+  // Current score display
   const { score: correctCount, total: totalGradable } = (function() {
     if (wasCompleted && completionStatus) return { score: completionStatus.score, total: completionStatus.totalQuestions };
     let s = 0, t = 0;
@@ -379,9 +406,7 @@ export default function AssessmentPage() {
         const blanks = q.blanks || [];
         t += blanks.length;
         const sels = answers[q.id]?.selections || {};
-        for (const b of blanks) {
-          if (sels[b.id] === b.correctAnswer) s += 1;
-        }
+        for (const b of blanks) { if (sels[b.id] === b.correctAnswer) s += 1; }
       } else {
         t += 1;
         if (answers[q.id]?.isCorrect) s += 1;
@@ -402,7 +427,19 @@ export default function AssessmentPage() {
         year: "numeric", month: "long", day: "numeric",
       });
 
-  /* ── Print view ─────────────────────────────────────────── */
+  // Attempt info for CompletionBadge
+  const latestAttemptNumber = completionStatus?.attempts?.length ?? null;
+  const totalAttempts       = latestAttemptNumber;
+
+  // Best score for the gate
+  const bestScore = completionStatus
+    ? {
+        percentage: Math.max(...(completionStatus.attempts?.map(a => a.percentage) ?? [completionStatus.percentage])),
+        attempts: completionStatus.attempts?.length ?? 1,
+      }
+    : null;
+
+  /* ── Print view ──────────────────────────────────────────── */
   if (showPrintView) {
     return (
       <PrintableQuestions
@@ -439,6 +476,9 @@ export default function AssessmentPage() {
           score={correctCount}
           totalQuestions={totalGradable}
           completionDate={completionDate}
+          attemptNumber={latestAttemptNumber}
+          totalAttempts={totalAttempts}
+          timedMode={wasTimedMode || (submitted && timedMode)}
         />
 
         <div style={{
@@ -458,13 +498,36 @@ export default function AssessmentPage() {
     );
   }
 
-  /* ── Assessment view ────────────────────────────────────── */
+  /* ── Gate view — timed-capable weeks only ───────────────── */
+  if (showGate && !gateCleared) {
+    return (
+      <div className="container">
+        <Breadcrumb items={[
+          { label: "Modules", path: "/modules" },
+          { label: moduleInfo?.name || moduleId, path: `/module/${moduleId}` },
+          { label: weekLabel },
+        ]} />
+        <AssessmentGate
+          weekLabel={weekLabel}
+          kindConfig={kindConfig}
+          duration={effectiveDuration}
+          bestScore={bestScore}
+          onSelectMode={setSelectedMode}
+        />
+      </div>
+    );
+  }
+
+  /* ── Assessment view ─────────────────────────────────────── */
   let questionIndex = 0;
 
   return (
     <div className="container">
 
-      <AssessmentGuidance visible={showGuidance} onClose={() => { localStorage.setItem("guidance_seen", "true"); setShowGuidance(false); }} />
+      <AssessmentGuidance
+        visible={showGuidance}
+        onClose={() => { localStorage.setItem("guidance_seen", "true"); setShowGuidance(false); }}
+      />
 
       <Breadcrumb items={[
         { label: "Modules", path: "/modules" },
@@ -478,7 +541,6 @@ export default function AssessmentPage() {
         alignItems: "flex-start", marginBottom: "24px", gap: "16px",
       }}>
         <div>
-          {/* Kind badge — only rendered for quiz/exam weeks */}
           {kindConfig && (
             <div style={{
               display: "inline-flex", alignItems: "center", gap: "6px",
@@ -495,12 +557,8 @@ export default function AssessmentPage() {
 
           <h1 style={{ marginBottom: "6px" }}>{moduleId} Assessment</h1>
 
-          {/* Week label uses block-aware string: "Block 1, Week 4" */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: 0 }}>
-            <h2 style={{
-              marginBottom: 0,
-              color: kindConfig?.color ?? "var(--text-secondary)",
-            }}>
+            <h2 style={{ marginBottom: 0, color: kindConfig?.color ?? "var(--text-secondary)" }}>
               {weekLabel}
             </h2>
             <button
@@ -525,18 +583,14 @@ export default function AssessmentPage() {
             </button>
           </div>
 
-          {/* Kind description line — only for quiz/exam */}
           {kindConfig && (
-            <p style={{
-              marginTop: "6px", fontSize: "14px",
-              color: kindConfig.color, fontWeight: 500,
-            }}>
+            <p style={{ marginTop: "6px", fontSize: "14px", color: kindConfig.color, fontWeight: 500 }}>
               {kindConfig.description}
             </p>
           )}
         </div>
 
-        <button className="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'auto' }); setShowPrintView(true); }}
+        <button className="button" onClick={() => { window.scrollTo({ top: 0, behavior: "auto" }); setShowPrintView(true); }}
           style={{ padding: "11px 20px", fontSize: "14px", whiteSpace: "nowrap" }}>
           <PrintIcon /> Print Questions
         </button>
@@ -544,6 +598,11 @@ export default function AssessmentPage() {
 
       {/* Audio player */}
       <AudioPlayer audioUrl={audioUrl} audioDescription={audioDescription} weekId={weekId} />
+
+      {/* ── Countdown timer — timed mode only ─────────────── */}
+      {timedMode && gateCleared && !submitted && (
+        <CountdownTimer timeRemaining={timeRemaining} hasExpired={hasExpired} />
+      )}
 
       {/* In-progress notice */}
       {savedProgress && Object.keys(answers).length > 0 && !submitted && (
@@ -595,7 +654,6 @@ export default function AssessmentPage() {
           const currentIndex = isScenario ? null : questionIndex;
           if (isScenario) {
             lastScenario = question;
-            // scenario blocks are rendered as-is by QuestionRenderer
             return (
               <QuestionRenderer
                 key={question.id}
@@ -609,7 +667,6 @@ export default function AssessmentPage() {
               />
             );
           }
-          // non-scenario question — pass nearest scenario context
           questionIndex++;
           return (
             <QuestionRenderer
@@ -626,7 +683,7 @@ export default function AssessmentPage() {
         });
       })()}
 
-      {/* ── Submit & Finish area ────────────────────────────── */}
+      {/* ── Submit & Finish area ──────────────────────────── */}
       <div style={{
         marginTop: "40px", padding: "28px 24px",
         background: "rgba(var(--bg-card-rgb), 0.6)",
@@ -653,7 +710,7 @@ export default function AssessmentPage() {
         )}
 
         <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
-          <button className="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'auto' }); setShowPrintView(true); }}
+          <button className="button" onClick={() => { window.scrollTo({ top: 0, behavior: "auto" }); setShowPrintView(true); }}
             style={{ padding: "11px 20px", fontSize: "14px", whiteSpace: "nowrap" }}>
             <PrintIcon /> Print Questions
           </button>
@@ -681,6 +738,11 @@ export default function AssessmentPage() {
             : "Answer all questions above to unlock the submit button."}
         </p>
       </div>
+
+      {/* Floating mini-timer — fixed position, only in timed mode */}
+      {timedMode && gateCleared && !submitted && (
+        <FloatingTimer timeRemaining={timeRemaining} hasExpired={hasExpired} />
+      )}
     </div>
   );
 }

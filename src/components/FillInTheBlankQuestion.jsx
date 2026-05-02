@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
+import ExplanationPanel from "./ExplanationPanel";
 
 /*
   Fill-in-the-blank question.
@@ -22,7 +23,8 @@ import ScenarioModal from "./ScenarioModal";
         correctAnswer: "high flexibility"
       }
     ],
-    points: 2
+    points: 2,
+    explanation: "Optional prose shown after the student checks their answer."
   }
 
   The `text` uses ___ (triple underscore) as a placeholder marker.
@@ -187,7 +189,7 @@ export default function FillInTheBlankQuestion({
         ))}
       </p>
 
-      {/* Result row — only after submit */}
+      {/* Result row — only after submit or check */}
       {showResult && (
         <div style={{ marginTop: "16px" }}>
           <p style={{
@@ -230,6 +232,9 @@ export default function FillInTheBlankQuestion({
               );
             })}
           </div>
+
+          {/* Explanation — only visible once the student has committed an answer */}
+          <ExplanationPanel explanation={question.explanation} submitted={submitted} />
         </div>
       )}
 
@@ -258,9 +263,10 @@ export default function FillInTheBlankQuestion({
           </button>
         </div>
       )}
-        {scenario && (
-          <ScenarioModal visible={showScenario} onClose={() => setShowScenario(false)} title={scenario.title || "Scenario Context"} context={scenario.context} />
-        )}
+
+      {scenario && (
+        <ScenarioModal visible={showScenario} onClose={() => setShowScenario(false)} title={scenario.title || "Scenario Context"} context={scenario.context} />
+      )}
     </div>
   );
 }

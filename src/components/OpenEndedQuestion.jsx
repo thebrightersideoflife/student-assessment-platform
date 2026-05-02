@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
 import AnswerValidator from "../utils/answerValidator";
+import ExplanationPanel from "./ExplanationPanel";
 
 export default function OpenEndedQuestion({
   question,
@@ -143,6 +144,7 @@ export default function OpenEndedQuestion({
           )}
         </div>
       )}
+
       {scenario && (
         <ScenarioModal visible={showScenario} onClose={() => setShowScenario(false)} title={scenario.title || "Scenario Context"} context={scenario.context} />
       )}
@@ -216,6 +218,9 @@ export default function OpenEndedQuestion({
               💡 {validationResult.hints.join(", ")}
             </div>
           )}
+
+          {/* Explanation — only visible once the student has checked their answer */}
+          <ExplanationPanel explanation={question.explanation} submitted={submitted} />
         </div>
       )}
     </div>

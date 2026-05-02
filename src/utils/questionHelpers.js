@@ -9,8 +9,8 @@
  * Derives the full display label for a week object.
  *
  * Examples:
- *   { name: "Week 1", block: 1 }  →  "Block 1, Week 1"
- *   { name: "Week 4", block: 1, kind: "quiz" }  →  "Block 1, Week 4"
+ *   { name: "Week 1", block: 1 }  →  "Week 1"
+ *   { name: "Week 4", block: 1, kind: "quiz" }  →  "Week 4"
  *   { name: "Week 1" }  →  "Week 1"   (no block — graceful fallback)
  *
  * @param {object} week — a week object from src/data/weeks.js
@@ -18,8 +18,6 @@
  */
 export function getWeekLabel(week) {
   if (!week) return "";
-  // The UI groups weeks under block headings; cards should only show the week name.
-  // Return the week name regardless of block to avoid repeating the block label.
   return week.name;
 }
 
@@ -34,33 +32,39 @@ export function getWeekLabel(week) {
  *   "quiz"            →  formal online quiz      →  amber config
  *   "exam"            →  official exam           →  red config
  *
+ * `defaultDuration` is the fallback time limit (minutes) used by the gate
+ * when a week's data file doesn't specify a `duration` field explicitly.
+ * Always prefer `week.duration` over `kindConfig.defaultDuration`.
+ *
  * Usage:
  *   const kindConfig = getWeekKindConfig(week.kind);
  *   if (kindConfig) { ... render badge ... }
  *
  * @param {string|undefined} kind
- * @returns {{ label, icon, color, bgColor, borderColor, description } | null}
+ * @returns {{ label, icon, color, bgColor, borderColor, description, defaultDuration } | null}
  */
 export function getWeekKindConfig(kind) {
   switch (kind) {
     case "quiz":
       return {
-        label:       "Online Quiz",
-        icon:        "📋",
-        color:       "var(--golden-amber)",
-        bgColor:     "rgba(244,169,0,0.10)",
-        borderColor: "rgba(244,169,0,0.40)",
-        description: "This week is when you take the institution's formal online quiz.",
+        label:           "Online Quiz",
+        icon:            "📋",
+        color:           "var(--golden-amber)",
+        bgColor:         "rgba(244,169,0,0.10)",
+        borderColor:     "rgba(244,169,0,0.40)",
+        description:     "This week is when you take the institution's formal online quiz.",
+        defaultDuration: 30,   // minutes — fallback if week.duration is absent
       };
 
     case "exam":
       return {
-        label:       "Official Exam",
-        icon:        "🎓",
-        color:       "var(--poppy-red)",
-        bgColor:     "rgba(255,64,64,0.10)",
-        borderColor: "rgba(255,64,64,0.40)",
-        description: "This week's assessment reflects the official exam content.",
+        label:           "Official Exam",
+        icon:            "🎓",
+        color:           "var(--poppy-red)",
+        bgColor:         "rgba(255,64,64,0.10)",
+        borderColor:     "rgba(255,64,64,0.40)",
+        description:     "This week's assessment reflects the official exam content.",
+        defaultDuration: 90,   // minutes — fallback if week.duration is absent
       };
 
     default:

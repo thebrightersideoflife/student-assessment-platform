@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
 import AnswerReveal from "./AnswerReveal";
 import MermaidDiagram from "./MermaidDiagram";
+import ExplanationPanel from "./ExplanationPanel";
 import formatTextToNodes from "../utils/formatText.jsx";
 import renderWithKatex from "../utils/renderWithKatex.jsx";
 
@@ -127,6 +128,9 @@ export default function ShowAnswerQuestion({ question, index, submitted = false,
               </div>
             </div>
           )}
+
+          {/* Explanation — visible once the student has revealed the memo */}
+          <ExplanationPanel explanation={question.explanation} submitted={submitted} />
         </>
       )}
     </div>

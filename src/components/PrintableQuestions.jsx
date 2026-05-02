@@ -284,6 +284,17 @@ export default function PrintableQuestions({
       else document.documentElement.removeAttribute("data-theme");
     };
   }, []);
+
+  // Set document title for PDF filename
+  useEffect(() => {
+    const year = new Date().getFullYear();
+    const pdfFilename = `${moduleId}-${year}-WK${weekId}_student-assessment-platform`;
+    const prevTitle = document.title;
+    document.title = pdfFilename;
+    return () => {
+      document.title = prevTitle;
+    };
+  }, [moduleId, weekId]);
   /* 
     Determine which question types count for scoring and marks tally.
     scenario and show-answer are display-only.

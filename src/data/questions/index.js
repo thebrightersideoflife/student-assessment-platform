@@ -49,12 +49,13 @@ import ITSEA_W4 from "./ITSEA/week4.js";
 import ITSEA_W5 from "./ITSEA/week5.js";
 import ITSEA_W6 from "./ITSEA/week6.js";
 import ITSEA_W7 from "./ITSEA/week7.js";
+import ITSEA_W8 from "./ITSEA/week8.js";
 
 // ── ITJVA ──────────────────────────────────────────────────────────────────
 // import ITJVA_W1 from "./ITJVA/week1.js";
 
 // ── ITSSA ──────────────────────────────────────────────────────────────────
-//import ITSSA_W1 from "./ITSSA/week1.js";
+import ITSSA_W1 from "./ITSSA/week1.js";
 
 // ── Assembly map ───────────────────────────────────────────────────────────
 // Week keys must match the id strings in src/data/weeks.js
@@ -89,12 +90,13 @@ const rawQuestions = {
     "5": ITSEA_W5,
     "6": ITSEA_W6,
     "7": ITSEA_W7,
+    "8": ITSEA_W8,
   },
   ITJVA: {
     // "1": ITJVA_W1,
   },
   ITSSA: {
-   // "1": ITSSA_W1,
+   "1": ITSSA_W1,
   },
 };
 

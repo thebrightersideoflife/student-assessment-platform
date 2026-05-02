@@ -40,6 +40,7 @@ You are part of the data engineering team tasked with redesigning and querying t
     ],
     correctAnswers: ["It enforces referential integrity between related tables"],
     points: 2,
+    explanation: "A Foreign Key ensures that a value in one table must match a value in another (the parent table), preventing \"orphaned\" records, such as an order existing for a non-existent customer."
   },
 
   {
@@ -60,6 +61,7 @@ You are part of the data engineering team tasked with redesigning and querying t
       },
     ],
     points: 2,
+    explanation: "UNIQUE allows for one NULL but no duplicates; NOT NULL mandates that a value must be present in every row."
   },
 
   {
@@ -73,6 +75,7 @@ You are part of the data engineering team tasked with redesigning and querying t
       caseSensitive: false,
       tolerance: 0,
     },
+    explanation: "Commands like CREATE, ALTER, and DROP are part of DDL because they define or modify the structure (schema) of the database."
   },
 
   {
@@ -88,6 +91,7 @@ You are part of the data engineering team tasked with redesigning and querying t
     ],
     correctAnswers: ["ON DELETE CASCADE"],
     points: 2,
+    explanation: "The CASCADE action automatically deletes child records (inventory) when the parent record (warehouse) is removed."
   },
 
   {
@@ -186,6 +190,7 @@ CREATE TABLE OrderLine (
 - No justification provided for constraint choices
 - Using surrogate key on OrderLine instead of composite PK`,
     points: 12,
+    explanation: "This design uses Primary Keys for identity, Foreign Keys for relationships, and CHECK constraints to ensure business logic (like positive prices) is enforced at the database level."
   },
 
   // ─────────────────────────────────────────────
@@ -205,6 +210,7 @@ CREATE TABLE OrderLine (
     ],
     correctAnswers: ["WHERE Price BETWEEN 100 AND 500"],
     points: 2,
+    explanation: "The BETWEEN operator is inclusive, meaning it correctly captures the values 100 and 500 as well as everything in between."
   },
 
   {
@@ -225,6 +231,7 @@ CREATE TABLE OrderLine (
       },
     ],
     points: 2,
+    explanation: "In the SQL order of operations, WHERE filters individual rows before grouping, while HAVING filters the results after they have been aggregated."
   },
 
   {
@@ -238,6 +245,7 @@ CREATE TABLE OrderLine (
       caseSensitive: false,
       tolerance: 0,
     },
+    explanation: "HAVING was specifically designed to be used with aggregate functions (like SUM or COUNT) to filter groups."
   },
 
   {
@@ -253,6 +261,7 @@ CREATE TABLE OrderLine (
     ],
     correctAnswers: ["Use GROUP BY and HAVING with SUM()"],
     points: 2,
+    explanation: "To find a total per customer, you must group them first; since you are filtering by the result of SUM(), you must use HAVING."
   },
 
   {
@@ -311,6 +320,7 @@ HAVING SUM(OrderTotal) > (
 | Missing subquery (compares to literal instead of computed average) | −2 |
 | **Total** | **10** |`,
     points: 12,
+    explanation: "This query requires a subquery because you cannot compare a sum directly to an average of sums in a single step; the subquery \"pre-calculates\" the average for the outer query to use."
   },
 
   // ─────────────────────────────────────────────
@@ -330,6 +340,7 @@ HAVING SUM(OrderTotal) > (
     ],
     correctAnswers: ["LEFT OUTER JOIN"],
     points: 2,
+    explanation: "A LEFT JOIN returns all records from the left table (Customers) and matching records from the right table (Orders); if no match exists, it still shows the customer with NULLs for the order fields."
   },
 
   {
@@ -343,6 +354,7 @@ HAVING SUM(OrderTotal) > (
       caseSensitive: false,
       tolerance: 0,
     },
+    explanation: "A subquery is used to perform a search that provides data to the main query."
   },
 
   {
@@ -358,6 +370,7 @@ HAVING SUM(OrderTotal) > (
     ],
     correctAnswers: ["IN"],
     points: 2,
+    explanation: "While = works for a single value, IN allows you to check if a value exists within a list or a multi-row result set returned by a subquery."
   },
 
   {
@@ -418,6 +431,7 @@ JOIN   Product   P  ON OL.ProductID = P.ProductID;
 - Incorrect column references (e.g. referencing Price from OrderLine instead of Product)
 - Omitting table aliases causing ambiguous column names`,
     points: 4,
+    explanation: "This query links four tables to bridge the gap between a Customer and the specific Products they bought, using a calculated column to find the total cost per line item."
   },
 
 ];

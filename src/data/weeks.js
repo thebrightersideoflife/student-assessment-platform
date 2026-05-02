@@ -8,6 +8,7 @@
 //   name        string   — display name ("Week 1")
 //   block       number   — academic block number (1, 2, 3, ...)
 //   kind        string?  — undefined = normal | "quiz" = formal online quiz | "exam" = official exam
+//   duration    number?  — time limit in minutes (only for quiz/exam weeks — practice weeks have no time limit)
 //   moduleAudio object?  — { audioUrl, audioDescription } if this week has an intro audio
 //
 // Block label ("Block 1, Week 4") is derived at render time via getWeekLabel()
@@ -231,12 +232,26 @@ export const weeks = {
         audioDescription: "An introduction to Week 7 of the Software Engineering module, outlining the main topics and learning objectives."
       }
     },
+    { id: "8", 
+      name: "Week 8", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week8-intro.mp3",
+        audioDescription: "An introduction to Week 8 of the Software Engineering module, outlining the main topics and learning objectives."
+      }
+    },
     // add more weeks as you build them
   ],
 
   ITSSA: [
-    //{ id: "1", name: "Week 1", block: 1 },
-    // add weeks as you build them
+    { id: "1", 
+      name: "Week 1", 
+      block: 1,
+      moduleAudio: {
+        audioUrl: "/audio/itssa-week1-intro.mp3",
+        audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 1."
+      }
+    },
   ],
 
 };

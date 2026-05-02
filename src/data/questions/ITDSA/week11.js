@@ -42,6 +42,7 @@ The company plans to optimise its database design using advanced SQL features su
     ],
     correctAnswers: ["ROLLBACK of the entire transaction"],
     points: 2,
+    explanation: "A rollback ensures atomicity by reversing any partial changes made before a failure, returning the database to its last consistent state."
   },
 
   {
@@ -57,6 +58,7 @@ The company plans to optimise its database design using advanced SQL features su
     },
     ],
     points: 2,
+    explanation: "The COMMIT command saves all changes made during a transaction to the physical disk permanently."
   },
 
   {
@@ -70,6 +72,7 @@ The company plans to optimise its database design using advanced SQL features su
       caseSensitive: false,
       tolerance: 0,
     },
+    explanation: "Atomicity is one of the ACID properties; it guarantees that a transaction is treated as a single unit that either completely succeeds or completely fails."
   },
 
   {
@@ -167,6 +170,7 @@ Weak answers define terms in isolation. Strong answers *apply concepts to the Ne
     ],
     correctAnswers: ["Simplify complex queries and restrict data access"],
     points: 2,
+    explanation: "Views provide a virtual table that can hide sensitive columns and wrap complex multi-table joins into a simple selectable object."
   },
 
   {
@@ -182,6 +186,7 @@ Weak answers define terms in isolation. Strong answers *apply concepts to the Ne
     },
     ],
     points: 2,
+    explanation: "Views are virtual because they do not store data themselves; they merely store the SQL query that retrieves data from base tables."
   },
 
   {
@@ -195,6 +200,7 @@ Weak answers define terms in isolation. Strong answers *apply concepts to the Ne
       caseSensitive: false,
       tolerance: 0,
     },
+    explanation: "The DROP command is used in SQL to delete structural objects like tables, indexes, or views from the database schema."
   },
 
   {
@@ -282,6 +288,7 @@ Full syntax *is* required here. Logical correctness of the \`WHERE\` clause carr
     ],
     correctAnswers: ["Functions return a value and can be used in expressions"],
     points: 2,
+    explanation: "Unlike procedures, functions are designed to return a specific value and can be embedded directly into SELECT statements or calculations."
   },
 
   {
@@ -297,6 +304,7 @@ Full syntax *is* required here. Logical correctness of the \`WHERE\` clause carr
       },
     ],
     points: 2,
+    explanation: "By definition, a SQL function must return a result to the calling environment."
   },
 
   {
@@ -310,6 +318,7 @@ Full syntax *is* required here. Logical correctness of the \`WHERE\` clause carr
       caseSensitive: false,
       tolerance: 0,
     },
+    explanation: "An INOUT parameter allows a value to be passed into a procedure, modified by the logic inside, and then passed back out to the caller."
   },
 
   {
@@ -378,6 +387,7 @@ Full syntax *is* required here. Logical correctness of the \`WHERE\` clause carr
     ],
     correctAnswers: ["Speed up data retrieval"],
     points: 2,
+    explanation: "An index creates a sorted lookup structure (like a B-tree) that allows the DBMS to find data without scanning every row in a table."
   },
 
   {
@@ -393,6 +403,7 @@ Full syntax *is* required here. Logical correctness of the \`WHERE\` clause carr
     },
     ],
     points: 2,
+    explanation: "A unique index ensures that no two rows in a table have the same value in the indexed column (e.g., an Email address)."
   },
 
   {
@@ -445,6 +456,7 @@ Full syntax *is* required here. Logical correctness of the \`WHERE\` clause carr
     ],
     correctAnswers: ["An automatic action executed in response to database events"],
     points: 2,
+    explanation: "Triggers are event-driven scripts that fire automatically when a DML operation (like INSERT or UPDATE) occurs."
   },
 
   {
@@ -460,6 +472,7 @@ Full syntax *is* required here. Logical correctness of the \`WHERE\` clause carr
       },
     ],
     points: 2,
+    explanation: "Triggers respond to data changes\u2014specifically INSERT, UPDATE, and DELETE\u2014which are DML operations."
   },
 
   {

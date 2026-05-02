@@ -30,7 +30,8 @@ export default [
       "Data storage capacity"
     ],
     correctAnswers: ["Business procedures and rules"],
-    points: 2
+    points: 2,
+    explanation: "Business procedures define how data is governed and used strategically, whereas hardware is merely the physical tool that supports the data."
   },
 
   // ── Q1.1 Justification — open-ended (2 marks) ─────────────────────────────
@@ -48,7 +49,8 @@ export default [
       caseSensitive: false,
       tolerance: 30,
       requiredTerms: ["business", "procedures"]
-    }
+    },
+    explanation: "Business procedures are more appropriate because they define how data is governed and used strategically, whereas hardware is merely the physical tool that supports the data."
   },
 
   // ── Q1.2 Short Answer — Conceptual precision (3 marks) ────────────────────
@@ -63,7 +65,8 @@ export default [
     validationOptions: {
       caseSensitive: false,
       tolerance: 10
-    }
+    },
+    explanation: "These are the internal guidelines that ensure data is handled consistently across an organization."
   },
 
   {
@@ -76,7 +79,8 @@ export default [
     validationOptions: {
       caseSensitive: false,
       tolerance: 10
-    }
+    },
+    explanation: "This is the phase where professionals gather information through interviews and manuals to understand what the system needs to do."
   },
 
   {
@@ -89,7 +93,8 @@ export default [
     validationOptions: {
       caseSensitive: false,
       tolerance: 10
-    }
+    },
+    explanation: "This principle treats data as a company-wide asset accessible to all authorized users rather than being owned by a single department."
   },
 
   // ── Q1.3 Fill-in-the-blank + Explanation (6 marks) ────────────────────────
@@ -115,7 +120,8 @@ export default [
         options: ["sovereignty", "warehousing", "accuracy", "normalisation"],
         correctAnswer: "accuracy"
       }
-    ]
+    ],
+    explanation: "TechWave currently suffers from redundancy because departments store the same information in separate spreadsheets. This causes inconsistency because an update in HR does not automatically reflect in Finance."
   },
 
   {
@@ -131,7 +137,8 @@ export default [
       caseSensitive: false,
       tolerance: 40,
       requiredTerms: ["techwave"]
-    }
+    },
+    explanation: "TechWave currently suffers from redundancy because departments store the same information in separate spreadsheets. This causes inconsistency because an update in HR does not automatically reflect in Finance."
   },
 
   // ── Q1.4a Essay Part A — Data as a resource + Business procedures (6 marks)
@@ -145,7 +152,8 @@ export default [
       "Treating data as a shared organisational resource means all departments access the same centralised, consistent information rather than maintaining isolated spreadsheets. For TechWave, this directly resolves data inconsistency and duplication — when HR updates an employee record, Finance and Customer Support immediately see the same change, eliminating conflicting data. It also addresses limited data sharing, since a centralised DBMS allows cross-departmental queries and reporting that were previously impossible with siloed systems.\n\nAligning business procedures with the DBMS ensures that the rules governing how data is captured, updated, and used are enforced at a system level. At TechWave, this means standardising how customer orders are recorded in Product Development versus how they are billed in Finance, preventing the contradictions that currently undermine decision-making. Procedures also define who is responsible for data quality, ensuring accountability across departments."
     ],
     markingGuide: "Award 2 marks for explaining data as a shared resource with clear scenario linkage (e.g. centralisaton resolving duplication or sharing). Award 2 marks for explaining how business procedures address a specific TechWave challenge (e.g. standardising data entry, enforcing consistency). Award 2 marks for identifying and discussing TWO distinct TechWave challenges — answers that address only one challenge are capped at 4 marks.",
-    points: 6
+    points: 6,
+    explanation: "Technology alone is insufficient; the interaction between people (training/culture) and processes (standardized rules) is what determines if a DBMS succeeds."
   },
 
   // ── Q1.4b Essay Part B — Technology and people interaction (6 marks) ──────
@@ -159,7 +167,8 @@ export default [
       "The interaction between technology and people is at the heart of any DBMS implementation. While the DBMS provides the technical infrastructure — centralised storage, query tools, security controls — it only delivers value if the people using it understand how to interact with it correctly. At TechWave, staff across HR, Finance, and other departments must be trained to enter data consistently, follow access protocols, and trust the system's outputs over their old spreadsheets.\n\nIf this interaction is poorly managed, several problems can arise. Employees who resist the change may continue using personal spreadsheets in parallel, recreating the very duplication the DBMS was meant to eliminate. Poorly trained staff may enter data inconsistently, corrupting the integrity of the centralised database. Management who do not understand the system's capabilities may fail to leverage it for decision-making, meaning the investment yields no strategic benefit. In the worst case, cultural resistance can cause the entire implementation to fail — not because the technology is flawed, but because the human dimension was neglected."
     ],
     markingGuide: "Award 2 marks for explaining what the technology–people interaction means in a DBMS context (not just a definition — must show the dependency). Award 2 marks for identifying at least TWO specific consequences of poor management of this interaction at TechWave. Award 2 marks for demonstrating that the student understands technology alone is insufficient — full marks require acknowledgement that human factors (training, culture, adoption) are equally critical.",
-    points: 6
+    points: 6,
+    explanation: "Technology alone is insufficient; the interaction between people (training/culture) and processes (standardized rules) is what determines if a DBMS succeeds."
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -187,7 +196,8 @@ export default [
       "Monitoring query performance"
     ],
     correctAnswers: ["Defining data governance policies"],
-    points: 2
+    points: 2,
+    explanation: "Defining policies is a managerial task because it involves high-level decision-making regarding ownership and legal compliance, not the technical execution of code."
   },
 
   // ── Q2.1 Justification — open-ended (1 mark) ──────────────────────────────
@@ -205,7 +215,8 @@ export default [
       caseSensitive: false,
       tolerance: 35,
       requiredTerms: ["management", "governance"]
-    }
+    },
+    explanation: "Defining policies is a managerial task because it involves high-level decision-making regarding ownership and legal compliance, not the technical execution of code."
   },
 
   // ── Q2.2 Short Answer — DBA responsibilities (4 marks) ────────────────────
@@ -223,7 +234,8 @@ export default [
       caseSensitive: false,
       tolerance: 35,
       requiredTerms: ["backup", "recovery", "performance", "maintenance"]
-    }
+    },
+    explanation: "The DBA performs regular backups so that if the system crashes, the data can be restored, ensuring system reliability."
   },
 
   {
@@ -239,7 +251,8 @@ export default [
       caseSensitive: false,
       tolerance: 35,
       requiredTerms: ["dba", "database", "edusmart", "system"]
-    }
+    },
+    explanation: "This supports long-term needs by monitoring how the system handles growth and optimizing queries to ensure the platform remains fast as more students join."
   },
 
   // ── Q2.3 Fill-in-the-blank + Explanation (6 marks) ────────────────────────
@@ -265,7 +278,8 @@ export default [
         options: ["migration", "normalisation", "configuration", "replication"],
         correctAnswer: "configuration"
       }
-    ]
+    ],
+    explanation: "Proper configuration is critical because it sets up security and access levels. If done poorly, unauthorized users might access student results, or the system might fail to handle the institutional workload."
   },
 
   {
@@ -281,7 +295,8 @@ export default [
       caseSensitive: false,
       tolerance: 40,
       requiredTerms: ["edusmart", "configuration"]
-    }
+    },
+    explanation: "Proper configuration is critical because it sets up security and access levels. If done poorly, unauthorized users might access student results, or the system might fail to handle the institutional workload."
   },
 
   // ── Q2.4a Essay Part A — Technological + Managerial impact (6 marks) ──────
@@ -295,7 +310,8 @@ export default [
       "Technologically, EduSmart must acquire and configure compatible server infrastructure to host Oracle XE, ensure network reliability so staff and students can access Oracle LiveSQL remotely, and establish maintenance routines to keep the system updated and secure. This represents a significant shift from the institution's previous manual or spreadsheet-based systems, requiring investment in both hardware and technical expertise. The DBA plays a central role here — without proper installation and configuration, the system cannot function reliably.\n\nManagerially, EduSmart's leadership must make strategic decisions that go beyond the technical setup. They must define data governance policies — determining who owns student data, how long it is retained, and who is permitted to access it. Management must also allocate budget for training, support, and ongoing maintenance, and they must communicate clearly to staff why the change is happening and what is expected of them. Weak managerial decisions create ambiguity, leading to inconsistent data practices and resistance from staff who are unsure of their responsibilities under the new system."
     ],
     markingGuide: "Award 1 mark for identifying the technological impact. Award 2 marks for explaining technological impact with specific EduSmart detail (infrastructure, Oracle XE, DBA role). Award 1 mark for identifying the managerial impact. Award 2 marks for explaining managerial impact with specific EduSmart detail (governance, policy, budget, communication). Generic textbook answers without scenario application are capped at 3 marks total.",
-    points: 6
+    points: 6,
+    explanation: "Technology alone is insufficient; the interaction between people (training/culture) and processes (standardized rules) is what determines if a DBMS succeeds."
   },
 
   // ── Q2.4b Essay Part B — Cultural impact + Interdependence (6 marks) ──────
@@ -309,7 +325,8 @@ export default [
       "Culturally, EduSmart's staff — including administrative personnel, instructors, and department heads — must transition from familiar manual processes to a fully digital, centralised database environment. Many employees may resist this change, not because the technology is difficult, but because it disrupts established routines and requires learning new skills. This resistance can manifest as continued use of paper records, reluctance to enter data into the system, or general scepticism about whether the new platform is an improvement. EduSmart must invest in structured training programmes, provide ongoing support, and foster a culture that values data accuracy and digital competence.\n\nThese three impacts — technological, managerial, and cultural — are deeply interdependent. Poor technology implementation (e.g. an unreliable system) gives staff a legitimate reason to distrust and avoid it, deepening cultural resistance. Weak management decisions (e.g. no training budget or unclear policies) leave staff without the guidance needed to adapt. Conversely, cultural resistance that is not addressed will undermine even a technically excellent system — if instructors refuse to enter assessment results correctly, the database's integrity is compromised regardless of its architecture. A successful implementation requires all three dimensions to be managed simultaneously and with equal seriousness."
     ],
     markingGuide: "Award 1 mark for identifying cultural resistance as the core challenge. Award 2 marks for explaining cultural impact with specific EduSmart examples (e.g. staff reverting to paper, reluctance to adopt the system). Award 3 marks for a clear, well-reasoned discussion of interdependence — specifically showing cause-and-effect relationships between at least two of the three impact areas. Answers that list impacts separately without discussing their connections are capped at 4 marks.",
-    points: 6
+    points: 6,
+    explanation: "The cultural shift is often the hardest part; staff moving from paper to digital may resist the system, which can compromise data integrity if they refuse to use it correctly."
   }
 
 ];
