@@ -9,6 +9,7 @@ import RoadmapPage from "../pages/RoadmapPage";
 import ResourcesPage from "../pages/ResourcesPage";
 import ProgressPage from "../pages/ProgressPage";
 import SupportPage from "../pages/SupportPage";
+import QuestionSearchPage from "../pages/QuestionSearchPage";
 
 export default function AppRouter() {
   return (
@@ -28,17 +29,13 @@ export default function AppRouter() {
 
         <Route path="/support" element={<SupportPage />} />
 
+        <Route path="/search/questions" element={<QuestionSearchPage />} />
+
         <Route path="/module/:moduleId" element={<WeeksPage />} />
 
-        <Route
-          path="/module/:moduleId/week/:weekId"
-          element={<AssessmentPage />}
-        />
+        <Route path="/module/:moduleId/week/:weekId" element={<AssessmentPage />}/>
 
-        <Route
-          path="/module/:moduleId/roadmap"
-          element={<RoadmapPage />}
-        />
+        <Route path="/module/:moduleId/roadmap" element={<RoadmapPage />}/>
       </Routes>
     </BrowserRouter>
   );

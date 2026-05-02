@@ -274,19 +274,19 @@ export default function Header() {
         </Link>
 
         {/* Navigation */}
-        <nav className="header-nav">
-          <Link to="/resources" className={`nav-link ${isActive("/resources") ? "active" : ""}`}>
-            Resources
-          </Link>
+        <nav className="header-nav">          
           <Link to="/modules" className={`nav-link ${isActive("/modules") ? "active" : ""}`}>
             Modules
+          </Link>
+          <Link to="/search/questions" className={`nav-link ${isActive("/search/questions") ? "active" : ""}`}>
+            Search Questions
           </Link>
           <Link to="/progress" className={`nav-link ${isActive("/progress") ? "active" : ""}`}>
             My Progress
           </Link>
           <Link to="/support" className={`nav-link ${isActive("/support") ? "active" : ""}`}>
             Support
-          </Link>
+          </Link>          
         </nav>
 
         {/* Actions */}
@@ -436,6 +436,7 @@ export default function Header() {
             <button className={`mobile-nav-item ${isActive("/modules") ? "active" : ""}`} onClick={() => navigateTo("/modules")}>Modules</button>
             <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>
             <button className={`mobile-nav-item ${isActive("/support") ? "active" : ""}`} onClick={() => navigateTo("/support")}>Support</button>
+            <button className={`mobile-nav-item ${isActive("/search/questions") ? "active" : ""}`} onClick={() => navigateTo("/search/questions")}>Search Questions</button>
           </div>
         </div>,
         document.body
