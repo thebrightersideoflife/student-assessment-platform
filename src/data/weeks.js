@@ -246,7 +246,7 @@ export const weeks = {
   ITSSA: [
     { id: "1", 
       name: "Week 1", 
-      block: 1,
+      block: 2,
       moduleAudio: {
         audioUrl: "/audio/itssa-week1-intro.mp3",
         audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 1."
