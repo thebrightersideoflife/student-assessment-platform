@@ -5,6 +5,21 @@ import ThemeToggle from "./ThemeToggle";
 import "../assets/styles/header.css";
 import { buildSearchIndex, queryIndex } from "../utils/search";
 
+const MODULE_SELECTION_KEY = "progress_tracked_modules";
+
+function getTrackedModuleIds(allModuleIds) {
+  try {
+    const raw = localStorage.getItem(MODULE_SELECTION_KEY);
+    if (!raw) return null; // not yet set — means all modules
+    const parsed = JSON.parse(raw);
+    const validIds = new Set(allModuleIds);
+    const filtered = parsed.filter((id) => validIds.has(id));
+    return filtered.length > 0 ? filtered : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -60,12 +75,13 @@ export default function Header() {
 
       setSearchIndex(buildSearchIndex(modules, activeWeeks, availableRoadmaps));
     }).catch(() => {
-      // fallback: try to build from modules only
-      import("../data/modules").then(({ modules }) => setSearchIndex(buildSearchIndex(modules, {})));
+      import("../data/modules").then(({ modules }) =>
+        setSearchIndex(buildSearchIndex(modules, {}))
+      );
     });
   }, []);
 
-  // Calculate overall progress from localStorage
+  // Calculate overall progress — scoped to the tracked modules the student selected
   useEffect(() => {
     const calculateProgress = async () => {
       try {
@@ -75,9 +91,16 @@ export default function Header() {
           import("../data/questions/index.js"),
         ]);
 
-        const modules = mods.modules || [];
+        const allModules = mods.modules || [];
         const weeks = weeksMod.weeks || {};
         const questions = questionsMod.questions || {};
+
+        // Respect the student's module selection — same key as ProgressPage
+        const allModuleIds = allModules.map((m) => m.id);
+        const trackedIds = getTrackedModuleIds(allModuleIds);
+        const modules = trackedIds
+          ? allModules.filter((m) => trackedIds.includes(m.id))
+          : allModules;
 
         let completed = 0;
         let total = 0;
@@ -99,8 +122,7 @@ export default function Header() {
 
         setOverallProgress({ completed, total });
       } catch (err) {
-        // Fallback: if imports fail, keep existing values
-        // but still attempt a naive scan of localStorage keys
+        // Fallback: naive localStorage scan (no module filtering possible)
         let completed = 0;
         let total = 0;
         try {
@@ -108,8 +130,7 @@ export default function Header() {
             const key = localStorage.key(i);
             if (key && key.startsWith("assessment_completion_")) {
               total++;
-              const data = localStorage.getItem(key);
-              if (data) completed++;
+              if (localStorage.getItem(key)) completed++;
             }
           }
         } catch (e) {
@@ -122,10 +143,13 @@ export default function Header() {
     calculateProgress();
     window.addEventListener("storage", calculateProgress);
     window.addEventListener("assessmentCompleted", calculateProgress);
+    // Also re-calculate when the tracked module selection changes
+    window.addEventListener("assessmentStorageUpdate", calculateProgress);
 
     return () => {
       window.removeEventListener("storage", calculateProgress);
       window.removeEventListener("assessmentCompleted", calculateProgress);
+      window.removeEventListener("assessmentStorageUpdate", calculateProgress);
     };
   }, [location]);
 
@@ -237,8 +261,7 @@ export default function Header() {
     if (type === "roadmap") {
       return (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
         </svg>
       );
     }
@@ -274,7 +297,7 @@ export default function Header() {
         </Link>
 
         {/* Navigation */}
-        <nav className="header-nav">          
+        <nav className="header-nav">
           <Link to="/modules" className={`nav-link ${isActive("/modules") ? "active" : ""}`}>
             Modules
           </Link>
@@ -286,7 +309,7 @@ export default function Header() {
           </Link>
           <Link to="/support" className={`nav-link ${isActive("/support") ? "active" : ""}`}>
             Support
-          </Link>          
+          </Link>
         </nav>
 
         {/* Actions */}
@@ -322,15 +345,14 @@ export default function Header() {
             title="Search assessments (⌘K)"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </button>
 
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Mobile hamburger (hidden on large screens) */}
+          {/* Mobile hamburger */}
           <button
             className={`action-button hamburger-button ${menuOpen ? "active" : ""}`}
             onClick={() => setMenuOpen((s) => !s)}
@@ -339,9 +361,9 @@ export default function Header() {
             title="Menu"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
           </button>
         </div>
@@ -352,8 +374,7 @@ export default function Header() {
         <div className="search-container" ref={searchContainerRef}>
           <div className="search-bar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: "var(--text-secondary)" }}>
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input
               ref={searchInputRef}
@@ -368,8 +389,7 @@ export default function Header() {
             <span className="search-shortcut">ESC</span>
             <button className="search-close" onClick={closeSearch}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </button>
           </div>
@@ -400,8 +420,7 @@ export default function Header() {
               ) : (
                 <div className="search-empty">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                   </svg>
                   <span>No results for <strong>"{searchQuery}"</strong></span>
                 </div>
@@ -419,14 +438,13 @@ export default function Header() {
         </div>
       )}
 
-      {/* Mobile menu (renders to document.body to avoid transform containment) */}
+      {/* Mobile menu */}
       {menuOpen && createPortal(
         <div className="mobile-menu fullscreen" ref={menuRef} role="menu" aria-label="Mobile navigation">
           <div className="mobile-menu-top">
             <button className="action-button close-button" onClick={() => setMenuOpen(false)} aria-label="Close menu">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </button>
           </div>

@@ -50,6 +50,12 @@ function ModuleSelector({ tracked, onChange, firstVisit }) {
     setDraft(new Set(modules.map((m) => m.id)));
   }
 
+  function handleDeselectAll() {
+    // Retain exactly one module so the save button stays enabled.
+    // The student can then immediately click the one they actually want.
+    setDraft(new Set([modules[0].id]));
+  }
+
   function handleSave() {
     const ids = Array.from(draft);
     saveTrackedModules(ids);
@@ -57,6 +63,7 @@ function ModuleSelector({ tracked, onChange, firstVisit }) {
   }
 
   const allSelected = draft.size === modules.length;
+  const noneSelected = draft.size <= 1;
   const draftList = Array.from(draft);
   const isDirty =
     !tracked ||
@@ -89,7 +96,7 @@ function ModuleSelector({ tracked, onChange, firstVisit }) {
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "5px" }}>
-            <span style={{ fontSize: "18px" }}>🎯</span>
+            <span style={{ fontSize: "18px" }}>📚</span>
             <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>
               {firstVisit ? "Choose your modules to get started" : "My Modules"}
             </h3>
@@ -118,26 +125,47 @@ function ModuleSelector({ tracked, onChange, firstVisit }) {
           </p>
         </div>
 
-        {!allSelected && (
-          <button
-            onClick={handleSelectAll}
-            style={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--text-secondary)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px 0",
-              textDecoration: "underline",
-              textUnderlineOffset: "3px",
-              flexShrink: 0,
-              whiteSpace: "nowrap",
-            }}
-          >
-            Select all
-          </button>
-        )}
+        {/* Select all / Deselect all shortcuts */}
+        <div style={{ display: "flex", gap: "12px", flexShrink: 0, alignItems: "center" }}>
+          {!allSelected && (
+            <button
+              onClick={handleSelectAll}
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--text-secondary)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px 0",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Select all
+            </button>
+          )}
+          {!noneSelected && (
+            <button
+              onClick={handleDeselectAll}
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--text-secondary)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px 0",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Deselect all
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Module grid */}
