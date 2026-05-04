@@ -10,6 +10,7 @@ import ResourcesPage from "../pages/ResourcesPage";
 import ProgressPage from "../pages/ProgressPage";
 import SupportPage from "../pages/SupportPage";
 import QuestionSearchPage from "../pages/QuestionSearchPage";
+import RevisionPage from "../pages/RevisionPage";
 
 export default function AppRouter() {
   return (
@@ -36,6 +37,8 @@ export default function AppRouter() {
         <Route path="/module/:moduleId/week/:weekId" element={<AssessmentPage />}/>
 
         <Route path="/module/:moduleId/roadmap" element={<RoadmapPage />}/>
+
+        <Route path="/revision" element={<RevisionPage />} />
       </Routes>
     </BrowserRouter>
   );

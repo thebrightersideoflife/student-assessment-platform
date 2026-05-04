@@ -31,7 +31,7 @@ export default [
     ],
     correctAnswers: ["Business procedures and rules"],
     points: 2,
-    explanation: "Business procedures define how data is governed and used strategically, whereas hardware is merely the physical tool that supports the data."
+    explanation: "Standardised business rules define how data is created, shared, and protected across departments — aligning people, processes, and technology."
   },
 
   // ── Q1.1 Justification — open-ended (2 marks) ─────────────────────────────
@@ -42,7 +42,7 @@ export default [
     sectionLabel: "1.1 (Justify)",
     text: "You selected an answer in Q1.1. In 1–2 sentences, explain why that answer is more appropriate than ONE of the other options in the context of TechWave.",
     correctAnswers: [
-      "Business procedures define how data is created, used, and controlled across departments. Without aligning the DBMS to these rules, even advanced hardware will not resolve TechWave's inconsistency and duplication problems."
+      "Business procedures define how data is created, used, and controlled across departments. Without aligning the DBMS to these rules, even advanced hardware will not resolve TechWave's inconsistency and duplication problems. This is more appropriate than D. Data storage capacity, which only affects how much data can be kept, not how consistently or meaningfully it’s managed. In other words, storage size doesn’t guarantee data quality or governance, but well‑defined procedures do."
     ],
     points: 2,
     validationOptions: {
@@ -78,9 +78,9 @@ export default [
     points: 1,
     validationOptions: {
       caseSensitive: false,
-      tolerance: 10
+      tolerance: 30
     },
-    explanation: "This is the phase where professionals gather information through interviews and manuals to understand what the system needs to do."
+    explanation: "This is the phase where professionals *gather information* through interviews and manuals to understand **what the system needs to do**."
   },
 
   {
@@ -88,7 +88,7 @@ export default [
     type: "open-ended",
     sectionLabel: "1.2c",
     text: "After implementing the DBMS, all departments at TechWave will draw from one consistent pool of data instead of their own isolated copies. What two-word term describes this principle of treating data as a shared company-wide resource?",
-    correctAnswers: ["Data integration", "Shared resource", "Data asset", "Shared data"],
+    correctAnswers: ["Data integration","Data Sharing", "Data centralisation", "Data centralization"],
     points: 1,
     validationOptions: {
       caseSensitive: false,

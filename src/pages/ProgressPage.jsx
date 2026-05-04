@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { modules } from "../data/modules";
 import StreakCard from "../components/StreakCard";
+import ProgressReport from "../components/ProgressReport";
 import AssessmentStorage from "../utils/assessmentStorage";
 import { getActiveWeeks, getCurrentStreak, getLongestStreak } from "../utils/streakHelpers";
+import { buildCompletionMap, countCompletedWeeks } from "../utils/revisionHelpers";
 import "../assets/styles/progress.css";
 
 const MODULE_SELECTION_KEY = "progress_tracked_modules";
@@ -96,7 +98,7 @@ function ModuleSelector({ tracked, onChange, firstVisit }) {
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "5px" }}>
-            <span style={{ fontSize: "18px" }}>📚</span>
+            <span style={{ fontSize: "18px" }}>🎯</span>
             <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>
               {firstVisit ? "Choose your modules to get started" : "My Modules"}
             </h3>
@@ -316,6 +318,7 @@ export default function ProgressPage() {
   const [allProgressData, setAllProgressData] = useState([]);
   const [streakData, setStreakData] = useState({ streak: 0, longest: 0, isAtRisk: false, activeWeeks: [] });
   const [expandedAttempts, setExpandedAttempts] = useState({});
+  const [completedWeekCount, setCompletedWeekCount] = useState(0);
 
   const firstVisit = trackedModuleIds === null;
 
@@ -349,6 +352,25 @@ export default function ProgressPage() {
   function handleModuleChange(ids) {
     setTrackedModuleIds(ids);
     setShowSelector(false);
+  }
+
+  function handleExportPDF() {
+    // Force light theme so the print stylesheet gets clean colours
+    const prev = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light");
+
+    const date = new Date().toLocaleDateString("en-ZA", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+    const prevTitle = document.title;
+    document.title = `Progress_Report_${new Date().toISOString().slice(0, 10)}`;
+
+    window.print();
+
+    // Restore theme + title after the print dialog closes
+    document.title = prevTitle;
+    if (prev) document.documentElement.setAttribute("data-theme", prev);
+    else document.documentElement.removeAttribute("data-theme");
   }
 
   // Load all progress once on mount
@@ -417,6 +439,15 @@ export default function ProgressPage() {
       const { streak, isAtRisk } = getCurrentStreak(activeWeeks);
       const longest = getLongestStreak(activeWeeks);
       setStreakData({ streak, longest, isAtRisk, activeWeeks });
+
+      // Count completed weeks for revision entry point
+      const weeksMod2 = await import("../data/weeks");
+      const completionMap = buildCompletionMap(
+        modules.map((m) => m.id),
+        weeksMod2.weeks || {},
+        AssessmentStorage.getCompletionStatus.bind(AssessmentStorage)
+      );
+      setCompletedWeekCount(countCompletedWeeks(completionMap));
     };
 
     compute();
@@ -453,19 +484,33 @@ export default function ProgressPage() {
             </p>
           </div>
 
-          {/* Edit modules button — visible only after first selection is saved */}
+          {/* Action buttons — visible only after first selection is saved */}
           {!firstVisit && !showSelector && (
-            <button
-              onClick={() => setShowSelector(true)}
-              className="button"
-              style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, flexShrink: 0, marginTop: "8px", display: "flex", alignItems: "center", gap: "7px" }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-              Edit modules
-            </button>
+            <div style={{ display: "flex", gap: "10px", flexShrink: 0, marginTop: "8px", flexWrap: "wrap" }}>
+              <button
+                onClick={handleExportPDF}
+                className="button solid"
+                style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export as PDF
+              </button>
+              <button
+                onClick={() => setShowSelector(true)}
+                className="button"
+                style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit modules
+              </button>
+            </div>
           )}
         </div>
 
@@ -487,6 +532,50 @@ export default function ProgressPage() {
               isAtRisk={streakData.isAtRisk}
               activeWeeks={streakData.activeWeeks}
             />
+
+            {/* ── Revision Mode entry point ────────────────────── */}
+            {completedWeekCount >= 2 && (
+              <div style={{
+                background: "rgba(var(--bg-card-rgb), 0.72)",
+                backdropFilter: "blur(12px) saturate(160%)",
+                WebkitBackdropFilter: "blur(12px) saturate(160%)",
+                border: "1px solid rgba(var(--border-color-rgb), 0.45)",
+                borderRadius: "14px",
+                padding: "20px 24px",
+                marginBottom: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "20px",
+                flexWrap: "wrap",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <span style={{ fontSize: "32px", lineHeight: 1 }}>🔀</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "3px" }}>
+                      Cross-week Revision
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                      Mix questions from your {completedWeekCount} completed week{completedWeekCount !== 1 ? "s" : ""} into a single shuffled session.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate("/revision")}
+                  className="button solid"
+                  style={{ padding: "11px 22px", fontSize: "14px", fontWeight: 600, flexShrink: 0, display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 3 21 3 21 8"/>
+                    <line x1="4" y1="20" x2="21" y2="3"/>
+                    <polyline points="21 16 21 21 16 21"/>
+                    <line x1="15" y1="15" x2="21" y2="21"/>
+                    <line x1="4" y1="4" x2="9" y2="9"/>
+                  </svg>
+                  Start revision
+                </button>
+              </div>
+            )}
 
             <div className="stats-grid">
               <div className="stat-card">
@@ -626,6 +715,20 @@ export default function ProgressPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* ProgressReport is always mounted (hidden on screen, visible at print time) */}
+        {!firstVisit && (
+          <ProgressReport
+            progressData={progressData}
+            overallStats={overallStats}
+            streakData={streakData}
+            trackedCount={trackedModuleIds?.length ?? modules.length}
+            totalModules={modules.length}
+            generatedDate={new Date().toLocaleDateString("en-ZA", {
+              day: "numeric", month: "long", year: "numeric",
+            })}
+          />
         )}
       </div>
     </div>

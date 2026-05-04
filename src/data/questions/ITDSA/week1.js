@@ -93,7 +93,7 @@ export default [
     id: "ITDSA_W1_Q6",
     type: "open-ended",
     text: "In a manual file system, if a client's phone number is updated in the \"Invoices\" file but not the \"Shipping\" file, what specific type of anomaly has occurred?",
-    correctAnswers: ["Update Anomaly", "Update anomaly", "update anomaly"],
+    correctAnswers: ["Update Anomaly"],
     points: 4,
     validationOptions: {
       requiredTerms: ["update", "anomaly"],
@@ -222,6 +222,7 @@ export default [
     correctAnswers: ["Application Request", "DBMS Engine", "Application Request / DBMS Engine"],
     points: 4,
     validationOptions: {
+      requiredTerms: ["application request"],
       caseSensitive: false,
       allowPartialMatch: false
     },
