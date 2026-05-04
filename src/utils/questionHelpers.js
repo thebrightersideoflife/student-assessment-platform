@@ -53,7 +53,7 @@ export function getWeekKindConfig(kind) {
         bgColor:         "rgba(244,169,0,0.10)",
         borderColor:     "rgba(244,169,0,0.40)",
         description:     "This week is when you take the institution's formal online quiz.",
-        defaultDuration: 30,   // minutes — fallback if week.duration is absent
+        defaultDuration: 90,   // minutes — fallback if week.duration is absent
       };
 
     case "exam":

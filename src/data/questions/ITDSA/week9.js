@@ -21,6 +21,7 @@ export default [
   {
     id: "ITDSA_W9_Q1",
     type: "multiple-choice",
+    tags: ["business procedures", "data governance"],
     sectionLabel: "1.1",
     text: "TechWave's management wants to treat organisational data as a strategic asset rather than a departmental by-product. Which factor is MOST critical in ensuring the new DBMS aligns with this goal?",
     options: [
@@ -39,6 +40,7 @@ export default [
   {
     id: "ITDSA_W9_Q2",
     type: "open-ended",
+    tags: ["business procedures", "governance rationale"],
     sectionLabel: "1.1 (Justify)",
     text: "You selected an answer in Q1.1. In 1–2 sentences, explain why that answer is more appropriate than ONE of the other options in the context of TechWave.",
     correctAnswers: [
@@ -58,6 +60,7 @@ export default [
   {
     id: "ITDSA_W9_Q3",
     type: "open-ended",
+    tags: ["data governance rules", "business rules"],
     sectionLabel: "1.2a",
     text: "TechWave's departments each maintain their own records without any shared rules for how data is captured or used. What is the term for the guidelines that govern how data must be handled within an organisation?",
     correctAnswers: ["Business rules", "Data governance rules", "Data policies"],
@@ -72,6 +75,7 @@ export default [
   {
     id: "ITDSA_W9_Q4",
     type: "open-ended",
+    tags: ["requirements gathering", "systems analysis"],
     sectionLabel: "1.2b",
     text: "TechWave's DBA and data analyst interview department heads and review operational manuals before designing the DBMS. What is this information-gathering activity called?",
     correctAnswers: ["Requirements gathering", "Requirements analysis", "Needs analysis"],
@@ -86,6 +90,7 @@ export default [
   {
     id: "ITDSA_W9_Q5",
     type: "open-ended",
+    tags: ["data integration", "shared data"],
     sectionLabel: "1.2c",
     text: "After implementing the DBMS, all departments at TechWave will draw from one consistent pool of data instead of their own isolated copies. What two-word term describes this principle of treating data as a shared company-wide resource?",
     correctAnswers: ["Data integration","Data Sharing", "Data centralisation", "Data centralization"],
@@ -102,6 +107,7 @@ export default [
   {
     id: "ITDSA_W9_Q6",
     type: "fill-in-the-blank",
+    tags: ["data redundancy", "data quality"],
     sectionLabel: "1.3",
     text: "A DBMS improves organisational efficiency by reducing data ___, which is the unnecessary storing of the same data in multiple places. Structuring data so it is consistent and non-contradictory is referred to as maintaining data ___. When an organisation ensures its data reflects real-world facts accurately, it is upholding data ___.",
     blanks: [
@@ -127,6 +133,7 @@ export default [
   {
     id: "ITDSA_W9_Q7",
     type: "open-ended",
+    tags: ["redundancy explanation", "data quality impact"],
     sectionLabel: "1.3 (Explain)",
     text: "From the three concepts you completed above (redundancy, integrity, accuracy), choose ONE and explain in 2–3 sentences how it directly applies to TechWave's current situation.",
     correctAnswers: [
@@ -146,6 +153,7 @@ export default [
   {
     id: "ITDSA_W9_Q8",
     type: "show-answer",
+    tags: ["data as resource", "process alignment"],
     sectionLabel: "1.4 Part A",
     text: "Discuss how treating data as a shared organisational resource and aligning business procedures with the DBMS will address TWO of TechWave's current challenges. (6 marks)",
     correctAnswers: [
@@ -161,6 +169,7 @@ export default [
   {
     id: "ITDSA_W9_Q9",
     type: "show-answer",
+    tags: ["technology-people interaction", "change management"],
     sectionLabel: "1.4 Part B",
     text: "Explain the interaction between technology and people in a DBMS implementation, and discuss what can go wrong at TechWave if this interaction is poorly managed. (6 marks)",
     correctAnswers: [
@@ -187,6 +196,7 @@ export default [
   {
     id: "ITDSA_W9_Q10",
     type: "multiple-choice",
+    tags: ["data governance policies"],
     sectionLabel: "2.1",
     text: "EduSmart's senior management is deciding who controls access to student data, what retention policies apply, and how data quality will be maintained. Which activity BEST represents this responsibility?",
     options: [
@@ -205,6 +215,7 @@ export default [
   {
     id: "ITDSA_W9_Q11",
     type: "open-ended",
+    tags: ["managerial responsibility", "technical responsibility"],
     sectionLabel: "2.1 (Justify)",
     text: "In one sentence, explain why the activity you selected in Q2.1 is a managerial responsibility rather than a technical one.",
     correctAnswers: [
@@ -224,6 +235,7 @@ export default [
   {
     id: "ITDSA_W9_Q12",
     type: "open-ended",
+    tags: ["DBA reliability", "backup management"],
     sectionLabel: "2.2a",
     text: "Identify and explain ONE DBA responsibility at EduSmart that directly supports system reliability. Your answer must name the responsibility and explain what the DBA actually does.",
     correctAnswers: [
@@ -241,6 +253,7 @@ export default [
   {
     id: "ITDSA_W9_Q13",
     type: "open-ended",
+    tags: ["DBA long-term support", "performance monitoring"],
     sectionLabel: "2.2b",
     text: "Identify and explain a SECOND DBA responsibility at EduSmart that is different from your answer above, and explain how it supports the institution's long-term system needs.",
     correctAnswers: [
@@ -260,6 +273,7 @@ export default [
   {
     id: "ITDSA_W9_Q14",
     type: "fill-in-the-blank",
+    tags: ["Oracle XE", "configuration"],
     sectionLabel: "2.3",
     text: "EduSmart will install Oracle ___ locally on its servers as the core database engine. Staff who are off-campus can use Oracle ___ to run SQL queries through a browser without any installation. Before any user can access the system, the DBA must complete the process of system ___, which tailors the database to meet the institution's specific requirements.",
     blanks: [
@@ -285,6 +299,7 @@ export default [
   {
     id: "ITDSA_W9_Q15",
     type: "open-ended",
+    tags: ["system configuration", "security", "usability"],
     sectionLabel: "2.3 (Explain)",
     text: "Explain in 2–3 sentences why proper system configuration is critical at EduSmart. Your answer should reference what could go wrong if configuration is done poorly.",
     correctAnswers: [
@@ -304,6 +319,7 @@ export default [
   {
     id: "ITDSA_W9_Q16",
     type: "show-answer",
+    tags: ["technological impact", "managerial impact"],
     sectionLabel: "2.4 Part A",
     text: "Evaluate the TECHNOLOGICAL and MANAGERIAL impacts of implementing a DBMS at EduSmart Institute. For each impact, explain what it means in practice and how it affects the institution. (6 marks)",
     correctAnswers: [
@@ -319,6 +335,7 @@ export default [
   {
     id: "ITDSA_W9_Q17",
     type: "show-answer",
+    tags: ["cultural challenges", "interdependence", "tech management culture"],
     sectionLabel: "2.4 Part B",
     text: "Discuss the CULTURAL challenges EduSmart will face when implementing the DBMS, and explain how the technological, managerial, and cultural impacts are interdependent. (6 marks)",
     correctAnswers: [

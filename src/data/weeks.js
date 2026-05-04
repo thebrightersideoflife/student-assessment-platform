@@ -24,6 +24,7 @@ export const weeks = {
         audioUrl: "/audio/itnsa-week1-intro.mp3",
         audioDescription: "A short overview of Week 1 topics for the Network and Systems Administration module."
       },
+      duration: 45,   // minutes — overrides kindConfig.defaultDuration for quiz/exam weeks
     },
     { id: "2", 
       name: "Week 2", 
@@ -32,6 +33,7 @@ export const weeks = {
         audioUrl: "/audio/itnsa-week2-intro.mp3",
         audioDescription: "A short overview of Week 2 topics for the Network and Systems Administration module."
       },
+      duration: 115,   // custom duration for this week (overrides kindConfig.defaultDuration)
     },
     { id: "3", 
       name: "Week 3", 
@@ -39,7 +41,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itnsa-week3-intro.mp3",
         audioDescription: "A short overview of Week 3 topics for the Network and Systems Administration module."
-      }
+      },
+      duration: 120,
     },
     { id: "4", 
       name: "Week 4", 
@@ -48,7 +51,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itnsa-week4-intro.mp3",
         audioDescription: "A short overview of Week 4 topics for the Network and Systems Administration module."
-      }
+      },
+      duration: 120,
     },
     { id: "5", 
       name: "Week 5", 
@@ -56,7 +60,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itnsa-week5-intro.mp3",
         audioDescription: "A short overview of Week 5 topics for the Network and Systems Administration module."
-      }
+      },
+      duration: 75,
     },
     { id: "6", 
       name: "Week 6", 
@@ -64,7 +69,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itnsa-week6-intro.mp3",
         audioDescription: "A short overview of Week 6 topics for the Network and Systems Administration module."
-      }
+      },
+      duration: 70,
     },
     { id: "7", 
       name: "Week 7", 
@@ -72,7 +78,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itnsa-week7-intro.mp3",
         audioDescription: "A short overview of Week 7 topics for the Network and Systems Administration module."
-      }
+      },
+      duration: 95,
     },
   ],
 
@@ -84,7 +91,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week1-intro.mp3",
         audioDescription: "A short overview of Week 1 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 110,
     },
     { id: "2", 
       name: "Week 2", 
@@ -93,6 +101,7 @@ export const weeks = {
         audioUrl: "/audio/itdsa-week2-intro.mp3",
         audioDescription: "A short overview of Week 2 topics for the Data Structures and Algorithms module." 
       },
+      duration: 112,
     },
     { id: "3", 
       name: "Week 3", 
@@ -100,7 +109,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week3-intro.mp3",
         audioDescription: "A short overview of Week 3 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 130,
     },
     { id: "4", 
       name: "Week 4", 
@@ -109,7 +119,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week4-intro.mp3",
         audioDescription: "A short overview of Week 4 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 90,
     },
     { id: "5", 
       name: "Week 5", 
@@ -117,7 +128,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week5-intro.mp3",
         audioDescription: "A short overview of Week 5 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 95,
     },
     { id: "6", 
       name: "Week 6", 
@@ -125,7 +137,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week6-intro.mp3",
         audioDescription: "A short overview of Week 6 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 95, 
     },
     { id: "7", 
       name: "Week 7", 
@@ -133,7 +146,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week7-intro.mp3",
         audioDescription: "A short overview of Week 7 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 85,
     },
     { id: "8", 
       name: "Week 8", 
@@ -141,7 +155,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week8-intro.mp3",
         audioDescription: "A short overview of Week 8 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 75,
     },
     { id: "9", 
       name: "Week 9", 
@@ -149,7 +164,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week9-intro.mp3",
         audioDescription: "A short overview of Week 9 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 85,
     },
     { id: "10", 
       name: "Week 10", 
@@ -157,7 +173,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week10-intro.mp3",
         audioDescription: "A short overview of Week 10 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 70,
     },
     { id: "11", 
       name: "Week 11", 
@@ -165,7 +182,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itdsa-week11-intro.mp3",
         audioDescription: "A short overview of Week 11 topics for the Data Structures and Algorithms module."
-      }
+      },
+      duration: 90,
     }
   ],
 
@@ -181,7 +199,8 @@ export const weeks = {
       moduleAudio: {
       audioUrl: "/audio/itsea-week1-intro.mp3",
       audioDescription: "An introduction to the Software Engineering module, covering key concepts and expectations for Week 1."
-      } 
+      },
+      duration: 60, 
     },
     { id: "2", 
       name: "Week 2", 
@@ -189,7 +208,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itsea-week2-intro.mp3",
         audioDescription: "An introduction to Week 2 of the Software Engineering module, outlining the main topics and learning objectives."
-      }
+      },
+      duration: 80,
     },
     { id: "3", 
       name: "Week 3", 
@@ -197,7 +217,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itsea-week3-intro.mp3",
         audioDescription: "An introduction to Week 3 of the Software Engineering module, outlining the main topics and learning objectives."
-      }
+      },
+      duration: 90,
     },
     { id: "4", 
       name: "Week 4", 
@@ -206,7 +227,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itsea-week4-intro.mp3",
         audioDescription: "An introduction to the Week 4 quiz for the Software Engineering module, providing tips and guidance for success."
-      }
+      },
+      duration: 75,
     },
     { id: "5", 
       name: "Week 5", 
@@ -214,7 +236,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itsea-week5-intro.mp3",
         audioDescription: "An introduction to Week 5 of the Software Engineering module, outlining the main topics and learning objectives."
-      }
+      },
+      duration: 70,
     },
     { id: "6", 
       name: "Week 6", 
@@ -222,7 +245,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itsea-week6-intro.mp3",
         audioDescription: "An introduction to Week 6 of the Software Engineering module, outlining the main topics and learning objectives."
-      }
+      },
+      duration: 70,
     },
     { id: "7", 
       name: "Week 7", 
@@ -230,7 +254,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itsea-week7-intro.mp3",
         audioDescription: "An introduction to Week 7 of the Software Engineering module, outlining the main topics and learning objectives."
-      }
+      },
+      duration: 70,
     },
     { id: "8", 
       name: "Week 8", 
@@ -238,7 +263,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itsea-week8-intro.mp3",
         audioDescription: "An introduction to Week 8 of the Software Engineering module, outlining the main topics and learning objectives."
-      }
+      },
+      duration: 60,
     },
     // add more weeks as you build them
   ],
@@ -250,7 +276,8 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itssa-week1-intro.mp3",
         audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 1."
-      }
+      },
+      duration: 60,
     },
   ],
 
