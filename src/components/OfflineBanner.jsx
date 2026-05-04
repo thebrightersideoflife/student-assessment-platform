@@ -4,16 +4,35 @@
 // Sits below the header (top: var(--header-height)) so it doesn't
 // fight with the sticky nav.
 //
+// Auto-dismisses after 20 seconds. Re-appears (with a fresh 20 s timer)
+// each time the student loses connectivity again.
+//
 // Usage — drop into App.jsx or Layout.jsx:
 //   import OfflineBanner from "./components/OfflineBanner";
 //   <OfflineBanner />
 
+import { useState, useEffect } from "react";
 import useServiceWorker from "../utils/useServiceWorker";
 
 export default function OfflineBanner() {
   const { isOffline } = useServiceWorker();
+  const [visible, setVisible] = useState(false);
 
-  if (!isOffline) return null;
+  useEffect(() => {
+    if (!isOffline) {
+      // Back online — hide immediately and clear any running timer
+      setVisible(false);
+      return;
+    }
+
+    // Just went offline — show the banner and start the 20 s countdown
+    setVisible(true);
+    const timer = setTimeout(() => setVisible(false), 20_000);
+
+    return () => clearTimeout(timer);
+  }, [isOffline]);
+
+  if (!visible) return null;
 
   return (
     <div
