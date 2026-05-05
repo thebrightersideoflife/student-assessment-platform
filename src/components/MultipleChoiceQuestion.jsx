@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
 import ExplanationPanel from "./ExplanationPanel";
+import renderWithKatex from "../utils/renderWithKatex.jsx";
 
 export default function MultipleChoiceQuestion({
   question,
@@ -83,9 +84,9 @@ export default function MultipleChoiceQuestion({
         <ScenarioModal visible={showScenario} onClose={() => setShowScenario(false)} title={scenario.title || "Scenario Context"} context={scenario.context} />
       )}
 
-      <p style={{ marginBottom: "16px", lineHeight: "1.65", fontSize: "16px" }}>
-        {question.text || question.question}
-      </p>
+      <div style={{ marginBottom: "16px", lineHeight: "1.65", fontSize: "16px" }}>
+        {renderWithKatex(question.text || question.question)}
+      </div>
 
       {/* Image */}
       {question.image && (

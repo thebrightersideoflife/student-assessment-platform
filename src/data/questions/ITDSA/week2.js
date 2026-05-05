@@ -191,7 +191,8 @@ export default [
       requiredTerms: ["entity", "integrity"],
       caseSensitive: false,
       allowPartialMatch: false
-    }
+    }, 
+    explanation: "The **Entity Integrity** rule ensures that every row in a table can be uniquely identified. Since a *primary key* is used to uniquely distinguish each record, **none of its attributes can be NULL**. If even one part of a primary key were NULL, the database would not be able to reliably identify that record.\n\nIn contrast, other integrity rules serve different purposes:\n\n- **Referential Integrity** ensures relationships between tables remain consistent (foreign keys must match existing primary keys or be NULL if allowed).\n- **Domain Integrity** ensures that values stored in a column are valid according to defined rules such as data type, range, or format.\n\nTogether, these rules help maintain accuracy, consistency, and reliability in a database."
   },
   {
     id: "ITDSA_W2_Q13",
@@ -206,7 +207,7 @@ export default [
   // ========================================
   // Part 5: Relational Algebra (3 questions)
   // ========================================
-  {
+  { 
     id: "ITDSA_W2_Q14",
     type: "multiple-choice",
     text: "Which relational algebra operator combines all rows from two tables, resulting in a set of all possible ordered pairs of tuples?",
@@ -217,7 +218,8 @@ export default [
       "Cartesian Product"
     ],
     correctAnswers: ["Cartesian Product"],
-    points: 4
+    points: 4,
+    explanation: "The **Cartesian Product** operator combines every row from one table with every row from another table, producing all possible ordered pairs of tuples. This means if one table has *m* rows and the other has *n* rows, the result will contain *m × n* rows.\n\nIt does not use any condition to match rows, unlike a **Join**, which only combines rows based on a specified relationship.\n\nOther operators:\n- **Selection** filters rows based on a condition.\n- **Projection** selects specific columns from a table.\n- **Join** combines related rows from two tables using a condition."
   },
   {
     id: "ITDSA_W2_Q15",
@@ -229,14 +231,15 @@ export default [
       requiredTerms: ["division"],
       caseSensitive: false,
       allowPartialMatch: true
-    }
+    },
+    explanation: "The **Division** operator (÷) is used in relational algebra to find tuples in one relation that are associated with *all* tuples in another relation. It represents the concept of a **universal condition** — meaning “for every value” in the second relation.\n\nFor example, if you have a table of **StudentCourses(Student, Course)** and another table **RequiredCourses(Course)**, the operation:\n\nStudentCourses ÷ RequiredCourses\n\nreturns all students who have taken *every* course listed in RequiredCourses.\n\nThis is different from most other operations like **Join**, which only check if a match exists (an “exists” condition). Division specifically answers questions where something must be true for *all* values.\n\nIn practical SQL, the Division operator is not used directly but is typically implemented using queries with **NOT EXISTS**, **GROUP BY**, or **HAVING** clauses."
   },
   {
     id: "ITDSA_W2_Q16",
     type: "show-answer",
     text: "Given two relations R(A,B) and S(B), express the Division operation (R ÷ S) using only the fundamental operators: Selection (σ), Projection (π), and Set Difference (−). Demonstrate the step-by-step logic to ensure the result contains only values of 'A' associated with every value of 'B' in S.",
     correctAnswers: [
-      "The expression is: π_A(R) − π_A((π_A(R) × S) − R). Step-by-step logic: 1) π_A(R) finds all possible candidates. 2) π_A(R) × S creates every possible combination of those candidates with the requirements in S. 3) Subtracting R from that ((π_A(R) × S) − R) reveals which candidate-requirement pairs are missing. 4) The final subtraction removes any candidate from the total list who was missing at least one requirement."
+      "The expression is: π_A(R) − π_A((π_A(R) × S) − R).\n\nStep-by-step explanation:\n\n1) π_A(R): Extract all unique values of A from R. These are your *candidates* — values that might satisfy the condition.\n\n2) π_A(R) × S: Pair each candidate A with every value of B in S. This generates all the combinations that *should exist* if a candidate fully satisfies the requirement (i.e., is related to every B in S).\n\n3) (π_A(R) × S) − R: Remove the pairs that actually exist in R. What remains are the *missing pairs* — combinations that should exist but do not.\n\n4) π_A((π_A(R) × S) − R): Extract the A values that are missing at least one required B. These are the *failures*.\n\n5) π_A(R) − π_A((π_A(R) × S) − R): Finally, remove all failing A values from the original candidates. The result is the set of A values that are correctly associated with *every* B in S.\n\nKey idea: Instead of directly finding who satisfies \"for all\", we eliminate those who fail even once."
     ],
     points: 10
   },
@@ -285,41 +288,47 @@ export default [
   },
 
   // ========================================
-  // Part 7: Extended ER and Clustering (2 questions)
+  // Part 7: Extended ER and Clustering (3 questions)
   // ========================================
   {
     id: "ITDSA_W2_Q20",
     type: "multiple-choice",
-    text: "In EER modeling, which constraint specifies that an entity instance of a supertype can belong to more than one subtype simultaneously?",
+    text: "Which of the following BEST explains why a company might consider a graph database for its analytics division that needs to traverse complex interconnected relationships?",
     options: [
-      "Disjoint Constraint",
-      "Overlapping Constraint",
-      "Partial Completeness",
-      "Total Completeness"
+      "Graph databases enforce stricter schema constraints than relational databases",
+      "Graph databases eliminate the need for data integrity constraints",
+      "Graph databases are optimised for traversing complex interconnected relationships",
+      "Graph databases store data more compactly than relational databases"
     ],
-    correctAnswers: ["Overlapping Constraint"],
+    correctAnswers: ["Graph databases are optimised for traversing complex interconnected relationships"],
     points: 4
   },
   {
     id: "ITDSA_W2_Q21",
-    type: "open-ended",
-    text: "What is the \"top-down\" process of identifying lower-level, more specific entity types from a high-level entity?",
-    correctAnswers: ["Specialization"],
-    points: 4,
-    validationOptions: {
-      requiredTerms: ["specialization"],
-      caseSensitive: false,
-      allowPartialMatch: false
-    }
+    type: "fill-in-the-blank",
+    text: "A rule stating that a DriverID in the Trips table must exist in the Drivers table is an example of a ___ constraint.",
+    blanks: [
+      {
+        id: "constraint_type",
+        correctAnswer: "referential",
+        options: ["domain", "referential", "entity", "business"]
+      }
+    ],
+    points: 1,
+    explanation: "This is an example of a **referential integrity constraint** because it enforces a valid relationship between two tables.\n\nIn this case:\n- The **Drivers** table is the *parent* table (it contains valid DriverIDs as primary keys).\n- The **Trips** table is the *child* table (it references DriverIDs as a foreign key).\n\nThe rule ensures that every DriverID in the Trips table must already exist in the Drivers table. This prevents situations where a trip is assigned to a driver who does not exist in the system (known as an \"orphan record\").\n\nFor example:\n- Valid: Trip with DriverID = 101, where Driver 101 exists in Drivers.\n- Invalid: Trip with DriverID = 999, where no such driver exists.\n\nOther constraints for comparison:\n- **Entity integrity** ensures primary keys are unique and never NULL.\n- **Domain integrity** ensures values are valid (e.g., correct data type or range).\n- **Business constraints** are custom rules specific to an application.\n\nKey idea: Referential integrity maintains *consistency between related tables*."
   },
   {
     id: "ITDSA_W2_Q22",
-    type: "show-answer",
-    text: "Design an EER model for a \"Vehicle\" fleet. You have Subtypes: \"Cargo Truck\" and \"Passenger Bus.\" Use the \"Subtype Discriminator\" attribute to handle a \"Total Specialization\" and \"Disjoint\" constraint. Explain how you would implement this at the physical level using the \"One-Table-Per-Subtype\" approach versus the \"Single-Table\" approach, focusing on the trade-off between null values and join performance.",
-    correctAnswers: [
-      "Single-Table Approach: All Truck and Bus attributes are in the VEHICLE table. This is fast for queries (no joins) but creates many Nulls (e.g., a Bus will have a Null in the Cargo_Tons column). One-Table-Per-Subtype: Separate tables for VEHICLE, TRUCK, and BUS. This is cleaner (no Nulls) but requires a Left Join whenever you want to see the full details of the fleet, which degrades performance at scale."
+    type: "multiple-choice",
+    text: "Which of the following BEST describes a business rule?",
+    options: [
+      "A query used to retrieve data",
+      "A statement defining organisational policies and constraints on data",
+      "A method for indexing database tables",
+      "A programming construct for enforcing loops"
     ],
-    points: 10
+    correctAnswers: ["A statement defining organisational policies and constraints on data"],
+    points: 4
   },
 
   // ========================================

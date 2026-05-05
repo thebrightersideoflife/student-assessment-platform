@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
 import AnswerValidator from "../utils/answerValidator";
 import ExplanationPanel from "./ExplanationPanel";
+import renderWithKatex from "../utils/renderWithKatex.jsx";
 
 /* ── Icons (self-contained) ─────────────────────────────────────────────── */
 const FlagIcon = ({ filled }) => (
@@ -264,9 +265,9 @@ export default function OpenEndedQuestion({
       </div>
 
       {/* Question text */}
-      <p style={{ marginBottom: "14px", lineHeight: "1.65", fontSize: "16px" }}>
-        {question.text || question.question}
-      </p>
+      <div style={{ marginBottom: "14px", lineHeight: "1.65", fontSize: "16px" }}>
+        {renderWithKatex(question.text || question.question)}
+      </div>
 
       {/* Image */}
       {question.image && (

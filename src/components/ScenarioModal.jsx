@@ -1,5 +1,6 @@
 import React from "react";
 import { createPortal } from "react-dom";
+import renderWithKatex from "../utils/renderWithKatex.jsx";
 
 export default function ScenarioModal({ visible = false, onClose = () => {}, title = "Scenario", context = "" }) {
   if (!visible) return null;
@@ -34,8 +35,8 @@ export default function ScenarioModal({ visible = false, onClose = () => {}, tit
           <button className="button" onClick={onClose} style={{ padding: "8px 12px" }}>Close</button>
         </div>
 
-        <div style={{ marginTop: "12px", background: "rgba(var(--bg-secondary-rgb), 0.6)", padding: "14px", borderRadius: "10px", border: "1px solid rgba(var(--border-color-rgb), 0.35)", whiteSpace: "pre-line", color: "var(--text-secondary)", lineHeight: 1.7 }}>
-          {context}
+        <div style={{ marginTop: "12px", background: "rgba(var(--bg-secondary-rgb), 0.6)", padding: "14px", borderRadius: "10px", border: "1px solid rgba(var(--border-color-rgb), 0.35)", color: "var(--text-secondary)", lineHeight: 1.7 }}>
+          {renderWithKatex(context)}
         </div>
 
         {/* bottom action removed — clicking outside or Close header will dismiss */}

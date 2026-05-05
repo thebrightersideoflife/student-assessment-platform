@@ -4,7 +4,7 @@
 // Sits below the header (top: var(--header-height)) so it doesn't
 // fight with the sticky nav.
 //
-// Auto-dismisses after 20 seconds. Re-appears (with a fresh 20 s timer)
+// Auto-dismisses after 10 seconds. Re-appears (with a fresh 10 s timer)
 // each time the student loses connectivity again.
 //
 // Usage — drop into App.jsx or Layout.jsx:
@@ -14,51 +14,84 @@
 import { useState, useEffect } from "react";
 import useServiceWorker from "../utils/useServiceWorker";
 
+const pulseStyles = `
+  @keyframes bannerPulse {
+    0%, 100% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.02);
+    }
+  }
+  .banner-pulsing {
+    animation: bannerPulse 0.6s ease-in-out infinite !important;
+  }
+`;
+
 export default function OfflineBanner() {
   const { isOffline } = useServiceWorker();
   const [visible, setVisible] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
 
   useEffect(() => {
     if (!isOffline) {
       // Back online — hide immediately and clear any running timer
       setVisible(false);
+      setIsPulsing(false);
       return;
     }
 
-    // Just went offline — show the banner and start the 20 s countdown
+    // Just went offline — show the banner and start the 10 s countdown
     setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 20_000);
+    setIsPulsing(false);
+    
+    // Start pulsing after 7 seconds (3 seconds before fading out)
+    const pulseTimer = setTimeout(() => setIsPulsing(true), 7_000);
+    
+    // Fade out after 10 seconds
+    const fadeTimer = setTimeout(() => {
+      setVisible(false);
+      setIsPulsing(false);
+    }, 10_000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(pulseTimer);
+      clearTimeout(fadeTimer);
+    };
   }, [isOffline]);
 
   if (!visible) return null;
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      style={{
-        position: "fixed",
-        top: "64px",          // clear the header — adjust if your header height differs
-        left: 0,
-        right: 0,
-        zIndex: 9000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "8px",
-        padding: "8px 20px",
-        background: "rgba(244,169,0,0.92)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        color: "#1a1200",
-        fontSize: "13px",
-        fontWeight: 600,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
-        transition: "opacity 0.3s ease",
-      }}
-    >
+    <>
+      <style>{pulseStyles}</style>
+      <div
+        role="status"
+        aria-live="polite"
+        className={isPulsing ? "banner-pulsing" : ""}
+        style={{
+          position: "fixed",
+          top: "64px",          // clear the header — adjust if your header height differs
+          left: 0,
+          right: 0,
+          zIndex: 9000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          padding: "8px 20px",
+          background: "rgba(244,169,0,0.92)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          color: "#1a1200",
+          fontSize: "13px",
+          fontWeight: 600,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
+          transition: "opacity 0.3s ease",
+        }}
+      >
       {/* Wifi-off icon */}
       <svg
         width="15"
@@ -81,5 +114,6 @@ export default function OfflineBanner() {
       </svg>
       You're offline — assessments and progress still work normally.
     </div>
+    </>
   );
 }

@@ -12,6 +12,9 @@
   }
 */
 
+import React from "react";
+import renderWithKatex from "../utils/renderWithKatex.jsx";
+
 const FileTextIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -65,9 +68,8 @@ export default function ScenarioBlock({ question }) {
             fontSize: "15px",
             lineHeight: "1.75",
             color: "var(--text-secondary)",
-            whiteSpace: "pre-line",   // respects \n line breaks in the context string
           }}>
-            {question.context}
+            {renderWithKatex(question.context)}
           </p>
         </div>
       )}
