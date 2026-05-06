@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { modules } from "../data/modules";
 import StreakCard from "../components/StreakCard";
@@ -8,7 +9,8 @@ import { getActiveWeeks, getCurrentStreak, getLongestStreak } from "../utils/str
 import { buildCompletionMap, countCompletedWeeks } from "../utils/revisionHelpers";
 import "../assets/styles/progress.css";
 
-const MODULE_SELECTION_KEY = "progress_tracked_modules";
+const MODULE_SELECTION_KEY  = "progress_tracked_modules";
+const PREFERRED_NAME_KEY    = "progress_preferred_name";
 
 function loadTrackedModules() {
   try {
@@ -27,6 +29,117 @@ function saveTrackedModules(ids) {
   try {
     localStorage.setItem(MODULE_SELECTION_KEY, JSON.stringify(ids));
   } catch {}
+}
+
+function loadPreferredName() {
+  try { return localStorage.getItem(PREFERRED_NAME_KEY) || ""; }
+  catch { return ""; }
+}
+
+function savePreferredName(name) {
+  try { localStorage.setItem(PREFERRED_NAME_KEY, name.trim()); }
+  catch {}
+}
+
+/* ─── Preferred Name Modal ───────────────────────────────────────────────── */
+function NameModal({ initial, onSave, onCancel }) {
+  const [value, setValue] = useState(initial);
+
+  // Close on Escape, block body scroll while open
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onCancel]);
+
+  function commit() {
+    const v = value.trim();
+    savePreferredName(v);
+    onSave(v);
+  }
+
+  return createPortal(
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "24px",
+        background: "rgba(0,0,0,0.45)",
+        backdropFilter: "blur(12px) saturate(160%)",
+        WebkitBackdropFilter: "blur(12px) saturate(160%)",
+        animation: "fadeIn 0.18s ease",
+      }}
+    >
+      <style>{`
+        @keyframes fadeIn  { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+      `}</style>
+
+      <div style={{
+        background: "var(--bg-card)",
+        border: "1px solid rgba(var(--border-color-rgb), 0.55)",
+        borderRadius: "18px",
+        padding: "32px 28px 28px",
+        width: "100%",
+        maxWidth: "480px",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+          <span style={{ fontSize: "20px" }}>👤</span>
+          <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 700, color: "var(--text-primary)" }}>
+            Preferred Name
+          </h3>
+        </div>
+        <p style={{ margin: "0 0 20px", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+          Your name will appear on completion certificates and your progress report.
+        </p>
+
+        {/* Input */}
+        <input
+          type="text"
+          value={value}
+          autoFocus
+          maxLength={60}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
+          placeholder="Enter an identity your study group / institution knows you by"
+          style={{
+            width: "100%",
+            padding: "11px 14px",
+            borderRadius: "10px",
+            border: "1.5px solid rgba(var(--border-color-rgb), 0.5)",
+            background: "rgba(var(--bg-secondary-rgb), 0.7)",
+            color: "var(--text-primary)",
+            fontSize: "14px",
+            outline: "none",
+            boxSizing: "border-box",
+            marginBottom: "20px",
+            transition: "border-color 0.15s ease",
+          }}
+          onFocus={(e) => { e.target.style.borderColor = "var(--accent-primary)"; }}
+          onBlur={(e)  => { e.target.style.borderColor = "rgba(var(--border-color-rgb), 0.5)"; }}
+        />
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <button onClick={onCancel} className="button"
+            style={{ padding: "10px 20px", fontSize: "13px" }}>
+            Cancel
+          </button>
+          <button onClick={commit} className="button solid"
+            style={{ padding: "10px 20px", fontSize: "13px", fontWeight: 600 }}>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 /* ─── Module Selector Panel ──────────────────────────────────────────────── */
@@ -314,7 +427,9 @@ export default function ProgressPage() {
 
   // null = first visit (no selection saved yet), string[] = saved selection
   const [trackedModuleIds, setTrackedModuleIds] = useState(() => loadTrackedModules());
-  const [showSelector, setShowSelector] = useState(false);
+  const [showSelector, setShowSelector]         = useState(false);
+  const [preferredName, setPreferredName]       = useState(() => loadPreferredName());
+  const [nameModalOpen, setNameModalOpen]       = useState(false);
   const [allProgressData, setAllProgressData] = useState([]);
   const [streakData, setStreakData] = useState({ streak: 0, longest: 0, isAtRisk: false, activeWeeks: [] });
   const [expandedAttempts, setExpandedAttempts] = useState({});
@@ -476,8 +591,10 @@ export default function ProgressPage() {
           style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}
         >
           <div>
-            <h1>My Progress</h1>
-            <p className="progress-subtitle">
+            <h1>
+              {preferredName ? `👋 Hi ${preferredName}` : "My Progress"}
+            </h1>
+            <p className="progress-subtitle" style={{ margin: 0 }}>
               {!firstVisit && trackedModuleIds
                 ? `Tracking ${trackedModuleIds.length} of ${modules.length} module${trackedModuleIds.length !== 1 ? "s" : ""}`
                 : "Track your learning journey across all modules"}
@@ -510,11 +627,34 @@ export default function ProgressPage() {
                 </svg>
                 Edit modules
               </button>
+              <button
+                onClick={() => setNameModalOpen(true)}
+                className="button"
+                style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                {preferredName ? "Edit name" : "Add name"}
+              </button>
             </div>
           )}
         </div>
 
+        {/* Name modal — portalled to document.body */}
+        {nameModalOpen && (
+          <NameModal
+            initial={preferredName}
+            onSave={(v) => { setPreferredName(v); setNameModalOpen(false); }}
+            onCancel={() => setNameModalOpen(false)}
+          />
+        )}
+
         {/* ── Module Selector — always on first visit, toggled otherwise ── */}
+        {firstVisit && (
+          <NameField onSave={(name) => { setPreferredName(name); setEditingName(false); }} />
+        )}
         {(firstVisit || showSelector) && (
           <ModuleSelector
             tracked={trackedModuleIds}
@@ -725,6 +865,7 @@ export default function ProgressPage() {
             streakData={streakData}
             trackedCount={trackedModuleIds?.length ?? modules.length}
             totalModules={modules.length}
+            preferredName={preferredName}
             generatedDate={new Date().toLocaleDateString("en-ZA", {
               day: "numeric", month: "long", year: "numeric",
             })}

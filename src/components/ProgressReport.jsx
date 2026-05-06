@@ -22,6 +22,7 @@ export default function ProgressReport({
   streakData = {},
   trackedCount = 0,
   totalModules = 0,
+  preferredName = "",
   generatedDate = "",
 }) {
   const year = new Date().getFullYear();
@@ -139,6 +140,11 @@ export default function ProgressReport({
             <div style={{ fontSize: "12px", color: "#4A5A75" }}>
               Generated {generatedDate}
             </div>
+            {preferredName && (
+              <div style={{ fontSize: "13px", color: "#0B0F1A", fontWeight: 600, marginTop: "6px" }}>
+                Student: {preferredName}
+              </div>
+            )}
           </div>
           <div style={{ textAlign: "right", fontSize: "12px", color: "#4A5A75", lineHeight: 1.7 }}>
             <div>

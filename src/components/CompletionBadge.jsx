@@ -5,9 +5,10 @@ export default function CompletionBadge({
   score,
   totalQuestions,
   completionDate,
-  attemptNumber = null,   // e.g. 2 — passed in by AssessmentPage after markCompleted
-  totalAttempts = null,   // e.g. 3 — total attempts so far including this one
-  timedMode = false,      // true when this attempt was completed under timed mode
+  attemptNumber = null,
+  totalAttempts = null,
+  timedMode = false,
+  studentName = "",
 }) {
   const percentage = Math.round((score / totalQuestions) * 100);
   const passed = percentage >= 70;
@@ -97,10 +98,19 @@ export default function CompletionBadge({
 
           <p
             className="secondary-text"
-            style={{ fontSize: "18px", color: "var(--text-secondary)", marginBottom: "12px" }}
+            style={{ fontSize: "18px", color: "var(--text-secondary)", marginBottom: studentName ? "6px" : "12px" }}
           >
             Certificate of Completion
           </p>
+
+          {studentName && (
+            <p
+              className="secondary-text"
+              style={{ fontSize: "15px", color: "var(--text-primary)", fontWeight: 600, marginBottom: "12px" }}
+            >
+              Issued to {studentName}
+            </p>
+          )}
 
           {/* Meta pill row — timed mode + attempt number */}
           {(timedMode || isRetake) && (
