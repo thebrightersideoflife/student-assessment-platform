@@ -19,7 +19,7 @@ export default function WeekCard({ moduleId, week, hasQuestions, blockWeekNumber
     const unsubscribe = AssessmentStorage.subscribe((event) => {
       if (
         event.detail.clearAll ||
-        (event.detail.moduleId === moduleId && event.detail.weekId === week.id)
+        (event.detail.moduleId === moduleId && String(event.detail.weekId) === String(week.id))
       ) {
         checkCompletion();
       }

@@ -539,84 +539,85 @@ export default function ProgressPage() {
     else document.documentElement.removeAttribute("data-theme");
   }
 
-  // Load all progress once on mount
-  useEffect(() => {
-    const compute = async () => {
-      try {
-        const [weeksMod, questionsMod] = await Promise.all([
-          import("../data/weeks"),
-          import("../data/questions/index.js"),
-        ]);
-        const weeksByModule = weeksMod.weeks || {};
-        const questions = questionsMod.questions || {};
+  async function refreshProgressData() {
+    try {
+      const [weeksMod, questionsMod] = await Promise.all([
+        import("../data/weeks"),
+        import("../data/questions/index.js"),
+      ]);
+      const weeksByModule = weeksMod.weeks || {};
+      const questions = questionsMod.questions || {};
 
-        const moduleProgress = [];
-        for (const module of modules) {
-          const allWeeks = weeksByModule[module.id] || [];
-          const activeWeeks = allWeeks.filter((w) => {
-            const qForWeek = (questions[module.id] || {})[String(w.id)];
-            return Array.isArray(qForWeek) && qForWeek.length > 0;
-          });
-          const weekData = activeWeeks.map((w) => {
-            const status = AssessmentStorage.getCompletionStatus(module.id, w.id);
-            if (status) {
-              return {
-                weekId: String(w.id), completed: true,
-                score: status.score, totalQuestions: status.totalQuestions,
-                percentage: Math.round((status.score / status.totalQuestions) * 100),
-                completedDate: status.completedDate, attempts: status.attempts || [],
-              };
-            }
-            return { weekId: String(w.id), completed: false, attempts: [] };
-          });
-          moduleProgress.push({
-            module, weeks: weekData,
-            completedCount: weekData.filter((w) => w.completed).length,
-            totalWeeks: activeWeeks.length,
-          });
-        }
-        setAllProgressData(moduleProgress);
-      } catch {
-        // Fallback
-        const fallbackWeeks = ["1", "2", "3", "4", "5", "6", "7"];
-        const moduleProgress = modules.map((module) => {
-          const weekData = fallbackWeeks.map((weekId) => {
-            const status = AssessmentStorage.getCompletionStatus(module.id, weekId);
-            if (status) {
-              return {
-                weekId, completed: true, score: status.score, totalQuestions: status.totalQuestions,
-                percentage: Math.round((status.score / status.totalQuestions) * 100),
-                completedDate: status.completedDate, attempts: status.attempts || [],
-              };
-            }
-            return { weekId, completed: false, attempts: [] };
-          });
-          return {
-            module, weeks: weekData,
-            completedCount: weekData.filter((w) => w.completed).length,
-            totalWeeks: fallbackWeeks.length,
-          };
+      const moduleProgress = [];
+      for (const module of modules) {
+        const allWeeks = weeksByModule[module.id] || [];
+        const activeWeeks = allWeeks.filter((w) => {
+          const qForWeek = (questions[module.id] || {})[String(w.id)];
+          return Array.isArray(qForWeek) && qForWeek.length > 0;
         });
-        setAllProgressData(moduleProgress);
+        const weekData = activeWeeks.map((w) => {
+          const status = AssessmentStorage.getCompletionStatus(module.id, w.id);
+          if (status) {
+            return {
+              weekId: String(w.id), completed: true,
+              score: status.score, totalQuestions: status.totalQuestions,
+              percentage: Math.round((status.score / status.totalQuestions) * 100),
+              completedDate: status.completedDate, attempts: status.attempts || [],
+            };
+          }
+          return { weekId: String(w.id), completed: false, attempts: [] };
+        });
+        moduleProgress.push({
+          module, weeks: weekData,
+          completedCount: weekData.filter((w) => w.completed).length,
+          totalWeeks: activeWeeks.length,
+        });
       }
+      setAllProgressData(moduleProgress);
+    } catch {
+      const fallbackWeeks = ["1", "2", "3", "4", "5", "6", "7"];
+      const moduleProgress = modules.map((module) => {
+        const weekData = fallbackWeeks.map((weekId) => {
+          const status = AssessmentStorage.getCompletionStatus(module.id, weekId);
+          if (status) {
+            return {
+              weekId, completed: true, score: status.score, totalQuestions: status.totalQuestions,
+              percentage: Math.round((status.score / status.totalQuestions) * 100),
+              completedDate: status.completedDate, attempts: status.attempts || [],
+            };
+          }
+          return { weekId, completed: false, attempts: [] };
+        });
+        return {
+          module, weeks: weekData,
+          completedCount: weekData.filter((w) => w.completed).length,
+          totalWeeks: fallbackWeeks.length,
+        };
+      });
+      setAllProgressData(moduleProgress);
+    }
 
-      const allAttempts = AssessmentStorage.getAllAttempts();
-      const activeWeeks = getActiveWeeks(allAttempts);
-      const { streak, isAtRisk } = getCurrentStreak(activeWeeks);
-      const longest = getLongestStreak(activeWeeks);
-      setStreakData({ streak, longest, isAtRisk, activeWeeks });
+    const allAttempts = AssessmentStorage.getAllAttempts();
+    const activeWeeks = getActiveWeeks(allAttempts);
+    const { streak, isAtRisk } = getCurrentStreak(activeWeeks);
+    const longest = getLongestStreak(activeWeeks);
+    setStreakData({ streak, longest, isAtRisk, activeWeeks });
 
-      // Count completed weeks for revision entry point
-      const weeksMod2 = await import("../data/weeks");
-      const completionMap = buildCompletionMap(
-        modules.map((m) => m.id),
-        weeksMod2.weeks || {},
-        AssessmentStorage.getCompletionStatus.bind(AssessmentStorage)
-      );
-      setCompletedWeekCount(countCompletedWeeks(completionMap));
-    };
+    const weeksMod2 = await import("../data/weeks");
+    const completionMap = buildCompletionMap(
+      modules.map((m) => m.id),
+      weeksMod2.weeks || {},
+      AssessmentStorage.getCompletionStatus.bind(AssessmentStorage)
+    );
+    setCompletedWeekCount(countCompletedWeeks(completionMap));
+  }
 
-    compute();
+  useEffect(() => {
+    refreshProgressData();
+    const unsubscribe = AssessmentStorage.subscribe(() => {
+      refreshProgressData();
+    });
+    return unsubscribe;
   }, []);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
