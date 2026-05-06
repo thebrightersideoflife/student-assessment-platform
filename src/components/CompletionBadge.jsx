@@ -21,9 +21,40 @@ export default function CompletionBadge({
     const attemptSuffix = attemptNumber ? `_Attempt${attemptNumber}` : "";
     const filename = `${moduleId}_Week${weekId}_Student_Assessment_Platform_${date}${attemptSuffix}`;
     const prevTitle = document.title;
-    document.title = filename;
-    window.print();
-    document.title = prevTitle;
+    const body = document.body;
+    const printHost = document.createElement("div");
+
+    printHost.className = "completion-badge-print-host";
+    printHost.style.position = "fixed";
+    printHost.style.inset = "0";
+    printHost.style.zIndex = "999999";
+    printHost.style.background = "white";
+    printHost.style.padding = "24px";
+    printHost.style.overflow = "auto";
+    printHost.style.display = "flex";
+    printHost.style.alignItems = "center";
+    printHost.style.justifyContent = "center";
+
+    const badge = document.querySelector(".completion-badge");
+    if (badge) {
+      const clone = badge.cloneNode(true);
+      printHost.appendChild(clone);
+      body.appendChild(printHost);
+      body.classList.add("print-certificate-only");
+      document.title = filename;
+
+      const cleanup = () => {
+        body.classList.remove("print-certificate-only");
+        if (body.contains(printHost)) {
+          body.removeChild(printHost);
+        }
+        document.title = prevTitle;
+        window.removeEventListener("afterprint", cleanup);
+      };
+
+      window.addEventListener("afterprint", cleanup);
+      window.print();
+    }
   }
 
   return (
@@ -31,30 +62,39 @@ export default function CompletionBadge({
       <style>
         {`
           @media print {
-            .completion-badge { background: white !important; }
-            .completion-badge.passed { border-color: #76d13d !important; }
-            .completion-badge.not-passed { border-color: #f4a900 !important; }
-            .completion-badge .main-heading { color: #000 !important; }
-            .completion-badge .sub-heading { color: #000 !important; }
-            .completion-badge .secondary-text { color: #666 !important; }
-            .completion-badge .score-value.passed { color: #76d13d !important; }
-            .completion-badge .score-value.not-passed { color: #f4a900 !important; }
-            .completion-badge .score-display { background: #f5f5f5 !important; }
-            .completion-badge .divider { background: #ddd !important; }
-            .completion-badge .seal { border-top-color: #ddd !important; }
-            .completion-badge .badge-circle.passed {
-              background: linear-gradient(135deg, #76d13d, #00d4ff) !important;
+            body.print-certificate-only * { visibility: hidden !important; }
+            body.print-certificate-only .completion-badge-print-host,
+            body.print-certificate-only .completion-badge-print-host * {
+              visibility: visible !important;
             }
-            .completion-badge .badge-circle.not-passed {
-              background: linear-gradient(135deg, #f4a900, #ff6b35) !important;
+            body.print-certificate-only .completion-badge-print-host {
+              position: absolute !important;
+              inset: 0 !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: white !important;
             }
-            .no-print { display: none !important; }
-            /* Timed mode label prints — it's meaningful on a certificate */
-            .timed-mode-label {
-              color: #555 !important;
-              border-color: #ccc !important;
-              background: #f9f9f9 !important;
+            body.print-certificate-only .completion-badge {
+              box-shadow: none !important;
+              width: auto !important;
+              max-width: 100% !important;
+              margin: 0 !important;
+              background: var(--bg-card) !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
             }
+            body.print-certificate-only .completion-badge .badge-circle,
+            body.print-certificate-only .completion-badge .score-display,
+            body.print-certificate-only .completion-badge .timed-mode-label {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            body.print-certificate-only .no-print { display: none !important; }
           }
         `}
       </style>
