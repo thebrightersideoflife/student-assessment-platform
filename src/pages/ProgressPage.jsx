@@ -652,8 +652,12 @@ export default function ProgressPage() {
         )}
 
         {/* ── Module Selector — always on first visit, toggled otherwise ── */}
-        {firstVisit && (
-          <NameField onSave={(name) => { setPreferredName(name); setEditingName(false); }} />
+        {firstVisit && preferredName === "" && (
+          <NameModal
+            initial={preferredName}
+            onSave={(name) => setPreferredName(name)}
+            onCancel={() => {}} // No cancel on first visit
+          />
         )}
         {(firstVisit || showSelector) && (
           <ModuleSelector
