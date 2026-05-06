@@ -70,8 +70,18 @@ export default function AssessmentPage() {
     try { return localStorage.getItem("progress_preferred_name") || ""; }
     catch { return ""; }
   })();
-  const completionStatus = AssessmentStorage.getCompletionStatus(moduleId, weekId);
-  const wasCompleted     = completionStatus !== null;
+
+  // completionStatus must live in state — reading it once at render time
+  // means it stays stale after handleSubmitAndFinish writes a new attempt.
+  const [completionStatus, setCompletionStatus] = useState(
+    () => AssessmentStorage.getCompletionStatus(moduleId, weekId)
+  );
+
+  function refreshCompletionStatus() {
+    setCompletionStatus(AssessmentStorage.getCompletionStatus(moduleId, weekId));
+  }
+
+  const wasCompleted = completionStatus !== null;
   const savedProgress    = AssessmentStorage.loadProgress(moduleId, weekId);
 
   const [answers,         setAnswers]         = useState(savedProgress?.answers || {});
@@ -151,6 +161,7 @@ export default function AssessmentPage() {
       moduleId, weekId, score, totalPoints,
       questionResults.length > 0 ? questionResults : undefined,
     );
+    refreshCompletionStatus();
     notifyAssessmentCompleted();
     setWasTimedMode(timedMode);
     setSubmitted(true);
@@ -168,8 +179,10 @@ export default function AssessmentPage() {
   });
 
   function handleRedo() {
-    if (!window.confirm("Are you sure you want to redo this assessment? Your previous score will be saved to your history.")) return;
-    AssessmentStorage.resetAssessment(moduleId, weekId);
+    if (!window.confirm("Start a new attempt? Your previous scores and history will be kept.")) return;
+    // Only clear the in-progress draft — completion record and attempts[] stay intact.
+    // markCompleted() will append the new attempt when they finish.
+    AssessmentStorage.clearProgress(moduleId, weekId);
     setAnswers({});
     setSubmitted(false);
     setShowCertificate(false);

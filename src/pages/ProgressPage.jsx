@@ -41,7 +41,53 @@ function savePreferredName(name) {
   catch {}
 }
 
-/* ─── Preferred Name Modal ───────────────────────────────────────────────── */
+/* ─── Preferred Name Field (first visit only — inline card) ─────────────── */
+function NameField({ value, onChange }) {
+  return (
+    <div style={{
+      background: "rgba(var(--bg-card-rgb), 0.82)",
+      backdropFilter: "blur(16px) saturate(160%)",
+      WebkitBackdropFilter: "blur(16px) saturate(160%)",
+      border: "1px solid rgba(var(--border-color-rgb), 0.5)",
+      borderRadius: "16px",
+      padding: "20px 24px",
+      marginBottom: "16px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+        <span style={{ fontSize: "18px" }}>👤</span>
+        <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
+          Preferred Name
+        </h3>
+        <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontStyle: "italic" }}>
+          optional
+        </span>
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Enter an identity your study group / institution knows you by"
+        maxLength={60}
+        style={{
+          width: "100%",
+          padding: "10px 14px",
+          borderRadius: "10px",
+          border: "1.5px solid rgba(var(--border-color-rgb), 0.5)",
+          background: "rgba(var(--bg-secondary-rgb), 0.6)",
+          color: "var(--text-primary)",
+          fontSize: "14px",
+          outline: "none",
+          boxSizing: "border-box",
+          transition: "border-color 0.15s ease",
+        }}
+        onFocus={(e) => { e.target.style.borderColor = "var(--accent-primary)"; }}
+        onBlur={(e)  => { e.target.style.borderColor = "rgba(var(--border-color-rgb), 0.5)"; }}
+      />
+    </div>
+  );
+}
+
+/* ─── Preferred Name Modal (return visits — portalled overlay) ───────────── */
 function NameModal({ initial, onSave, onCancel }) {
   const [value, setValue] = useState(initial);
 
@@ -142,86 +188,8 @@ function NameModal({ initial, onSave, onCancel }) {
   );
 }
 
-/* ─── Preferred Name Field (inline for first visit) ─────────────────────── */
-function NameField({ initial, onSave }) {
-  const [value, setValue] = useState(initial);
-  const [saved, setSaved] = useState(false);
-
-  // Keep value in sync with initial prop if it changes
-  useEffect(() => {
-    if (initial && initial !== value) {
-      setValue(initial);
-    }
-  }, [initial]);
-
-  function commit() {
-    const v = value.trim();
-    if (v) {
-      savePreferredName(v);
-      setSaved(true);
-      // Ensure the callback is definitely called
-      setTimeout(() => onSave(v), 100);
-    }
-  }
-
-  return (
-    <div
-      style={{
-        background: "rgba(var(--bg-card-rgb), 0.82)",
-        backdropFilter: "blur(16px) saturate(160%)",
-        WebkitBackdropFilter: "blur(16px) saturate(160%)",
-        border: "1px solid rgba(var(--border-color-rgb), 0.5)",
-        borderRadius: "16px",
-        overflow: "hidden",
-        marginBottom: "32px",
-        padding: "24px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-        <span style={{ fontSize: "20px" }}>👤</span>
-        <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 700, color: "var(--text-primary)" }}>
-          Preferred Name
-        </h3>
-      </div>
-      <p style={{ margin: "0 0 20px", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-        Your name will appear on completion certificates and your progress report.
-      </p>
-
-      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-        <input
-          type="text"
-          value={value}
-          autoFocus
-          maxLength={60}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
-          placeholder="Enter an identity your study group / institution knows you by"
-          style={{
-            flex: 1,
-            padding: "11px 14px",
-            borderRadius: "10px",
-            border: "1.5px solid rgba(var(--border-color-rgb), 0.5)",
-            background: "rgba(var(--bg-secondary-rgb), 0.7)",
-            color: "var(--text-primary)",
-            fontSize: "14px",
-            outline: "none",
-            boxSizing: "border-box",
-            transition: "border-color 0.15s ease",
-          }}
-          onFocus={(e) => { e.target.style.borderColor = "var(--accent-primary)"; }}
-          onBlur={(e)  => { e.target.style.borderColor = "rgba(var(--border-color-rgb), 0.5)"; }}
-        />
-        <button onClick={commit} className="button solid"
-          style={{ padding: "11px 20px", fontSize: "13px", fontWeight: 600 }}>
-          Save
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ─── Module Selector Panel ──────────────────────────────────────────────── */
-function ModuleSelector({ tracked, onChange, firstVisit }) {
+function ModuleSelector({ tracked, onChange, firstVisit, onSaveWithName }) {
   const [draft, setDraft] = useState(
     () => new Set(tracked ?? modules.map((m) => m.id))
   );
@@ -252,7 +220,11 @@ function ModuleSelector({ tracked, onChange, firstVisit }) {
   function handleSave() {
     const ids = Array.from(draft);
     saveTrackedModules(ids);
-    onChange(ids);
+    if (firstVisit && onSaveWithName) {
+      onSaveWithName(ids);   // parent commits name + modules together
+    } else {
+      onChange(ids);
+    }
   }
 
   const allSelected = draft.size === modules.length;
@@ -507,7 +479,7 @@ export default function ProgressPage() {
   const [trackedModuleIds, setTrackedModuleIds] = useState(() => loadTrackedModules());
   const [showSelector, setShowSelector]         = useState(false);
   const [preferredName, setPreferredName]       = useState(() => loadPreferredName());
-  const [editingName, setEditingName]           = useState(false);
+  const [draftName, setDraftName]               = useState("");   // first-visit name buffer
   const [nameModalOpen, setNameModalOpen]       = useState(false);
   const [allProgressData, setAllProgressData] = useState([]);
   const [streakData, setStreakData] = useState({ streak: 0, longest: 0, isAtRisk: false, activeWeeks: [] });
@@ -515,23 +487,6 @@ export default function ProgressPage() {
   const [completedWeekCount, setCompletedWeekCount] = useState(0);
 
   const firstVisit = trackedModuleIds === null;
-
-  // Show name field on first visit if no name set
-  useEffect(() => {
-    if (firstVisit && preferredName === "") {
-      setEditingName(true);
-    }
-  }, [firstVisit, preferredName]);
-
-  // Ensure preferredName is synced from localStorage when leaving first visit
-  useEffect(() => {
-    if (!firstVisit && preferredName === "") {
-      const stored = loadPreferredName();
-      if (stored) {
-        setPreferredName(stored);
-      }
-    }
-  }, [firstVisit, preferredName]);
 
   // Filtered view — only tracked modules
   const progressData = trackedModuleIds
@@ -747,18 +702,21 @@ export default function ProgressPage() {
           />
         )}
 
-        {/* ── Module Selector — always on first visit, toggled otherwise ── */}
-        {firstVisit && editingName && (
-          <NameField
-            initial={preferredName}
-            onSave={(name) => { setPreferredName(name); setEditingName(false); }}
-          />
+        {/* ── Name field + Module Selector — first visit only ── */}
+        {firstVisit && (
+          <NameField value={draftName} onChange={setDraftName} />
         )}
         {(firstVisit || showSelector) && (
           <ModuleSelector
             tracked={trackedModuleIds}
             onChange={handleModuleChange}
             firstVisit={firstVisit}
+            onSaveWithName={firstVisit ? (ids) => {
+              const name = draftName.trim();
+              savePreferredName(name);
+              setPreferredName(name);
+              handleModuleChange(ids);
+            } : undefined}
           />
         )}
 
