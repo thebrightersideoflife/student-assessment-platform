@@ -145,12 +145,22 @@ function NameModal({ initial, onSave, onCancel }) {
 /* ─── Preferred Name Field (inline for first visit) ─────────────────────── */
 function NameField({ initial, onSave }) {
   const [value, setValue] = useState(initial);
+  const [saved, setSaved] = useState(false);
+
+  // Keep value in sync with initial prop if it changes
+  useEffect(() => {
+    if (initial && initial !== value) {
+      setValue(initial);
+    }
+  }, [initial]);
 
   function commit() {
     const v = value.trim();
     if (v) {
       savePreferredName(v);
-      onSave(v);
+      setSaved(true);
+      // Ensure the callback is definitely called
+      setTimeout(() => onSave(v), 100);
     }
   }
 
@@ -510,6 +520,16 @@ export default function ProgressPage() {
   useEffect(() => {
     if (firstVisit && preferredName === "") {
       setEditingName(true);
+    }
+  }, [firstVisit, preferredName]);
+
+  // Ensure preferredName is synced from localStorage when leaving first visit
+  useEffect(() => {
+    if (!firstVisit && preferredName === "") {
+      const stored = loadPreferredName();
+      if (stored) {
+        setPreferredName(stored);
+      }
     }
   }, [firstVisit, preferredName]);
 
