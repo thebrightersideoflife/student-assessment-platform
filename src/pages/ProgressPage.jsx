@@ -142,6 +142,74 @@ function NameModal({ initial, onSave, onCancel }) {
   );
 }
 
+/* ─── Preferred Name Field (inline for first visit) ─────────────────────── */
+function NameField({ initial, onSave }) {
+  const [value, setValue] = useState(initial);
+
+  function commit() {
+    const v = value.trim();
+    if (v) {
+      savePreferredName(v);
+      onSave(v);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        background: "rgba(var(--bg-card-rgb), 0.82)",
+        backdropFilter: "blur(16px) saturate(160%)",
+        WebkitBackdropFilter: "blur(16px) saturate(160%)",
+        border: "1px solid rgba(var(--border-color-rgb), 0.5)",
+        borderRadius: "16px",
+        overflow: "hidden",
+        marginBottom: "32px",
+        padding: "24px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+        <span style={{ fontSize: "20px" }}>👤</span>
+        <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 700, color: "var(--text-primary)" }}>
+          Preferred Name
+        </h3>
+      </div>
+      <p style={{ margin: "0 0 20px", fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+        Your name will appear on completion certificates and your progress report.
+      </p>
+
+      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <input
+          type="text"
+          value={value}
+          autoFocus
+          maxLength={60}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
+          placeholder="Enter an identity your study group / institution knows you by"
+          style={{
+            flex: 1,
+            padding: "11px 14px",
+            borderRadius: "10px",
+            border: "1.5px solid rgba(var(--border-color-rgb), 0.5)",
+            background: "rgba(var(--bg-secondary-rgb), 0.7)",
+            color: "var(--text-primary)",
+            fontSize: "14px",
+            outline: "none",
+            boxSizing: "border-box",
+            transition: "border-color 0.15s ease",
+          }}
+          onFocus={(e) => { e.target.style.borderColor = "var(--accent-primary)"; }}
+          onBlur={(e)  => { e.target.style.borderColor = "rgba(var(--border-color-rgb), 0.5)"; }}
+        />
+        <button onClick={commit} className="button solid"
+          style={{ padding: "11px 20px", fontSize: "13px", fontWeight: 600 }}>
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Module Selector Panel ──────────────────────────────────────────────── */
 function ModuleSelector({ tracked, onChange, firstVisit }) {
   const [draft, setDraft] = useState(
@@ -429,6 +497,7 @@ export default function ProgressPage() {
   const [trackedModuleIds, setTrackedModuleIds] = useState(() => loadTrackedModules());
   const [showSelector, setShowSelector]         = useState(false);
   const [preferredName, setPreferredName]       = useState(() => loadPreferredName());
+  const [editingName, setEditingName]           = useState(false);
   const [nameModalOpen, setNameModalOpen]       = useState(false);
   const [allProgressData, setAllProgressData] = useState([]);
   const [streakData, setStreakData] = useState({ streak: 0, longest: 0, isAtRisk: false, activeWeeks: [] });
@@ -436,6 +505,13 @@ export default function ProgressPage() {
   const [completedWeekCount, setCompletedWeekCount] = useState(0);
 
   const firstVisit = trackedModuleIds === null;
+
+  // Show name field on first visit if no name set
+  useEffect(() => {
+    if (firstVisit && preferredName === "") {
+      setEditingName(true);
+    }
+  }, [firstVisit, preferredName]);
 
   // Filtered view — only tracked modules
   const progressData = trackedModuleIds
@@ -652,11 +728,10 @@ export default function ProgressPage() {
         )}
 
         {/* ── Module Selector — always on first visit, toggled otherwise ── */}
-        {firstVisit && preferredName === "" && (
-          <NameModal
+        {firstVisit && editingName && (
+          <NameField
             initial={preferredName}
-            onSave={(name) => setPreferredName(name)}
-            onCancel={() => {}} // No cancel on first visit
+            onSave={(name) => { setPreferredName(name); setEditingName(false); }}
           />
         )}
         {(firstVisit || showSelector) && (
