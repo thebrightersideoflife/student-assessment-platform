@@ -56,6 +56,7 @@ import ITSEA_W8 from "./ITSEA/week8.js";
 
 // ── ITSSA ──────────────────────────────────────────────────────────────────
 import ITSSA_W1 from "./ITSSA/week1.js";
+import ITSSA_W2 from "./ITSSA/week2.js";
 
 // ── Assembly map ───────────────────────────────────────────────────────────
 // Week keys must match the id strings in src/data/weeks.js
@@ -97,39 +98,8 @@ const rawQuestions = {
   },
   ITSSA: {
    "1": ITSSA_W1,
+    "2": ITSSA_W2,
   },
 };
 
-// ── normalizePoints ────────────────────────────────────────────────────────
-// Caps question points per type so no individual file can accidentally
-// exceed the platform-wide maximums. Edit caps here to change them globally.
-function normalizePoints(questionsObj) {
-  const clone = JSON.parse(JSON.stringify(questionsObj));
-  const caps = {
-    "multiple-choice":    2,
-    "open-ended":         3,
-    "show-answer":        8,
-  };
-  for (const moduleKey of Object.keys(clone)) {
-    const moduleWeeks = clone[moduleKey];
-    for (const weekKey of Object.keys(moduleWeeks)) {
-      const arr = moduleWeeks[weekKey];
-      if (!Array.isArray(arr)) continue;
-      for (const q of arr) {
-        if (!q || !q.type) continue;
-        const cap = caps[q.type];
-        if (typeof cap === "number") {
-          // Only cap points when the question explicitly specifies a
-          // numeric `points` value that exceeds the platform cap.
-          if (typeof q.points === "number" && q.points > cap) {
-            q.points = cap;
-          }
-          // Leave q.points untouched when it's missing or already within cap.
-        }
-      }
-    }
-  }
-  return clone;
-}
-
-export const questions = normalizePoints(rawQuestions);
+export const questions = rawQuestions;

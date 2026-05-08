@@ -70,7 +70,7 @@ Questions live in `src/data/questions/`, split by module and week:
 
 ```
 src/data/questions/
-├── index.js          # Assembles all modules and weeks, runs normalizePoints()
+├── index.js          # Assembles all modules and weeks
 ├── ITNSA/
 │   ├── week1.js
 │   ├── week2.js

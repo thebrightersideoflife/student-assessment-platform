@@ -279,6 +279,60 @@ export const weeks = {
       },
       duration: 60,
     },
+    { id: "2", 
+      name: "Week 2", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itssa-week2-intro.mp3",
+        audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 2."
+      },
+      duration: 110,
+    },
+    { id: "3", 
+      name: "Week 3", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itssa-week3-intro.mp3",
+        audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 3."
+      },
+      duration: 90,
+    },
+    { id: "4", 
+      name: "Week 4",
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itssa-week4-intro.mp3",
+        audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 4."
+      },
+      duration: 90,
+    },
+    { id: "5", 
+      name: "Week 5", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itssa-week5-intro.mp3",
+        audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 5."
+      },
+      duration: 90,
+    },
+    { id: "6", 
+      name: "Week 6", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itssa-week6-intro.mp3",
+        audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 6."
+      },
+      duration: 90,
+    },
+    { id: "7", 
+      name: "Week 7",
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itssa-week7-intro.mp3",
+        audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 7."
+      },
+      duration: 90,
+    },
   ],
 
 };

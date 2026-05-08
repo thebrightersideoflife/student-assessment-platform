@@ -18,7 +18,7 @@
 //     2.3  Sequence Diagram                            (5 marks)
 //     2.4  Data-driven vs Event-driven                 (4 marks) — wait, total = 22, adjusted below
 //
-// NOTE on points: normalizePoints() caps show-answer at 8.
+// NOTE on points: Points are now trusted directly from the question bank.
 // Real exam marks are preserved in markingGuide strings.
 // Platform scoring reflects relative weight only.
 //
