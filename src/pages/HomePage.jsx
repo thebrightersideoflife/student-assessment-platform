@@ -385,32 +385,62 @@ export default function HomePage() {
           VIDEO SECTION
           ════════════════════════════════════════════════════ */}
       <section style={{
-        maxWidth: "900px",
+        maxWidth: "1280px",
         margin: "0 auto",
         padding: "56px 40px 72px",
         position: "relative", zIndex: 1,
       }}>
-        {/* 16:9 responsive wrapper — no card, floats on page bg */}
+        {/* Two-column video grid */}
         <div style={{
-          position: "relative",
-          paddingTop: "56.25%",
-          width: "100%",
-          borderRadius: "16px",
-          overflow: "hidden",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "24px",
         }}>
-          <iframe
-            src="https://www.youtube.com/embed/QW6y-F4Pr3Q"
-            title="Student Assessment Platform — Introduction"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            style={{
-              position: "absolute",
-              top: 0, left: 0,
-              width: "100%", height: "100%",
-              border: "none",
-            }}
-          />
+          {/* Video 1 — 16:9 responsive wrapper */}
+          <div style={{
+            position: "relative",
+            paddingTop: "56.25%",
+            width: "100%",
+            borderRadius: "16px",
+            overflow: "hidden",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+          }}>
+            <iframe
+              src="https://www.youtube.com/embed/QW6y-F4Pr3Q"
+              title="Student Assessment Platform — Introduction"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              style={{
+                position: "absolute",
+                top: 0, left: 0,
+                width: "100%", height: "100%",
+                border: "none",
+              }}
+            />
+          </div>
+          
+          {/* Video 2 — 16:9 responsive wrapper */}
+          <div style={{
+            position: "relative",
+            paddingTop: "56.25%",
+            width: "100%",
+            borderRadius: "16px",
+            overflow: "hidden",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+          }}>
+            <iframe
+              src="https://www.youtube.com/embed/qo7SuzQMi8w"
+              title="Student Assessment Platform — Walkthrough"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              style={{
+                position: "absolute",
+                top: 0, left: 0,
+                width: "100%", height: "100%",
+                border: "none",
+              }}
+            />
+          </div>
         </div>
       </section>
 
