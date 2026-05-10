@@ -39,11 +39,11 @@ export default [
     text: "In the terminology of secure systems, a realized risk is called an ___.",
     blanks: [
       {
-        id: "b1",
-        options: ["attack", "threat", "vulnerability", "risk"],
-        correctAnswer: "attack",
+      id: "b1",
+      options: ["exploit", "threat", "incident", "attack", "vulnerability"],
+      correctAnswer: "attack",
       },
-    ],
+      ],
     explanation: "A **threat** plus an exploitable **vulnerability** creates **risk**. When exploitation actually occurs, the risk materialises into an **attack**.",
   },
 
@@ -89,7 +89,7 @@ export default [
     blanks: [
       {
         id: "b1",
-        options: ["DAD", "CIA", "AAA", "DID"],
+        options: ["CIA", "AAA", "DID", "DAD"],
         correctAnswer: "DAD",
       },
     ],
@@ -182,7 +182,7 @@ F --> G[Ransomware / disruption]`,
     blanks: [
       {
         id: "b1",
-        options: ["virus", "worm", "trojan", "botware"],
+        options: ["worm", "virus", "trojan", "botware"],
         correctAnswer: "virus",
       },
     ],
@@ -285,7 +285,7 @@ D --> E[Ransomware payload\nFiles encrypted]`,
     blanks: [
       {
         id: "b1",
-        options: ["pretexting", "phishing", "tailgating", "vishing"],
+        options: ["phishing", "pretexting", "tailgating", "vishing"],
         correctAnswer: "pretexting",
       },
     ],
@@ -334,7 +334,7 @@ D --> E[Ransomware payload\nFiles encrypted]`,
     blanks: [
       {
         id: "b1",
-        options: ["policy", "physical", "pretexting", "prevention"],
+        options: ["physical", "pretexting", "policy", "prevention"],
         correctAnswer: "policy",
       },
     ],
