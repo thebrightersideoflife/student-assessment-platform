@@ -38,10 +38,14 @@ export default function useServiceWorker() {
       if (reg) setIsRegistered(true);
     });
 
-    // vite-plugin-pwa fires this custom event after autoUpdate activates a
-    // new SW and takes control. The page hasn't reloaded — the new assets
-    // are in the cache and will be used on next navigation.
-    const handleUpdate = () => setDidUpdate(true);
+    // vite-plugin-pwa fires a custom event after autoUpdate activates a
+    // new SW and the refreshed assets are ready. Reload the page immediately
+    // so the user gets the latest app shell instead of staying on the old UI.
+    const handleUpdate = () => {
+      setDidUpdate(true);
+      window.location.reload();
+    };
+    window.addEventListener("swUpdated", handleUpdate);
     window.addEventListener("sw-updated", handleUpdate);
 
     // Also listen for the standard controllerchange which fires when
@@ -55,6 +59,7 @@ export default function useServiceWorker() {
     navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
 
     return () => {
+      window.removeEventListener("swUpdated", handleUpdate);
       window.removeEventListener("sw-updated", handleUpdate);
       navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
     };

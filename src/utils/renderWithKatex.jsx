@@ -57,13 +57,13 @@ function renderKatexString(str) {
       }
       // Plain prose — run through existing markdown formatter
       return (
-        <span key={`prose-${di}-${ii}`}>
+        <React.Fragment key={`prose-${di}-${ii}`}>
           {formatTextToNodes(seg)}
-        </span>
+        </React.Fragment>
       );
     });
 
-    return <span key={`prose-block-${di}`}>{nodes}</span>;
+    return <React.Fragment key={`prose-block-${di}`}>{nodes}</React.Fragment>;
   });
 }
 

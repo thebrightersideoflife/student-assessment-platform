@@ -10,20 +10,21 @@ import React from "react";
 // - `code` inline markers
 
 // ─── Inline parser (unchanged) ───────────────────────────────────────────────
-function parseInline(str) {
+function parseInline(str, keyPrefix = "") {
   if (!str) return null;
   const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((part, i) => {
     if (!part) return null;
+    const key = `${keyPrefix}-${i}`;
     if (part.startsWith("**") && part.endsWith("**")) {
-      return React.createElement("strong", { key: i }, part.slice(2, -2));
+      return React.createElement("strong", { key }, part.slice(2, -2));
     }
     if (part.startsWith("*") && part.endsWith("*")) {
-      return React.createElement("em", { key: i }, part.slice(1, -1));
+      return React.createElement("em", { key }, part.slice(1, -1));
     }
     if (part.startsWith("`") && part.endsWith("`")) {
       return React.createElement("code", {
-        key: i,
+        key,
         style: { background: "rgba(0,0,0,0.06)", padding: "0 4px", borderRadius: 4 },
       }, part.slice(1, -1));
     }
@@ -163,7 +164,7 @@ function renderParagraph(para, key) {
   const lines = para.split(/\n/g);
   const children = [];
   lines.forEach((line, li) => {
-    const inline = parseInline(line);
+    const inline = parseInline(line, `${key}-${li}`);
     if (Array.isArray(inline)) children.push(...inline);
     else children.push(inline);
     if (li < lines.length - 1)

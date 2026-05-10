@@ -391,7 +391,7 @@ export default function HomePage() {
         position: "relative", zIndex: 1,
       }}>
         {/* Two-column video grid */}
-        <div style={{
+        <div className="video-grid" style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "24px",
@@ -565,6 +565,16 @@ export default function HomePage() {
             grid-template-columns: 1fr !important;
             gap: 40px !important;
             padding: 56px 24px 48px !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .hero-grid {
+            grid-template-columns: 1fr !important;
+            gap: 40px !important;
+            padding: 56px 24px 48px !important;
+          }
+          .video-grid {
+            grid-template-columns: 1fr !important;
           }
         }
         @media (max-width: 480px) {

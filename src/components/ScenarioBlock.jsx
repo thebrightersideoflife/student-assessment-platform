@@ -62,15 +62,11 @@ export default function ScenarioBlock({ question }) {
           border: "1px solid rgba(var(--border-color-rgb), 0.3)",
           borderRadius: "10px",
           padding: "16px 20px",
+          fontSize: "15px",
+          lineHeight: "1.75",
+          color: "var(--text-secondary)",
         }}>
-          <p style={{
-            margin: 0,
-            fontSize: "15px",
-            lineHeight: "1.75",
-            color: "var(--text-secondary)",
-          }}>
-            {renderWithKatex(question.context)}
-          </p>
+          {renderWithKatex(question.context)}
         </div>
       )}
 
