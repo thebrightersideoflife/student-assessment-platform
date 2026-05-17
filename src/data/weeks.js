@@ -275,6 +275,15 @@ export const weeks = {
       },
       duration: 75,
     },
+    { id: "10", 
+      name: "Week 10", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week10-intro.mp3",
+        audioDescription: "An introduction to Week 10 of the Software Engineering module, outlining the main topics and learning objectives."
+      },
+      duration: 135,
+    },
     // add more weeks as you build them
   ],
 
