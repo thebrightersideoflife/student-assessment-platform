@@ -304,7 +304,7 @@ export const weeks = {
         audioUrl: "/audio/itssa-week3-intro.mp3",
         audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 3."
       },
-      duration: 90,
+      duration: 180,
     },
     { id: "4", 
       name: "Week 4",
