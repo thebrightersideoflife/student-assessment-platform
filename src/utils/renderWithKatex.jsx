@@ -15,8 +15,8 @@ function renderKatexString(str) {
   if (!str || typeof str !== "string") return null;
 
   // Split on $$...$$ first (display), then $...$ (inline)
+  // but avoid matching $ inside backticks
   const displayPattern = /(\$\$[\s\S]+?\$\$)/g;
-  const inlinePattern = /(\$[^$\n]+?\$)/g;
 
   // Two-pass split: display blocks first, then inline within prose segments
   const displayParts = str.split(displayPattern);
@@ -38,8 +38,29 @@ function renderKatexString(str) {
       }
     }
 
-    // Prose segment — further split on inline $...$
-    const inlineParts = part.split(inlinePattern);
+    // Prose segment — find inline $...$ but skip backtick-enclosed sections
+    const inlineParts = [];
+    let lastIdx = 0;
+    let inBackticks = false;
+
+    for (let i = 0; i < part.length; i++) {
+      if (part[i] === "`") {
+        inBackticks = !inBackticks;
+      } else if (part[i] === "$" && !inBackticks && i + 1 < part.length) {
+        // Potential start of $...$
+        const remaining = part.slice(i);
+        const match = remaining.match(/^\$([^$\n]+?)\$/);
+        if (match) {
+          // Found inline math
+          inlineParts.push(part.slice(lastIdx, i)); // text before
+          inlineParts.push(match[0]); // the $...$ match
+          i += match[0].length - 1;
+          lastIdx = i + 1;
+        }
+      }
+    }
+    inlineParts.push(part.slice(lastIdx)); // remaining text
+
     const nodes = inlineParts.map((seg, ii) => {
       if (seg.startsWith("$") && seg.endsWith("$") && seg.length > 2) {
         const latex = seg.slice(1, -1).trim();

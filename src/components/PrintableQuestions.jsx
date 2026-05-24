@@ -42,9 +42,7 @@ function ScenarioPrintBlock({ question }) {
         </div>
       )}
       <div className="scenario-content">
-        {(question.context || "").split("\n").filter(Boolean).map((para, i) => (
-          <p key={i}>{para}</p>
-        ))}
+        {formatTextToNodes(question.context || "")}
       </div>
     </div>
   );
@@ -55,7 +53,7 @@ function MultipleChoicePrintBlock({ question, displayIndex }) {
     <div className="question-block">
       <div className="q-number-row">
         <div className="q-number">{qLabel(question, displayIndex)}</div>
-        <div className="q-text">{question.text || question.question}</div>
+        <div className="q-text">{formatTextToNodes(question.text || question.question)}</div>
         <div className="q-marks">
           [{question.points || 1} {(question.points || 1) === 1 ? "mark" : "marks"}]
         </div>
@@ -98,7 +96,7 @@ function OpenEndedPrintBlock({ question, displayIndex, lineCount = 5 }) {
     <div className="question-block">
       <div className="q-number-row">
         <div className="q-number">{qLabel(question, displayIndex)}</div>
-        <div className="q-text">{question.text || question.question}</div>
+        <div className="q-text">{formatTextToNodes(question.text || question.question)}</div>
         <div className="q-marks">
           [{question.points || 1} {(question.points || 1) === 1 ? "mark" : "marks"}]
         </div>
@@ -201,7 +199,7 @@ function ShowAnswerPrintBlock({ question, displayIndex }) {
     <div className="question-block">
       <div className="q-number-row">
         <div className="q-number">{qLabel(question, displayIndex)}</div>
-        <div className="q-text">{question.text}</div>
+        <div className="q-text">{formatTextToNodes(question.text)}</div>
         <div className="q-marks">
           [{question.points || 0} {(question.points || 0) === 1 ? "mark" : "marks"}]
         </div>
