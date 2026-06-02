@@ -96,8 +96,6 @@ export default defineConfig({
          */
         globPatterns: [
           "**/*.{js,css,html,svg,woff2}",
-          "**/*.json",
-          "**/*.{png,jpg,webp,ico}",
         ],
 
         /*

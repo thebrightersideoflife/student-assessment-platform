@@ -41,6 +41,8 @@ import ITDSA_W9 from "./ITDSA/week9.js";
 import ITDSA_W10 from "./ITDSA/week10.js";
 import ITDSA_W11 from "./ITDSA/week11.js";
 import ITDSA_W12 from "./ITDSA/week12.js";
+import ITDSA_W13 from "./ITDSA/week13.js";
+
 
 // ── ITSEA ──────────────────────────────────────────────────────────────────
 import ITSEA_W1 from "./ITSEA/week1.js";
@@ -53,6 +55,8 @@ import ITSEA_W7 from "./ITSEA/week7.js";
 import ITSEA_W8 from "./ITSEA/week8.js";
 import ITSEA_W9 from "./ITSEA/week9.js";
 import ITSEA_W10 from "./ITSEA/week10.js";
+import ITSEA_W11 from "./ITSEA/week11.js";
+import ITSEA_W12 from "./ITSEA/week12.js";
 
 // ── ITJVA ──────────────────────────────────────────────────────────────────
 // import ITJVA_W1 from "./ITJVA/week1.js";
@@ -89,6 +93,7 @@ const rawQuestions = {
     "10": ITDSA_W10,
     "11": ITDSA_W11,
     "12": ITDSA_W12,
+    "13": ITDSA_W13,
   },
   ITSEA: {
     "1": ITSEA_W1,
@@ -101,6 +106,8 @@ const rawQuestions = {
     "8": ITSEA_W8,
     "9": ITSEA_W9,
     "10": ITSEA_W10,
+    "11": ITSEA_W11,
+    "12": ITSEA_W12,
   },
   ITJVA: {
     // "1": ITJVA_W1,

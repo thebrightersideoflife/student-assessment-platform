@@ -194,6 +194,15 @@ export const weeks = {
       },
       duration: 70,
     },
+    { id: "13", 
+      name: "Week 13", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itdsa-week13-intro.mp3",
+        audioDescription: "A short overview of Week 13 topics for the Data Structures and Algorithms module."
+      },
+      duration: 80,
+    }
   ],
 
   ITJVA: [
@@ -293,6 +302,24 @@ export const weeks = {
       },
       duration: 135,
     },
+    { id: "11", 
+      name: "Week 11", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week11-intro.mp3",
+        audioDescription: "An introduction to Week 11 of the Software Engineering module, outlining the main topics and learning objectives."
+      },
+      duration: 90,
+    },
+    { id: "12", 
+      name: "Week 12", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week12-intro.mp3",
+        audioDescription: "An introduction to Week 12 of the Software Engineering module, outlining the main topics and learning objectives."
+      },
+      duration: 75,
+    },
     // add more weeks as you build them
   ],
 
@@ -331,7 +358,7 @@ export const weeks = {
         audioUrl: "/audio/itssa-week4-intro.mp3",
         audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 4."
       },
-      duration: 150,
+      duration: 75,
     },
     { id: "5", 
       name: "Week 5", 
