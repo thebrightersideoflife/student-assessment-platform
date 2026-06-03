@@ -6,6 +6,7 @@
  *
  * Storage schema (per assessment key):
  * {
+ *   version: "1.0.1",  // NEW: version of the app when data was saved
  *   attempts: [
  *     { score, totalQuestions, percentage, completedDate, moduleId, weekId },
  *     ...
@@ -22,13 +23,51 @@
  *
  * Migration: records written before this version (no `attempts` array) are
  * silently promoted to the new shape on first read.
+ * 
+ * Version tracking: data saved with a different APP_VERSION is considered stale
+ * and will be cleared to avoid showing outdated questions or progress.
  */
+
+import { APP_VERSION, isVersionCurrent } from "./appVersion.js";
 
 const STORAGE_KEY_PREFIX = "assessment_completion_";
 const PROGRESS_KEY_PREFIX = "assessment_progress_";
 const STORAGE_EVENT = "assessmentStorageUpdate";
+const APP_VERSION_KEY = "app_version";
 
 class AssessmentStorage {
+  // ─── Initialization & Version Management ────────────────────────────────────
+
+  /**
+   * Initialize version tracking on app startup.
+   * Call this once from App.jsx or main.jsx to check if stored version
+   * matches current app version. If not, clears stale data.
+   *
+   * @returns {boolean} true if versions match (no clearing needed), false if cleared
+   */
+  static initializeVersion() {
+    const storedVersion = localStorage.getItem(APP_VERSION_KEY);
+    
+    if (!storedVersion) {
+      // First-time user: store current version
+      localStorage.setItem(APP_VERSION_KEY, APP_VERSION);
+      return true;
+    }
+
+    if (isVersionCurrent(storedVersion)) {
+      // User has latest version: no action needed
+      return true;
+    }
+
+    // User has old version: clear all stale data and update version
+    console.warn(
+      `[AssessmentStorage] Version mismatch: ${storedVersion} → ${APP_VERSION}. Clearing cached data.`
+    );
+    this.clearAll();
+    localStorage.setItem(APP_VERSION_KEY, APP_VERSION);
+    return false;
+  }
+
   // ─── Key helpers ────────────────────────────────────────────────────────────
 
   static getCompletionKey(moduleId, weekId) {
@@ -92,6 +131,7 @@ class AssessmentStorage {
     try {
       const key = this.getProgressKey(moduleId, weekId);
       const data = {
+        version: APP_VERSION,
         answers,
         lastUpdated: new Date().toISOString(),
         moduleId,
@@ -164,6 +204,7 @@ class AssessmentStorage {
       const attempts = existing ? [...existing.attempts, newAttempt] : [newAttempt];
 
       const data = {
+        version: APP_VERSION,
         completed: true,
         attempts,
         // Convenience fields — always the latest attempt
