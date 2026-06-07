@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
 import ExplanationPanel from "./ExplanationPanel";
+import ImageViewer from "./ImageViewer";
 
 /*
   Fill-in-the-blank question.
@@ -137,19 +138,11 @@ export default function FillInTheBlankQuestion({
 
       {/* Image */}
       {question.image && (
-        <div style={{
-          marginBottom: "16px", textAlign: "center", padding: "12px",
-          background: "rgba(var(--bg-secondary-rgb), 0.5)",
-          borderRadius: "10px", border: "1px solid rgba(var(--border-color-rgb), 0.35)",
-        }}>
-          <img src={question.image.src} alt={question.image.alt || "Question image"}
-            style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "contain" }} />
-          {question.image.caption && (
-            <p style={{ fontSize: "13px", fontStyle: "italic", color: "var(--text-secondary)", marginTop: "8px" }}>
-              {question.image.caption}
-            </p>
-          )}
-        </div>
+        <ImageViewer
+          src={question.image.src}
+          alt={question.image.alt || "Question image"}
+          caption={question.image.caption}
+        />
       )}
 
       {/* Sentence with inline dropdowns */}

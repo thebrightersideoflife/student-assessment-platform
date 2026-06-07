@@ -62,7 +62,7 @@ function MultipleChoicePrintBlock({ question, displayIndex }) {
       {question.image && (
         <div style={{ margin: "12px 0", textAlign: "center" }}>
           <img src={question.image.src} alt={question.image.alt || ""}
-            style={{ maxWidth: "100%", maxHeight: "260px", objectFit: "contain" }}
+            style={{ maxWidth: "100%", maxHeight: "300px", height: "auto", objectFit: "contain" }}
             onError={e => { e.target.style.display = "none"; }} />
           {question.image.caption && (
             <div style={{ fontSize: "9pt", fontStyle: "italic", color: "var(--p-light)", marginTop: "6px" }}>
@@ -105,7 +105,7 @@ function OpenEndedPrintBlock({ question, displayIndex, lineCount = 5 }) {
       {question.image && (
         <div style={{ margin: "12px 0", textAlign: "center" }}>
           <img src={question.image.src} alt={question.image.alt || ""}
-            style={{ maxWidth: "100%", maxHeight: "260px", objectFit: "contain" }}
+            style={{ maxWidth: "100%", maxHeight: "300px", height: "auto", objectFit: "contain" }}
             onError={e => { e.target.style.display = "none"; }} />
           {question.image.caption && (
             <div style={{ fontSize: "9pt", fontStyle: "italic", color: "var(--p-light)", marginTop: "6px" }}>
@@ -208,7 +208,7 @@ function ShowAnswerPrintBlock({ question, displayIndex }) {
       {question.image && (
         <div style={{ margin: "12px 0", textAlign: "center" }}>
           <img src={question.image.src} alt={question.image.alt || ""}
-            style={{ maxWidth: "100%", maxHeight: "260px", objectFit: "contain" }}
+            style={{ maxWidth: "100%", maxHeight: "300px", height: "auto", objectFit: "contain" }}
             onError={e => { e.target.style.display = "none"; }} />
           {question.image.caption && (
             <div style={{ fontSize: "9pt", fontStyle: "italic", color: "var(--p-light)", marginTop: "6px" }}>

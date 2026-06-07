@@ -359,10 +359,8 @@ class AssessmentStorage {
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (
-          key.startsWith(STORAGE_KEY_PREFIX) ||
-          key.startsWith(PROGRESS_KEY_PREFIX)
-        ) {
+        // Only clear in-progress answers, preserve completion history
+        if (key.startsWith(PROGRESS_KEY_PREFIX)) {
           keysToRemove.push(key);
         }
       }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ScenarioModal from "./ScenarioModal";
 import AnswerReveal from "./AnswerReveal";
+import ImageViewer from "./ImageViewer";
 import MermaidDiagram from "./MermaidDiagram";
 import ExplanationPanel from "./ExplanationPanel";
 import formatTextToNodes from "../utils/formatText.jsx";
@@ -65,23 +66,11 @@ export default function ShowAnswerQuestion({ question, index, submitted = false,
 
       {/* Image */}
       {question.image && (
-        <div style={{
-          marginTop: "16px", marginBottom: "16px", textAlign: "center",
-          padding: "12px",
-          background: "rgba(var(--bg-secondary-rgb), 0.5)",
-          borderRadius: "10px", border: "1px solid rgba(var(--border-color-rgb), 0.35)",
-        }}>
-          <img src={question.image.src} alt={question.image.alt}
-            style={{ maxWidth: "100%", height: "auto", borderRadius: "6px" }} />
-          {question.image.caption && (
-            <p style={{
-              fontSize: "14px", color: "var(--text-secondary)",
-              fontStyle: "italic", marginTop: "8px",
-            }}>
-              {question.image.caption}
-            </p>
-          )}
-        </div>
+        <ImageViewer
+          src={question.image.src}
+          alt={question.image.alt}
+          caption={question.image.caption}
+        />
       )}
 
       {scenario && (

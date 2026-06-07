@@ -104,12 +104,17 @@
  * WHAT GETS CLEARED
  *
  * When version mismatch detected:
- * ✓ Clears all completion history
- * ✓ Clears all in-progress answers
- * ✓ Clears all user progress tracking
+ * ✓ Clears all in-progress answers (incomplete work)
  * ✓ Updates version to current
  *
- * This ensures users see fresh content that matches the updated questions.
+ * WHAT IS PRESERVED:
+ * ✓ All completion records (test scores, dates, attempt history)
+ * ✓ Completion badges and streaks
+ *
+ * This approach:
+ * - Ensures users see fresh content that matches updated questions
+ * - Preserves student progress and motivation
+ * - Clears only incomplete work that may reference old content
  *
  * ─────────────────────────────────────────────────────────────────────────────
  */

@@ -202,6 +202,15 @@ export const weeks = {
         audioDescription: "A short overview of Week 13 topics for the Data Structures and Algorithms module."
       },
       duration: 80,
+    },
+    { id: "14", 
+      name: "Week 14", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itdsa-week14-intro.mp3",
+        audioDescription: "A short overview of Week 14 topics for the Data Structures and Algorithms module."
+      },
+      duration: 100,
     }
   ],
 
@@ -320,6 +329,15 @@ export const weeks = {
       },
       duration: 75,
     },
+    { id: "13", 
+      name: "Week 13", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week13-intro.mp3",
+        audioDescription: "An introduction to Week 13 of the Software Engineering module, outlining the main topics and learning objectives."
+      },
+      duration: 120,
+    },
     // add more weeks as you build them
   ],
 
@@ -376,7 +394,7 @@ export const weeks = {
         audioUrl: "/audio/itssa-week6-intro.mp3",
         audioDescription: "An introduction to the Software and Security Engineering module, covering key concepts and expectations for Week 6."
       },
-      duration: 90,
+      duration: 60,
     },
     { id: "7", 
       name: "Week 7",
