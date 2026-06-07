@@ -4,6 +4,7 @@ import { weeks } from "../data/weeks";               // CHANGED: was ../data/que
 import { questions } from "../data/questions/index.js"; // CHANGED: was ../data/questions
 import WeekCard from "../components/WeekCard";
 import Breadcrumb from "../components/Breadcrumb";
+import OfflineInfoButton from "../components/OfflineInfoButton";
 
 const BookIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,6 +55,7 @@ export default function WeeksPage() {
   const hasBlocks = blockKeys.length > 1 || (blockKeys.length === 1 && blockKeys[0] !== "other");
 
   return (
+    <>
     <div className="container">
       <Breadcrumb items={[
         { label: "Modules", path: "/modules" },
@@ -178,5 +180,7 @@ export default function WeeksPage() {
           })
       }
     </div>
+    <OfflineInfoButton />
+    </>
   );
 }
