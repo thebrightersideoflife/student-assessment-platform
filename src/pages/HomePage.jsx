@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useState, useRef } from "react";
 import { ThemeContext } from "../context/ThemeContext";
 import { modules } from "../data/modules";
 import { weeks as weekRegistry } from "../data/weeks";
 import { MODULE_META, DEFAULT_META, ArrowRightIcon, CheckCircleIcon, GridIcon } from "../components/moduleMeta";
+import FeaturedModulesCarousel from "../components/FeaturedModulesCarousel";
 
 /* Module accent colours & icons */
 // Helper: derive week count from canonical registry
@@ -114,12 +115,72 @@ function ModuleFeatureCard({ module, onClick }) {
   );
 }
 
+/* ── Podcast Play/Pause Button ───────────────────────────────── */
+
+function PodcastPlayButton() {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio("/audio/ListenBeforeYouStart.mp3");
+      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
+    }
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <button
+      onClick={togglePlay}
+      style={{
+        width: "48px",
+        height: "48px",
+        borderRadius: "999px",
+        border: "2px solid var(--golden-amber)",
+        background: "rgba(244,169,0,0.1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        transition: "all 0.3s ease",
+        color: "var(--golden-amber)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "var(--golden-amber)";
+        e.currentTarget.style.color = "var(--bg-primary)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "rgba(244,169,0,0.1)";
+        e.currentTarget.style.color = "var(--golden-amber)";
+      }}
+      aria-label={isPlaying ? "Pause podcast introduction" : "Play podcast introduction"}
+    >
+      {isPlaying ? (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="5" width="4" height="14" />
+          <rect x="14" y="5" width="4" height="14" />
+        </svg>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 /* ── HomePage ─────────────────────────────────────────────── */
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
-  const featured = modules.slice(0, 3);
   const totalWeeks = modules.reduce((sum, m) => sum + getWeekCount(m.id), 0);
 
   return (
@@ -281,8 +342,8 @@ export default function HomePage() {
               return (
                 <div style={{
                   display: "inline-flex", alignItems: "center", gap: "8px",
-                  background: `rgba(${accentRgb},0.08)`,
-                  border: `1px solid rgba(${accentRgb},0.2)`,
+                  background: theme === "light" ? "rgba(255,127,36,1)" : `rgba(${accentRgb},0.08)`,
+                  border: theme === "light" ? "none" : `1px solid rgba(${accentRgb},0.2)`,
                   borderRadius: "999px",
                   padding: "6px 16px",
                   width: "fit-content",
@@ -294,7 +355,7 @@ export default function HomePage() {
                     animation: "heroPulse 2s ease-in-out infinite",
                   }} />
                   <span style={{
-                    fontSize: "14px", fontWeight: 600, color: accentColor,
+                    fontSize: "14px", fontWeight: 600, color: theme === "light" ? "white" : accentColor,
                     letterSpacing: "0.08em", textTransform: "uppercase",
                   }}>
                     Built for Eduvos students
@@ -371,14 +432,189 @@ export default function HomePage() {
 
           </div>
         </div>
+      </section>
 
-        {/* Bottom fade into page */}
+      {/* ════════════════════════════════════════════════════
+          PODCAST SECTION — Prepare with Audio
+          ════════════════════════════════════════════════════ */}
+      <section style={{
+        maxWidth: "1280px",
+        margin: "0 auto",
+        padding: "60px 40px 80px",
+        position: "relative", zIndex: 1,
+      }}>
         <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          height: "120px",
-          background: "linear-gradient(to bottom, transparent, var(--bg-primary))",
-          pointerEvents: "none", zIndex: 1,
-        }} />
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "64px",
+          alignItems: "center",
+        }}>
+          {/* LEFT — Text content */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Eyebrow */}
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              background: theme === "light" ? "rgba(244,169,0,1)" : "rgba(244,169,0,0.08)",
+              border: theme === "light" ? "none" : `1px solid rgba(244,169,0,0.2)`,
+              borderRadius: "999px",
+              padding: "6px 16px",
+              width: "fit-content",
+            }}>
+              <div style={{
+                width: "6px", height: "6px", borderRadius: "50%",
+                background: "var(--golden-amber)",
+                boxShadow: `0 0 6px var(--golden-amber)`,
+                animation: "heroPulse 2s ease-in-out infinite",
+              }} />
+              <span style={{
+                fontSize: "14px", fontWeight: 600, color: theme === "light" ? "white" : "var(--golden-amber)",
+                letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>
+                Audio Learning
+              </span>
+            </div>
+
+            {/* Headline with Play/Pause Button */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <h2 style={{
+                fontSize: "clamp(1.75rem, 3vw, 2.4rem)",
+                fontWeight: 800,
+                lineHeight: 1.1,
+                letterSpacing: "-0.03em",
+                margin: 0,
+                color: "var(--text-primary)",
+              }}>
+                Podcast{" "}
+                <span style={{
+                  background: "linear-gradient(90deg, var(--golden-amber), var(--vibrant-cyan))",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}>
+                  Walkthrough
+                </span>
+              </h2>
+              <PodcastPlayButton />
+            </div>
+
+            {/* Body copy */}
+            <div style={{
+              display: "flex", flexDirection: "column", gap: "16px",
+              fontSize: "17px", lineHeight: "1.75",
+              color: "var(--text-secondary)",
+            }}>
+              <p style={{ margin: 0 }}>
+                Every week is accompanied by a carefully crafted podcast that summarizes the key concepts and topics you'll encounter in that week's assessment. Listen during your commute, workout, or while relaxing — get ahead of the material before you dive into the practice questions.
+              </p>
+              <p style={{ margin: 0 }}>
+                Our podcasts are designed to give you the confidence and context you need to approach each assessment prepared and ready. Think of it as your personal study companion.
+              </p>
+            </div>
+
+            {/* Features list */}
+            <div style={{
+              display: "flex", flexDirection: "column", gap: "12px",
+              marginTop: "8px",
+            }}>
+              {[
+                "Summarized key concepts for each week",
+                "Clear explanations of challenging topics",
+                "Perfect for pre-assessment preparation"
+              ].map((feature, idx) => (
+                <div key={idx} style={{
+                  display: "flex", alignItems: "center", gap: "12px",
+                  fontSize: "15px", color: "var(--text-secondary)",
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--lush-lime)" strokeWidth="2" strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {feature}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT — Image */}
+          <div style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            {/* Glowing orb behind image */}
+            <div style={{
+              position: "absolute",
+              width: "340px", height: "340px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(244,169,0,0.15) 0%, transparent 70%)",
+              filter: "blur(40px)",
+              animation: "heroPulse 6s ease-in-out infinite",
+            }} />
+
+            {/* Image frame */}
+            <div style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: "420px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              border: "1px solid rgba(var(--border-color-rgb), 0.3)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(244,169,0,0.08)",
+              background: "rgba(var(--bg-card-rgb), 0.6)",
+              backdropFilter: "blur(10px)",
+              height: "480px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <img
+                src="/images/Listen_Before_You_Start.png"
+                alt="Listen Before You Start"
+                style={{
+                  width: "100%", height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+                onError={e => {
+                  e.target.style.display = "none";
+                  e.target.parentElement.style.background = `
+                    linear-gradient(135deg,
+                      rgba(var(--bg-card-rgb),0.9),
+                      rgba(244,169,0,0.06)
+                    )
+                  `;
+                  const placeholder = document.createElement("div");
+                  placeholder.style.cssText = `
+                    display:flex;flex-direction:column;align-items:center;
+                    justify-content:center;gap:12px;padding:40px;text-align:center;
+                  `;
+                  placeholder.innerHTML = `
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none"
+                      stroke="rgba(244,169,0,0.5)" stroke-width="1.5"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="1"/>
+                      <path d="M12 8a4 4 0 0 1 4 4"/>
+                      <path d="M12 4a8 8 0 0 1 8 8"/>
+                    </svg>
+                    <span style="font-size:13px;color:rgba(var(--text-secondary),0.6);font-weight:500;letter-spacing:0.1em;text-transform:uppercase;">
+                      Listen & Learn
+                    </span>
+                  `;
+                  e.target.parentElement.appendChild(placeholder);
+                }}
+              />
+
+              {/* Shimmer overlay */}
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(244,169,0,0.03) 100%)",
+                pointerEvents: "none",
+              }} />
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ════════════════════════════════════════════════════
@@ -499,40 +735,181 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Module cards grid */}
+        {/* Animated Carousel */}
+        <FeaturedModulesCarousel modules={modules} />
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+          OFFLINE ACCESS & FLEXIBILITY
+          ════════════════════════════════════════════════════ */}
+      <section style={{
+        maxWidth: "1280px",
+        margin: "0 auto",
+        padding: "60px 40px 80px",
+        position: "relative", zIndex: 1,
+      }}>
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "20px",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "64px",
+          alignItems: "center",
         }}>
-          {featured.map(module => (
-            <ModuleFeatureCard
-              key={module.id}
-              module={module}
-              onClick={() => navigate(`/module/${module.id}`)}
-            />
-          ))}
-        </div>
-
-        {/* See more indicator */}
-        {modules.length > 3 && (
+          {/* LEFT — Image */}
           <div style={{
-            marginTop: "28px",
-            textAlign: "center",
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}>
-            <button
-              className="button"
-              onClick={() => navigate("/modules")}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "8px",
-                padding: "11px 24px", fontSize: "14px",
-              }}
-            >
-              + {modules.length - 3} more module{modules.length - 3 !== 1 ? "s" : ""} available
-              <ArrowRightIcon size={14} />
-            </button>
+            {/* Glowing orb behind image */}
+            <div style={{
+              position: "absolute",
+              width: "340px", height: "340px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(118,209,61,0.15) 0%, transparent 70%)",
+              filter: "blur(40px)",
+              animation: "heroPulse 6s ease-in-out infinite",
+            }} />
+
+            {/* Image with fallback placeholder */}
+            <div style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: "400px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              border: "1px solid rgba(var(--border-color-rgb), 0.3)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+              background: "linear-gradient(135deg, rgba(118,209,61,0.08), rgba(var(--bg-card-rgb),0.6))",
+              height: "420px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <img
+                src="/images/OfflineFunctionality.png"
+                alt="Offline Functionality"
+                style={{
+                  width: "100%", height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+                onError={e => {
+                  e.target.style.display = "none";
+                  const placeholder = document.createElement("div");
+                  placeholder.style.cssText = `
+                    text-align:center;display:flex;flex-direction:column;
+                    align-items:center;gap:20px;
+                  `;
+                  placeholder.innerHTML = `
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none"
+                      stroke="var(--lush-lime)" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round" style="opacity:0.7;">
+                      <path d="M12 2c-5.33 0-10 1.79-10 4v12c0 2.21 4.67 4 10 4s10-1.79 10-4V6c0-2.21-4.67-4-10-4z"/>
+                      <path d="M2 6c0 2.21 4.67 4 10 4s10-1.79 10-4"/>
+                      <path d="M2 12c0 2.21 4.67 4 10 4s10-1.79 10-4"/>
+                    </svg>
+                    <span style="font-size:16px;font-weight:600;color:var(--text-primary);letter-spacing:0.05em;text-transform:uppercase;">
+                      Download &amp; Learn
+                    </span>
+                  `;
+                  e.target.parentElement.appendChild(placeholder);
+                }}
+              />
+
+              {/* Shimmer overlay */}
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(118,209,61,0.03) 100%)",
+                pointerEvents: "none",
+              }} />
+            </div>
           </div>
-        )}
+
+          {/* RIGHT — Text content */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Eyebrow */}
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              background: theme === "light" ? "rgba(118,209,61,1)" : "rgba(118,209,61,0.08)",
+              border: theme === "light" ? "none" : `1px solid rgba(118,209,61,0.2)`,
+              borderRadius: "999px",
+              padding: "6px 16px",
+              width: "fit-content",
+            }}>
+              <div style={{
+                width: "6px", height: "6px", borderRadius: "50%",
+                background: "var(--lush-lime)",
+                boxShadow: `0 0 6px var(--lush-lime)`,
+                animation: "heroPulse 2s ease-in-out infinite",
+              }} />
+              <span style={{
+                fontSize: "14px", fontWeight: 600, color: theme === "light" ? "white" : "var(--lush-lime)",
+                letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>
+                Offline Ready
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h2 style={{
+              fontSize: "clamp(1.75rem, 3vw, 2.4rem)",
+              fontWeight: 800,
+              lineHeight: 1.1,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              color: "var(--text-primary)",
+            }}>
+              Study anywhere,{" "}
+              <span style={{
+                background: "linear-gradient(90deg, var(--lush-lime), var(--vibrant-cyan))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>
+                anytime
+              </span>
+            </h2>
+
+            {/* Body copy */}
+            <div style={{
+              display: "flex", flexDirection: "column", gap: "16px",
+              fontSize: "17px", lineHeight: "1.75",
+              color: "var(--text-secondary)",
+            }}>
+              <p style={{ margin: 0 }}>
+                This platform is designed to work offline, so you can study and test your knowledge even without an internet connection. Whether you're on the go, traveling, or in areas with unreliable internet, you've got full access to all modules, weeks, questions, and assessments.
+              </p>
+              <p style={{ margin: 0 }}>
+                <strong style={{ color: "var(--text-primary)" }}>Exception:</strong> Videos and podcasts require an internet connection and won't be available offline. When you reconnect, simply refresh the page to access the latest updates and new content.
+              </p>
+            </div>
+
+            {/* Features list */}
+            <div style={{
+              display: "flex", flexDirection: "column", gap: "12px",
+              marginTop: "8px",
+            }}>
+              {[
+                "Full access to all modules and assessments offline",
+                "Progress saved and synced when you reconnect",
+                "Videos and podcasts require internet connection"
+              ].map((feature, idx) => (
+                <div key={idx} style={{
+                  display: "flex", alignItems: "center", gap: "12px",
+                  fontSize: "15px", color: "var(--text-secondary)",
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--lush-lime)" strokeWidth="2" strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {feature}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ════════════════════════════════════════════════════
@@ -551,7 +928,7 @@ export default function HomePage() {
         <span style={{ fontWeight: 700, marginRight: "8px", color: theme === "light" ? "var(--sunset-orange)" : "var(--vibrant-cyan)" }}>
           Student Assessment Platform
         </span>
-        <span>All rights reserved</span>
+        <span>© {new Date().getFullYear()} All rights reserved</span>
       </footer>
 
       {/* Animation keyframes */}
