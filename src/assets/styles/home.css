@@ -1,0 +1,237 @@
+/* ════════════════════════════════════════════════════
+   HOME PAGE — Shared keyframes
+   ════════════════════════════════════════════════════ */
+@keyframes heroPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+/* ════════════════════════════════════════════════════
+   HOME PAGE — Responsive image card frames
+   Used by: HeroSection, PodcastSection, OfflineSection
+   ════════════════════════════════════════════════════ */
+
+/* Base frame: scales fluidly with viewport via aspect-ratio
+   instead of a fixed pixel height. */
+.home-image-frame {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--bg-card-rgb), 0.6);
+  backdrop-filter: blur(10px);
+}
+
+/* Hero image frame — taller, portrait-ish on desktop */
+.home-image-frame--hero {
+  max-width: 460px;
+  aspect-ratio: 4 / 4.5;
+  border: 1px solid rgba(var(--border-color-rgb), 0.3);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,191,255,0.08);
+}
+
+/* Podcast image frame */
+.home-image-frame--podcast {
+  max-width: 420px;
+  aspect-ratio: 4 / 4.5;
+  border: 1px solid rgba(var(--border-color-rgb), 0.3);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(244,169,0,0.08);
+}
+
+/* Offline image frame */
+.home-image-frame--offline {
+  max-width: 400px;
+  aspect-ratio: 4 / 4.2;
+  border: 1px solid rgba(var(--border-color-rgb), 0.3);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+  background: linear-gradient(135deg, rgba(118,209,61,0.08), rgba(var(--bg-card-rgb),0.6));
+}
+
+.home-image-frame img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.home-image-frame--hero img {
+  object-fit: contain;
+}
+
+.home-image-frame--podcast img,
+.home-image-frame--offline img {
+  object-fit: cover;
+}
+
+/* Shimmer overlay shared across frames */
+.home-image-shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Fallback placeholder content */
+.home-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.home-image-placeholder span {
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Glowing orb behind images */
+.home-image-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: heroPulse 6s ease-in-out infinite;
+}
+
+.home-image-orb--hero {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(0,191,255,0.12) 0%, transparent 70%);
+}
+
+.home-image-orb--podcast {
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(244,169,0,0.15) 0%, transparent 70%);
+}
+
+.home-image-orb--offline {
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(118,209,61,0.15) 0%, transparent 70%);
+}
+
+/* ════════════════════════════════════════════════════
+   Responsive breakpoints
+   ════════════════════════════════════════════════════ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .home-image-frame--hero,
+  .home-image-frame--podcast,
+  .home-image-frame--offline {
+    max-width: 360px;
+  }
+
+  .home-image-orb--hero,
+  .home-image-orb--podcast,
+  .home-image-orb--offline {
+    width: 280px;
+    height: 280px;
+  }
+}
+
+/* Mobile: stack layouts, let image frames shrink and
+   become wider/shorter instead of tall portraits */
+@media (max-width: 768px) {
+  .home-image-frame--hero,
+  .home-image-frame--podcast,
+  .home-image-frame--offline {
+    max-width: 100%;
+    aspect-ratio: 16 / 10;
+  }
+
+  .home-image-orb--hero,
+  .home-image-orb--podcast,
+  .home-image-orb--offline {
+    width: 220px;
+    height: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-image-frame--hero,
+  .home-image-frame--podcast,
+  .home-image-frame--offline {
+    aspect-ratio: 4 / 3;
+    border-radius: 16px;
+  }
+
+  .home-image-placeholder svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .home-image-placeholder span {
+    font-size: 11px;
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   HERO — section grid & content
+   ════════════════════════════════════════════════════ */
+.hero-grid {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 56px 40px 64px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+    padding: 56px 24px 48px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-grid {
+    padding: 56px 20px 44px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   GENERIC two-column section grid (Podcast / Offline)
+   ════════════════════════════════════════════════════ */
+.home-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .home-split-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   VIDEO SECTION grid
+   ════════════════════════════════════════════════════ */
+.video-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

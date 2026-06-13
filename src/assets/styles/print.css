@@ -551,6 +551,13 @@ html[data-print="active"] .app-header {
 @media print {
   @page { size: A4; margin: 14mm 16mm; }
 
+  /* Force backgrounds/colors to print without "Background graphics" toggle */
+  html, body, * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   body { background: white !important; font-size: 10pt; }
   body::before, body::after { display: none !important; }
 

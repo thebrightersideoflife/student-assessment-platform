@@ -21,6 +21,14 @@ export default [
     ],
     markingGuide: "Award 1 mark for identifying the changing/dynamic environment. Award 1 mark for explaining the impact of poor change management (rework, cost, inconsistencies). Award 1 mark for linking effective management to system success and alignment with stakeholder needs.",
     points: 3,
+    explanation: `Managing changing requirements is essential because the NSTS operates in a dynamic environment where technologies, policies, and user needs continually evolve.
+
+If these changes are not handled effectively, it can result in:
+- Costly rework
+- System inconsistencies
+- Increased expenses
+
+Proper management guarantees that the system remains functional, relevant, and properly aligned with stakeholder needs throughout the development lifecycle.`,
   },
 
   // 1.2 — show-answer
@@ -34,6 +42,11 @@ export default [
     ],
     markingGuide: "Award 1 mark for a correct explanation of change anticipation. Award 1 mark for a relevant example (e.g., prototyping). Award 1 mark for a correct explanation of change tolerance. Award 1 mark for linking both concepts to reduced rework cost or improved flexibility.",
     points: 4,
+    explanation: `**Change Anticipation:** This involves predicting potential changes early in the project. For example, developers can build prototypes to explore system features and clarify requirements before moving to full implementation.
+
+**Change Tolerance:** This involves designing the system's architecture so that modifications can be incorporated easily. This is typically achieved through incremental development, where updates can be applied to specific increments without disrupting the whole system.
+
+Together, both approaches significantly reduce rework costs and improve project flexibility.`,
   },
 
   // 1.3 — show-answer
@@ -47,6 +60,13 @@ export default [
     ],
     markingGuide: "Award 2 marks for a clear explanation of why differences in subsystem requirements necessitate different approaches. Award 2 marks for correctly describing at least two subsystem examples with appropriate reasoning. Award 1 mark for a conclusion that justifies the need for varied techniques across subsystems.",
     points: 5,
+    explanation: `Applying a single uniform approach across the entire system is inefficient because different subsystems have distinct constraints and requirements.
+
+- The **real-time monitoring** subsystem requires real-time processing and high-performance techniques to handle continuous data streams without any delay.
+- The **ticketing** subsystem requires strict data integrity mechanisms and transaction processing to ensure the reliability and accuracy of payments.
+- The **predictive maintenance** subsystem utilizes data analysis and evolving models, which require an approach focused on flexibility and iterative refinement.
+
+Applying tailored software engineering techniques to each specific subsystem improves the overall reliability, performance, and long-term maintainability of the NSTS.`,
   },
 
   // 1.4 — show-answer
@@ -60,6 +80,11 @@ export default [
     ],
     markingGuide: "Award 2 marks for correctly explaining the Waterfall model with at least one advantage and one disadvantage in context. Award 2 marks for correctly explaining the Incremental model with at least one advantage and one disadvantage in context. Award 2 marks for a contextual comparison that evaluates both models against the specific needs of NSTS.",
     points: 6,
+    explanation: `**The Waterfall Model:** This model relies on strictly sequential phases (requirements, design, implementation, and testing), where each phase is completed before the next begins. Its primary advantage is strong process control and documentation. It is highly suited for stable, well-defined requirements but is inflexible to change and delays testing until late in the project. This poses a major risk for the NSTS, where requirements are evolving and unclear.
+
+**The Incremental Model:** This model builds software in small, iterative releases guided by ongoing feedback. It handles changing requirements effectively and allows for the early delivery of usable features. However, disadvantages include potential degradation of the system structure over time and reduced process visibility for management.
+
+**Conclusion:** Because the NSTS has evolving requirements and would benefit greatly from early functionality, the incremental model is far more suitable than the Waterfall model.`,
   },
 
   // 1.5 — show-answer
@@ -73,6 +98,13 @@ export default [
     ],
     markingGuide: "Award 1 mark for correctly identifying the incremental development model. Award 1 mark per well-justified reason tied to the scenario (requirement volatility, early delivery, system complexity) — up to 3 marks. Full marks require at least two strong, scenario-specific justifications.",
     points: 4,
+    explanation: `The incremental development model is the most suitable recommendation for the NSTS.
+
+- **Requirement Volatility:** Because requirements are highly volatile, incremental development allows for iterative updates as needs clarify and change over time.
+- **Early Delivery:** The project's need for early delivery is fulfilled by releasing functional increments (like the ticketing or monitoring subsystems) before the full system is completed.
+- **System Complexity:** System complexity is managed by breaking the workload into smaller, controllable pieces, which effectively reduces overall risk.
+
+Furthermore, continuous stakeholder feedback ensures the platform evolves in alignment with actual real-world needs.`,
   },
 
   // 1.6 — fill-in-the-blank (testing stages order) + show-answer for justification
@@ -99,6 +131,7 @@ export default [
       },
     ],
     points: 2,
+    explanation: `The three main stages of software validation testing, in order, are **Component** testing, **System** testing, and **Customer** testing.`,
   },
 
   {
@@ -111,6 +144,13 @@ export default [
     ],
     markingGuide: "Award 1 mark for stating the purpose of validation (meeting specifications and user expectations). Award 1 mark for naming and briefly explaining all three testing stages. Award 1 mark for a clear justification of why system testing precedes customer testing, with reference to the NSTS context.",
     points: 3,
+    explanation: `Software validation serves the purpose of ensuring that the system fulfills its specifications and meets the expectations of end-users.
+
+- **Component testing** verifies individual parts in isolation.
+- **System testing** verifies that integrated components function correctly together.
+- **Customer testing** evaluates the software against real-world scenarios.
+
+In the NSTS project, system testing must precede customer testing to ensure all integrated subsystems (ticketing, monitoring, maintenance) work together correctly before user exposure. Releasing an unvalidated integrated system risks critical failures that are difficult and costly to diagnose.`,
   },
 
   // ── QUESTION 2: CampusServe Smart Services Platform ───────────────────────
@@ -133,6 +173,11 @@ export default [
     ],
     markingGuide: "Award 1 mark per valid, clearly explained benefit directly tied to the CampusServe context. Maximum 4 marks. Generic textbook answers that are not applied to the scenario should receive a maximum of 2 marks.",
     points: 4,
+    explanation: `Incremental development provides the benefit of early delivery for core features; for example, the payment module can be released to students before the rest of the platform is finished.
+
+Continuous user feedback ensures that each subsequent increment accurately reflects real campus needs. Additionally, the cost of implementing requirement changes is much lower because adjustments are made to individual increments instead of the entire system.
+
+This progressive enhancement leads to improved user satisfaction as the platform visibly gets better over time.`,
   },
 
   // 2.2 — multiple-choice (select 2 — implemented as two separate MC questions for auto-grading compatibility)
@@ -146,6 +191,11 @@ export default [
     ],
     markingGuide: "Award 2 marks per problem — 1 mark for correctly identifying and explaining the problem, and 1 mark for clearly linking it to a realistic impact on the CampusServe system. Answers that only list problems without explaining their impact should receive a maximum of 1 mark per problem.",
     points: 4,
+    explanation: `**Problem 1: Lack of Process Visibility**
+Because the system is built in increments, it can be challenging for managers to measure overall progress and accurately gauge remaining work. For CampusServe, this makes it difficult to plan timeline releases and appropriately allocate resources across different modules, such as payments and notifications.
+
+**Problem 2: System Structure Degradation**
+Continuous additions and changes across releases can result in poorly structured code that is difficult to maintain. In the context of CampusServe, this risks increasing technical debt, which makes adding future features (like new payment types) much more costly and error-prone.`,
   },
 
   // 2.3 — fill-in-the-blank + show-answer
@@ -167,6 +217,7 @@ export default [
       },
     ],
     points: 2,
+    explanation: `In the CampusServe project, requirements are recorded as **user stories**, which describe functionality from the end-user's perspective. This requires high levels of **customer involvement** to ensure that each increment adds real value to students and staff.`,
   },
 
   {
@@ -179,6 +230,11 @@ export default [
     ],
     markingGuide: "Award 2 marks for a clear explanation of how user stories are used and their benefit to the project. Award 2 marks for explaining the role of customer involvement and how it supports iterative development. Top answers should demonstrate how both concepts work together, not in isolation.",
     points: 4,
+    explanation: `User stories explicitly define system functionality from the perspective of the staff and students (e.g., "As a student, I want to pay for printing from my phone"). This allows the development team to prioritize the features that deliver the most immediate value.
+
+Customer involvement provides continuous feedback throughout the lifecycle, ensuring the platform evolves based on actual user behavior rather than development assumptions.
+
+Together, these practices support iterative development, improve requirement accuracy, and guarantee genuine value delivery.`,
   },
 
   // 2.4 — open-ended (term recall) + show-answer
@@ -193,6 +249,7 @@ export default [
       tolerance: 0,
     },
     points: 1,
+    explanation: `**Test-first development** is the practice of writing automated test cases before implementing the corresponding functional code.`,
   },
 
   {
@@ -205,6 +262,11 @@ export default [
     ],
     markingGuide: "Award 1 mark for a correct definition of test-first development. Award 1 mark for explaining how it ensures code meets requirements from the start or catches errors early. Award 1 mark for explaining the role of continuous testing and linking it to quality improvement in the CampusServe context.",
     points: 3,
+    explanation: `Test-first development involves writing automated test cases prior to implementing the functional code. This practice guarantees that every feature is built to meet its exact requirements from the very beginning, drastically reducing the likelihood of defects. For CampusServe, writing tests before coding the notification or payment modules ensures they behave correctly immediately upon release.
+
+Continuous testing runs these automated suites throughout development to detect regression and integration issues early on.
+
+Together, these practices increase confidence in every incremental release and yield higher quality, more maintainable software.`,
   },
 
 ];

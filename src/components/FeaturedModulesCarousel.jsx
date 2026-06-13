@@ -11,7 +11,7 @@ import { weeks as weekRegistry } from "../data/weeks";
  * - Top row sliding left
  * - Bottom row sliding right (opposite direction)
  * - Fade edges effect
- * - ~4 cards visible at once
+ * - ~4 cards visible at once (responsive)
  * - Theme-aware card design
  * - Hover border highlight
  * - Click navigation to first week
@@ -49,7 +49,7 @@ export default function FeaturedModulesCarousel({ modules }) {
       overflow: "hidden",
       paddingBottom: "20px",
     }}>
-      {/* CSS animations */}
+      {/* CSS animations & responsive rules */}
       <style>{`
         @keyframes slideLeft {
           0% { transform: translateX(0); }
@@ -65,6 +65,9 @@ export default function FeaturedModulesCarousel({ modules }) {
           animation-duration: 80s;
           animation-timing-function: linear;
           animation-iteration-count: infinite;
+          gap: 24px;
+          padding-left: 20px;
+          padding-right: 20px;
         }
 
         .carousel-top {
@@ -74,24 +77,87 @@ export default function FeaturedModulesCarousel({ modules }) {
         .carousel-bottom {
           animation-name: slideRight;
         }
+
+        .carousel-fade {
+          width: 120px;
+        }
+
+        .carousel-card {
+          width: 240px;
+        }
+
+        .carousel-row {
+          margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+          .carousel-card {
+            width: 200px;
+          }
+          .carousel-fade {
+            width: 80px;
+          }
+          .carousel-container {
+            gap: 18px;
+            padding-left: 16px;
+            padding-right: 16px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .carousel-card {
+            width: 170px;
+          }
+          .carousel-fade {
+            width: 48px;
+          }
+          .carousel-container {
+            gap: 14px;
+            padding-left: 12px;
+            padding-right: 12px;
+          }
+          .carousel-row {
+            margin-bottom: 20px;
+          }
+          .carousel-container {
+            animation-duration: 60s;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .carousel-card {
+            width: 145px;
+          }
+          .carousel-fade {
+            width: 28px;
+          }
+          .carousel-container {
+            gap: 10px;
+            padding-left: 8px;
+            padding-right: 8px;
+          }
+          .carousel-container {
+            animation-duration: 45s;
+          }
+        }
       `}</style>
 
       {/* Top Carousel - slides left */}
       <div
+        className="carousel-row"
         style={{
           position: "relative",
-          marginBottom: "30px",
           overflow: "hidden",
         }}
       >
         {/* Fade gradient left */}
         <div
+          className="carousel-fade"
           style={{
             position: "absolute",
             left: 0,
             top: 0,
             bottom: 0,
-            width: "120px",
             background: `linear-gradient(to right, var(--bg-primary), transparent)`,
             zIndex: 10,
             pointerEvents: "none",
@@ -100,12 +166,12 @@ export default function FeaturedModulesCarousel({ modules }) {
 
         {/* Fade gradient right */}
         <div
+          className="carousel-fade"
           style={{
             position: "absolute",
             right: 0,
             top: 0,
             bottom: 0,
-            width: "120px",
             background: `linear-gradient(to left, var(--bg-primary), transparent)`,
             zIndex: 10,
             pointerEvents: "none",
@@ -117,10 +183,7 @@ export default function FeaturedModulesCarousel({ modules }) {
           className="carousel-container carousel-top"
           style={{
             display: "flex",
-            gap: "24px",
             width: "fit-content",
-            paddingLeft: "20px",
-            paddingRight: "20px",
           }}
         >
           {topDuplicated.map((module, idx) => (
@@ -145,12 +208,12 @@ export default function FeaturedModulesCarousel({ modules }) {
       >
         {/* Fade gradient left */}
         <div
+          className="carousel-fade"
           style={{
             position: "absolute",
             left: 0,
             top: 0,
             bottom: 0,
-            width: "120px",
             background: `linear-gradient(to right, var(--bg-primary), transparent)`,
             zIndex: 10,
             pointerEvents: "none",
@@ -159,12 +222,12 @@ export default function FeaturedModulesCarousel({ modules }) {
 
         {/* Fade gradient right */}
         <div
+          className="carousel-fade"
           style={{
             position: "absolute",
             right: 0,
             top: 0,
             bottom: 0,
-            width: "120px",
             background: `linear-gradient(to left, var(--bg-primary), transparent)`,
             zIndex: 10,
             pointerEvents: "none",
@@ -176,10 +239,7 @@ export default function FeaturedModulesCarousel({ modules }) {
           className="carousel-container carousel-bottom"
           style={{
             display: "flex",
-            gap: "24px",
             width: "fit-content",
-            paddingLeft: "20px",
-            paddingRight: "20px",
           }}
         >
           {bottomDuplicated.map((module, idx) => (
@@ -214,9 +274,9 @@ function CarouselCard({
 
   return (
     <div
+      className="carousel-card"
       style={{
         flexShrink: 0,
-        width: "240px",
         cursor: "pointer",
       }}
       onMouseEnter={() => onHover(module.id)}
