@@ -1,272 +1,539 @@
 // src/data/questions/ITSEA/week2.js
 export default [
 
-  // ── QUESTION 1: National Smart Transportation System ──────────────────────
-
+  // ─────────────────────────────────────────────
+  // SCENARIO BLOCK
+  // ─────────────────────────────────────────────
   {
-    id: "SCENARIO_ITSEA_W2_Q1",
+    id: "ITSEA_W2_SCENARIO",
     type: "scenario",
-    title: "Question 1: National Smart Transportation System (25 Marks)",
-    context: `A government agency is developing a National Smart Transportation System (NSTS). The system integrates buses, trains, and traffic sensors to provide real-time route optimisation, digital ticketing, congestion monitoring, and predictive maintenance alerts.\n\nThe system must:\n- Handle large-scale real-time data\n- Integrate with existing legacy systems\n- Remain reliable during peak usage\n- Adapt to frequent policy and infrastructure changes\n\nRequirements are initially unclear and expected to evolve throughout development.`,
+    text: "**MedSync Global: Modernising Healthcare Software Delivery**\n\nMedSync Global is a multinational healthcare technology company that develops software used by hospitals, pharmacies, laboratories, emergency services, and insurance providers.\n\nThe company currently operates a legacy patient-management platform developed over many years using a traditional plan-driven approach. Recently, healthcare regulations have changed rapidly, hospitals have requested new digital services, and competing technology firms have begun releasing innovative features every few weeks.\n\nTo remain competitive, MedSync plans to replace its legacy platform with a cloud-based healthcare ecosystem that includes:\n- Electronic patient records\n- Appointment scheduling\n- Prescription management\n- Real-time ambulance tracking\n- Laboratory integration\n- AI-assisted diagnostic reporting\n\nThe system will be developed by multiple teams located across different countries. Regulatory compliance remains critical because software failures could affect patient safety.\n\nSenior management is debating whether the project should continue using traditional plan-driven approaches or transition toward Agile and Extreme Programming (XP) practices.",
   },
 
-  // 1.1 — open-ended (keyword validated, reveal answer)
+  // ─────────────────────────────────────────────
+  // QUESTION 1 — SOFTWARE PROCESS STRATEGY [12]
+  // ─────────────────────────────────────────────
+
   {
-    id: "ITSEA_W2_Q1_1A",
-    type: "show-answer",
+    id: "ITSEA_W2_Q1",
+    type: "multiple-choice",
+    tags: ["software processes", "SDLC"],
     sectionLabel: "1.1",
-    text: "Explain why it is essential to manage changing requirements effectively in this project.",
-    correctAnswers: [
-      "Managing changing requirements is essential because the system operates in a dynamic environment where policies, technologies, and user needs evolve. If changes are not handled effectively, it can lead to rework, increased costs, and system inconsistencies. Proper management ensures the system remains relevant, functional, and aligned with stakeholder needs throughout development."
+    text: "A consulting team argues that MedSync should continue using a pure Waterfall model.\n\nWhich factor **most strongly** supports this recommendation?",
+    options: [
+      "Hospitals frequently change requirements during development.",
+      "The system must comply with strict healthcare regulations and extensive documentation requirements.",
+      "Customers require software releases every two weeks.",
+      "The project relies heavily on user stories and sprint reviews.",
     ],
-    markingGuide: "Award 1 mark for identifying the changing/dynamic environment. Award 1 mark for explaining the impact of poor change management (rework, cost, inconsistencies). Award 1 mark for linking effective management to system success and alignment with stakeholder needs.",
-    points: 3,
-    explanation: `Managing changing requirements is essential because the NSTS operates in a dynamic environment where technologies, policies, and user needs continually evolve.
-
-If these changes are not handled effectively, it can result in:
-- Costly rework
-- System inconsistencies
-- Increased expenses
-
-Proper management guarantees that the system remains functional, relevant, and properly aligned with stakeholder needs throughout the development lifecycle.`,
+    correctAnswers: [
+      "The system must comply with strict healthcare regulations and extensive documentation requirements.",
+    ],
+    points: 1,
+    explanation:
+      "Waterfall performs best when requirements are relatively stable, formal documentation is required, regulatory approval is important, and traceability must be maintained. Healthcare systems frequently require compliance evidence and detailed documentation.\n\nOptions A, C, and D all describe conditions that favour **Agile** rather than Waterfall.",
   },
 
-  // 1.2 — show-answer
   {
-    id: "ITSEA_W2_Q1_2",
-    type: "show-answer",
+    id: "ITSEA_W2_Q2",
+    type: "fill-in-the-blank",
+    tags: ["software testing", "SDLC"],
     sectionLabel: "1.2",
-    text: "Discuss how change anticipation and change tolerance can be applied to reduce the cost of rework in this system.",
-    correctAnswers: [
-      "Change anticipation involves predicting possible changes early — for example, by developing prototypes to explore system features and refine requirements before full implementation. Change tolerance involves designing the system so that changes can be incorporated easily, typically through incremental development, where modifications can be made to specific increments without affecting the entire system. Together, these approaches reduce rework costs and improve flexibility throughout the project lifecycle."
-    ],
-    markingGuide: "Award 1 mark for a correct explanation of change anticipation. Award 1 mark for a relevant example (e.g., prototyping). Award 1 mark for a correct explanation of change tolerance. Award 1 mark for linking both concepts to reduced rework cost or improved flexibility.",
-    points: 4,
-    explanation: `**Change Anticipation:** This involves predicting potential changes early in the project. For example, developers can build prototypes to explore system features and clarify requirements before moving to full implementation.
-
-**Change Tolerance:** This involves designing the system's architecture so that modifications can be incorporated easily. This is typically achieved through incremental development, where updates can be applied to specific increments without disrupting the whole system.
-
-Together, both approaches significantly reduce rework costs and improve project flexibility.`,
-  },
-
-  // 1.3 — show-answer
-  {
-    id: "ITSEA_W2_Q1_3",
-    type: "show-answer",
-    sectionLabel: "1.3",
-    text: "Analyse why different subsystems (e.g., real-time monitoring, ticketing, maintenance prediction) may require different software engineering approaches or techniques.",
-    correctAnswers: [
-      "Different subsystems have distinct requirements and constraints, making a single uniform approach inefficient. The real-time monitoring subsystem requires high-performance and real-time processing techniques to handle continuous data streams without delay. The ticketing subsystem requires transaction processing and data integrity mechanisms to ensure payment accuracy and reliability. The predictive maintenance subsystem may use data analysis and evolving models, requiring flexibility and iterative refinement. Applying tailored techniques to each subsystem improves overall performance, reliability, and long-term maintainability of the system."
-    ],
-    markingGuide: "Award 2 marks for a clear explanation of why differences in subsystem requirements necessitate different approaches. Award 2 marks for correctly describing at least two subsystem examples with appropriate reasoning. Award 1 mark for a conclusion that justifies the need for varied techniques across subsystems.",
-    points: 5,
-    explanation: `Applying a single uniform approach across the entire system is inefficient because different subsystems have distinct constraints and requirements.
-
-- The **real-time monitoring** subsystem requires real-time processing and high-performance techniques to handle continuous data streams without any delay.
-- The **ticketing** subsystem requires strict data integrity mechanisms and transaction processing to ensure the reliability and accuracy of payments.
-- The **predictive maintenance** subsystem utilizes data analysis and evolving models, which require an approach focused on flexibility and iterative refinement.
-
-Applying tailored software engineering techniques to each specific subsystem improves the overall reliability, performance, and long-term maintainability of the NSTS.`,
-  },
-
-  // 1.4 — show-answer
-  {
-    id: "ITSEA_W2_Q1_4",
-    type: "show-answer",
-    sectionLabel: "1.4",
-    text: "Compare the Waterfall model and the Incremental development model for this project. Your answer should include key characteristics of each model, as well as their advantages and disadvantages in this context.",
-    correctAnswers: [
-      "The Waterfall model follows sequential phases — requirements, design, implementation, and testing — each completed before the next begins. Its key advantage is strong documentation and process control, making it suitable for stable, well-defined requirements. However, it is inflexible to change and delays testing until late in the lifecycle, which is a significant risk for NSTS where requirements are unclear and evolving. The Incremental development model builds the system in small, iterative releases with ongoing feedback. It handles changing requirements more effectively and supports early delivery of usable features. Its disadvantages include potential degradation of system structure over time and reduced process visibility for managers. For NSTS, where requirements evolve and early functionality is valuable, the incremental model is more suitable than Waterfall."
-    ],
-    markingGuide: "Award 2 marks for correctly explaining the Waterfall model with at least one advantage and one disadvantage in context. Award 2 marks for correctly explaining the Incremental model with at least one advantage and one disadvantage in context. Award 2 marks for a contextual comparison that evaluates both models against the specific needs of NSTS.",
-    points: 6,
-    explanation: `**The Waterfall Model:** This model relies on strictly sequential phases (requirements, design, implementation, and testing), where each phase is completed before the next begins. Its primary advantage is strong process control and documentation. It is highly suited for stable, well-defined requirements but is inflexible to change and delays testing until late in the project. This poses a major risk for the NSTS, where requirements are evolving and unclear.
-
-**The Incremental Model:** This model builds software in small, iterative releases guided by ongoing feedback. It handles changing requirements effectively and allows for the early delivery of usable features. However, disadvantages include potential degradation of the system structure over time and reduced process visibility for management.
-
-**Conclusion:** Because the NSTS has evolving requirements and would benefit greatly from early functionality, the incremental model is far more suitable than the Waterfall model.`,
-  },
-
-  // 1.5 — show-answer
-  {
-    id: "ITSEA_W2_Q1_5",
-    type: "show-answer",
-    sectionLabel: "1.5",
-    text: "Recommend the most suitable process model for this system. Justify your answer with reference to: requirement volatility, need for early delivery, and system complexity.",
-    correctAnswers: [
-      "The incremental development model is the most suitable choice for NSTS. Given high requirement volatility, incremental development supports iterative updates as requirements are clarified and change over time. The need for early delivery is met by releasing functional increments — such as the ticketing or monitoring subsystem — before the full system is complete. The system's complexity is managed by breaking development into smaller, more controllable parts, reducing overall risk. Continuous stakeholder feedback further ensures the system evolves in alignment with real-world needs."
-    ],
-    markingGuide: "Award 1 mark for correctly identifying the incremental development model. Award 1 mark per well-justified reason tied to the scenario (requirement volatility, early delivery, system complexity) — up to 3 marks. Full marks require at least two strong, scenario-specific justifications.",
-    points: 4,
-    explanation: `The incremental development model is the most suitable recommendation for the NSTS.
-
-- **Requirement Volatility:** Because requirements are highly volatile, incremental development allows for iterative updates as needs clarify and change over time.
-- **Early Delivery:** The project's need for early delivery is fulfilled by releasing functional increments (like the ticketing or monitoring subsystems) before the full system is completed.
-- **System Complexity:** System complexity is managed by breaking the workload into smaller, controllable pieces, which effectively reduces overall risk.
-
-Furthermore, continuous stakeholder feedback ensures the platform evolves in alignment with actual real-world needs.`,
-  },
-
-  // 1.6 — fill-in-the-blank (testing stages order) + show-answer for justification
-  {
-    id: "ITSEA_W2_Q1_6A",
-    type: "fill-in-the-blank",
-    sectionLabel: "1.6 Part A",
-    text: "Software validation ensures the system meets its specifications and user expectations. The three main stages of testing, in order, are: ___ testing, ___ testing, and ___ testing.",
+    text: "The Waterfall phase that verifies whether all integrated components function together correctly is called ___ and System Testing.",
     blanks: [
       {
         id: "b1",
-        options: ["Component", "System", "Customer"],
-        correctAnswer: "Component",
-      },
-      {
-        id: "b2",
-        options: ["Component", "System", "Customer"],
-        correctAnswer: "System",
-      },
-      {
-        id: "b3",
-        options: ["Component", "System", "Customer"],
-        correctAnswer: "Customer",
+        options: ["Acceptance", "Unit", "Integration", "Regression"],
+        correctAnswer: "Integration",
       },
     ],
-    points: 2,
-    explanation: `The three main stages of software validation testing, in order, are **Component** testing, **System** testing, and **Customer** testing.`,
   },
 
   {
-    id: "ITSEA_W2_Q1_6B",
-    type: "show-answer",
-    sectionLabel: "1.6 Part B",
-    text: "Explain the role of software validation (V&V) in ensuring system quality. Include the purpose of validation and briefly justify why System Testing must precede Customer Testing in the NSTS project.",
-    correctAnswers: [
-      "Software validation ensures that the system meets its specifications and fulfils the expectations of its end users. Component testing verifies individual parts in isolation, system testing integrates all components and verifies that they function correctly together, and customer testing evaluates the system against real user needs and scenarios. System testing must precede customer testing in NSTS because it ensures all integrated subsystems — monitoring, ticketing, and maintenance — work together correctly before exposing the system to end users. Releasing an unvalidated integrated system to customers risks critical failures that are costly and difficult to diagnose."
-    ],
-    markingGuide: "Award 1 mark for stating the purpose of validation (meeting specifications and user expectations). Award 1 mark for naming and briefly explaining all three testing stages. Award 1 mark for a clear justification of why system testing precedes customer testing, with reference to the NSTS context.",
-    points: 3,
-    explanation: `Software validation serves the purpose of ensuring that the system fulfills its specifications and meets the expectations of end-users.
-
-- **Component testing** verifies individual parts in isolation.
-- **System testing** verifies that integrated components function correctly together.
-- **Customer testing** evaluates the software against real-world scenarios.
-
-In the NSTS project, system testing must precede customer testing to ensure all integrated subsystems (ticketing, monitoring, maintenance) work together correctly before user exposure. Releasing an unvalidated integrated system risks critical failures that are difficult and costly to diagnose.`,
-  },
-
-  // ── QUESTION 2: CampusServe Smart Services Platform ───────────────────────
-
-  {
-    id: "SCENARIO_ITSEA_W2_Q2",
-    type: "scenario",
-    title: "Question 2: CampusServe Smart Services Platform (10 Marks)",
-    context: `CampusServe is developing a Smart Campus Services Platform that allows students and staff to:\n- Pay for services (printing, parking, events)\n- Manage accounts\n- View transaction history\n- Receive real-time notifications\n\nThe system is being developed using an incremental (agile) approach, with frequent releases and ongoing user feedback.`,
-  },
-
-  // 2.1 — show-answer
-  {
-    id: "ITSEA_W2_Q2_1",
-    type: "show-answer",
-    sectionLabel: "2.1",
-    text: "Explain how incremental development benefits this project.",
-    correctAnswers: [
-      "Incremental development benefits CampusServe by allowing early delivery of core features — for example, the payment module can be released and used by students before the full platform is complete. Continuous user feedback from students and staff ensures each subsequent increment better reflects real needs. The cost of implementing requirement changes is reduced because adjustments are made to individual increments rather than the entire system. Progressive enhancement of features improves user satisfaction over time, as the platform visibly improves with each release."
-    ],
-    markingGuide: "Award 1 mark per valid, clearly explained benefit directly tied to the CampusServe context. Maximum 4 marks. Generic textbook answers that are not applied to the scenario should receive a maximum of 2 marks.",
-    points: 4,
-    explanation: `Incremental development provides the benefit of early delivery for core features; for example, the payment module can be released to students before the rest of the platform is finished.
-
-Continuous user feedback ensures that each subsequent increment accurately reflects real campus needs. Additionally, the cost of implementing requirement changes is much lower because adjustments are made to individual increments instead of the entire system.
-
-This progressive enhancement leads to improved user satisfaction as the platform visibly gets better over time.`,
-  },
-
-  // 2.2 — multiple-choice (select 2 — implemented as two separate MC questions for auto-grading compatibility)
-  {
-    id: "ITSEA_W2_Q2_2",
-    type: "show-answer",
-    sectionLabel: "2.2",
-    text: "Discuss two problems associated with incremental development and explain how they may affect the CampusServe system.",
-    correctAnswers: [
-      "The first problem is lack of process visibility — because the system is built incrementally, it can be difficult for managers to measure overall progress or know exactly how much work remains. For CampusServe, this may make it harder to plan release timelines or allocate resources across modules such as payments and notifications. The second problem is system structure degradation — continuous changes and additions across increments can lead to poorly structured, harder-to-maintain code over time. For CampusServe, this risks increasing technical debt, making future features like new payment types or notification channels more costly and error-prone to implement."
-    ],
-    markingGuide: "Award 2 marks per problem — 1 mark for correctly identifying and explaining the problem, and 1 mark for clearly linking it to a realistic impact on the CampusServe system. Answers that only list problems without explaining their impact should receive a maximum of 1 mark per problem.",
-    points: 4,
-    explanation: `**Problem 1: Lack of Process Visibility**
-Because the system is built in increments, it can be challenging for managers to measure overall progress and accurately gauge remaining work. For CampusServe, this makes it difficult to plan timeline releases and appropriately allocate resources across different modules, such as payments and notifications.
-
-**Problem 2: System Structure Degradation**
-Continuous additions and changes across releases can result in poorly structured code that is difficult to maintain. In the context of CampusServe, this risks increasing technical debt, which makes adding future features (like new payment types) much more costly and error-prone.`,
-  },
-
-  // 2.3 — fill-in-the-blank + show-answer
-  {
-    id: "ITSEA_W2_Q2_3A",
-    type: "fill-in-the-blank",
-    sectionLabel: "2.3 Part A",
-    text: "In the CampusServe project, requirements are recorded as ___, which describe functionality from the end-user's perspective. This requires high levels of ___ to ensure that each increment adds real value to students and staff.",
-    blanks: [
-      {
-        id: "b1",
-        options: ["user stories", "system diagrams", "test cases", "technical specs"],
-        correctAnswer: "user stories",
-      },
-      {
-        id: "b2",
-        options: ["customer involvement", "automated testing", "code reviews", "sprint planning"],
-        correctAnswer: "customer involvement",
-      },
-    ],
-    points: 2,
-    explanation: `In the CampusServe project, requirements are recorded as **user stories**, which describe functionality from the end-user's perspective. This requires high levels of **customer involvement** to ensure that each increment adds real value to students and staff.`,
-  },
-
-  {
-    id: "ITSEA_W2_Q2_3B",
-    type: "show-answer",
-    sectionLabel: "2.3 Part B",
-    text: "Describe how user stories and customer involvement support the development of the CampusServe system.",
-    correctAnswers: [
-      "User stories describe system functionality from the perspective of students and staff — for example, 'As a student, I want to pay for printing from my phone.' This helps the development team prioritise features that deliver the most value. Customer involvement ensures continuous feedback throughout development, so the platform evolves in response to real user behaviour and needs rather than assumptions. Together, they improve requirement accuracy, support iterative development, and help ensure the final system delivers genuine value to its users."
-    ],
-    markingGuide: "Award 2 marks for a clear explanation of how user stories are used and their benefit to the project. Award 2 marks for explaining the role of customer involvement and how it supports iterative development. Top answers should demonstrate how both concepts work together, not in isolation.",
-    points: 4,
-    explanation: `User stories explicitly define system functionality from the perspective of the staff and students (e.g., "As a student, I want to pay for printing from my phone"). This allows the development team to prioritize the features that deliver the most immediate value.
-
-Customer involvement provides continuous feedback throughout the lifecycle, ensuring the platform evolves based on actual user behavior rather than development assumptions.
-
-Together, these practices support iterative development, improve requirement accuracy, and guarantee genuine value delivery.`,
-  },
-
-  // 2.4 — open-ended (term recall) + show-answer
-  {
-    id: "ITSEA_W2_Q2_4A",
+    id: "ITSEA_W2_Q3",
     type: "open-ended",
-    sectionLabel: "2.4 Part A",
-    text: "The practice of writing automated test cases before writing the actual functional code is known as what type of development?",
-    correctAnswers: ["Test-first development", "Test-driven development", "TDD", "Test-first"],
+    tags: ["requirements analysis", "software processes"],
+    sectionLabel: "1.3",
+    text: "What software process activity establishes the services required by a system and its constraints? *(1–3 words)*",
+    correctAnswers: ["Software Specification", "Specification"],
+    points: 1,
+    validationOptions: {
+      caseSensitive: false,
+      allowPartialMatch: true,
+    },
+    explanation:
+      "**Software Specification** defines required services, functional requirements, constraints, and system boundaries *before* design begins.\n\nMany students confuse requirements gathering with specification — specification is broader and formalised.",
+  },
+
+  {
+    id: "ITSEA_W2_Q4",
+    type: "multiple-choice",
+    tags: ["software processes", "SDLC"],
+    sectionLabel: "1.4",
+    text: "A hospital requests a new telemedicine feature halfway through development.\n\nWhich criticism of the Waterfall model becomes **most relevant**?",
+    options: [
+      "Lack of component reuse",
+      "Difficulty accommodating change after development has begun",
+      "Excessive customer involvement",
+      "Lack of testing",
+    ],
+    correctAnswers: [
+      "Difficulty accommodating change after development has begun",
+    ],
+    points: 1,
+    explanation:
+      "Waterfall assumes phases are completed sequentially. Introducing major changes later causes redesign, recoding, retesting, and schedule delays. This is the primary weakness of the Waterfall model when operating in dynamic environments.",
+  },
+
+  {
+    id: "ITSEA_W2_Q5",
+    type: "show-answer",
+    tags: [
+      "software processes",
+      "project management",
+      "requirements analysis",
+      "software maintenance",
+    ],
+    sectionLabel: "1.5",
+    text: "MedSync's executives ask you to recommend whether the organisation should use:\n- a predominantly **Waterfall** approach,\n- a predominantly **Agile** approach, or\n- a **hybrid** approach.\n\nEvaluate all three possibilities and justify your recommendation using characteristics of:\n- changing requirements,\n- regulatory compliance,\n- project scale,\n- stakeholder diversity,\n- system lifetime.\n\n*(8 marks)*",
+    correctAnswers: [
+      {
+        text:
+          "MedSync should adopt a **hybrid software development strategy** that combines the strengths of both Waterfall and Agile approaches.\n\n" +
+          "A purely Waterfall approach provides strong governance, documentation, traceability, and compliance management. These characteristics are essential because healthcare software operates in a highly regulated environment where failures may affect patient safety. Formal requirements analysis, documented designs, and structured validation processes support regulatory audits and long-term maintenance.\n\n" +
+          "However, Waterfall assumes that requirements remain relatively stable. MedSync operates in a dynamic environment where hospitals continuously request new features and healthcare regulations evolve regularly. A rigid Waterfall approach would make responding to change costly and slow.\n\n" +
+          "Conversely, Agile methods support continuous customer involvement, incremental delivery, and rapid adaptation. Hospitals could evaluate working software early and provide feedback before significant resources are committed. This reduces the risk of developing features that do not meet operational needs.\n\n" +
+          "Nevertheless, Agile alone may struggle because MedSync's system is large-scale, distributed across multiple teams, integrated with existing systems, and subject to external regulation. Large projects often require architectural planning, governance mechanisms, and extensive documentation that pure Agile approaches may not sufficiently provide.\n\n" +
+          "Therefore, the most appropriate strategy is a **hybrid model** where architecture, compliance requirements, risk assessments, security controls, and documentation are planned using structured methods, while individual modules are developed incrementally using Agile techniques.\n\n" +
+          "This approach balances flexibility with control and is most likely to deliver a compliant, maintainable, and adaptable healthcare platform.",
+        diagram: {
+          type: "mermaid",
+          code: `graph TD
+A[MedSync Strategy Decision]
+A --> B[Pure Waterfall]
+A --> C[Pure Agile]
+A --> D[Hybrid — Recommended]
+B --> B1[✅ Documentation & compliance]
+B --> B2[✅ Traceability]
+B --> B3[❌ Cannot accommodate change]
+C --> C1[✅ Incremental delivery]
+C --> C2[✅ Customer involvement]
+C --> C3[❌ Weak governance at scale]
+D --> D1[Structured: architecture, compliance, risk]
+D --> D2[Agile: incremental module delivery]
+D --> D3[Balances control with adaptability]`,
+        },
+      },
+    ],
+    markingGuide: `| Criterion | Marks |
+|---|---|
+| Waterfall strengths explained | 2 |
+| Waterfall weaknesses explained | 1 |
+| Agile strengths explained | 2 |
+| Agile limitations explained | 1 |
+| Justified recommendation | 2 |
+| **Total** | **8** |
+
+**A+ Indicators — student:**
+- Compares rather than merely describes
+- Evaluates trade-offs explicitly
+- Discusses scale, regulation, and changing requirements
+- Recommends and justifies the hybrid approach
+
+**Common mistakes:**
+- Describing Waterfall and Agile without comparing them
+- Recommending pure Agile without addressing regulatory risk
+- Not linking argument back to the MedSync scenario`,
+    points: 8,
+  },
+
+  // ─────────────────────────────────────────────
+  // QUESTION 2 — AGILE TRANSFORMATION [13]
+  // ─────────────────────────────────────────────
+
+  {
+    id: "ITSEA_W2_Q6",
+    type: "multiple-choice",
+    tags: ["software processes"],
+    sectionLabel: "2.1",
+    text: "The primary reason Agile methods emerged was:",
+    options: [
+      "To eliminate testing activities",
+      "To reduce customer participation",
+      "To better accommodate changing requirements",
+      "To replace all documentation",
+    ],
+    correctAnswers: ["To better accommodate changing requirements"],
+    points: 1,
+    explanation:
+      "Agile was created primarily because software requirements change frequently and traditional approaches struggled to accommodate these changes efficiently. It was **not** designed to eliminate testing, reduce customer participation, or abolish documentation.",
+  },
+
+  {
+    id: "ITSEA_W2_Q7",
+    type: "fill-in-the-blank",
+    tags: ["software processes"],
+    sectionLabel: "2.2",
+    text: "Agile methods emphasise ___ delivery, where software is developed and released in small functional units.",
+    blanks: [
+      {
+        id: "b1",
+        options: ["Big-bang", "Waterfall", "Sequential", "Incremental"],
+        correctAnswer: "Incremental",
+      },
+    ],
+  },
+
+  {
+    id: "ITSEA_W2_Q8",
+    type: "multiple-choice",
+    tags: ["requirements gathering", "software processes"],
+    sectionLabel: "2.3",
+    text: "Which Agile principle is being demonstrated when hospital administrators participate continuously throughout development?",
+    options: [
+      "Maintain simplicity",
+      "Customer involvement",
+      "Refactoring",
+      "System evolution",
+    ],
+    correctAnswers: ["Customer involvement"],
+    points: 1,
+    explanation:
+      "Continuous stakeholder participation is the Agile principle of **Customer Involvement**. It ensures that end users provide ongoing feedback, reducing the risk of building features that do not meet operational needs.",
+  },
+
+  {
+    id: "ITSEA_W2_Q9",
+    type: "open-ended",
+    tags: ["project management", "software processes"],
+    sectionLabel: "2.4",
+    text: "What Scrum artifact contains the prioritised list of desired features? *(1–3 words)*",
+    correctAnswers: ["Product Backlog"],
+    points: 1,
+    validationOptions: {
+      caseSensitive: false,
+      allowPartialMatch: true,
+    },
+    explanation:
+      "The **Product Backlog** contains prioritised features, requirements, and enhancements. It is owned by the Product Owner and serves as the single source of truth for what the team will build.",
+  },
+
+  {
+    id: "ITSEA_W2_Q10",
+    type: "multiple-choice",
+    tags: ["requirements analysis", "software processes"],
+    sectionLabel: "2.5",
+    text: "Which statement **best distinguishes** Agile from traditional plan-driven development?",
+    options: [
+      "Agile avoids validation activities.",
+      "Agile assumes requirements remain fixed.",
+      "Agile integrates requirements discovery with development.",
+      "Agile eliminates design activities.",
+    ],
+    correctAnswers: [
+      "Agile integrates requirements discovery with development.",
+    ],
+    points: 1,
+    explanation:
+      "The key distinction is that Agile treats requirements as emergent and integrates their discovery with development cycles, rather than treating requirements as a separate upfront activity. Agile does **not** eliminate validation, assume fixed requirements, or abandon design.",
+  },
+
+  {
+    id: "ITSEA_W2_Q11",
+    type: "show-answer",
+    tags: [
+      "software processes",
+      "requirements gathering",
+      "project management",
+    ],
+    sectionLabel: "2.6",
+    text: "MedSync plans to release software every two weeks to selected hospitals.\n\nEvaluate how **Agile principles** could improve project outcomes. Discuss:\n- Customer involvement\n- Embracing change\n- Incremental delivery\n- Simplicity\n- People over process\n\n*(8 marks)*",
+    correctAnswers: [
+      "Agile principles can significantly improve MedSync's project outcomes because healthcare environments evolve continuously.\n\n" +
+        "**Customer involvement** ensures doctors, nurses, administrators, and regulatory representatives provide ongoing feedback. This reduces the risk of misunderstanding operational requirements and improves stakeholder satisfaction.\n\n" +
+        "The principle of **embracing change** enables the project to adapt rapidly to changing healthcare regulations and emerging patient-care requirements without major redesign efforts.\n\n" +
+        "**Incremental delivery** allows MedSync to release usable functionality every few weeks. Hospitals can validate features in real-world settings and identify defects early, before large investments are made.\n\n" +
+        "**Maintaining simplicity** encourages developers to build only the functionality currently required rather than anticipating speculative future requirements. This reduces complexity and improves maintainability.\n\n" +
+        "The principle of **people over process** recognises that skilled developers are more valuable than rigid procedural compliance. Teams are empowered to solve problems collaboratively and efficiently.\n\n" +
+        "Collectively these principles improve responsiveness, quality, stakeholder alignment, and delivery speed.",
+    ],
+    markingGuide: `| Criterion | Marks |
+|---|---|
+| Customer involvement — explained and applied | 2 |
+| Embrace change — explained and applied | 2 |
+| Incremental delivery — explained and applied | 1 |
+| Simplicity — explained and applied | 1 |
+| People over process — explained and applied | 1 |
+| Integration into MedSync scenario | 1 |
+| **Total** | **8** |
+
+**Common mistakes:**
+- Listing principles without applying them to MedSync
+- Confusing "simplicity" with "poor design"
+- Omitting the scenario context entirely`,
+    points: 8,
+  },
+
+  // ─────────────────────────────────────────────
+  // QUESTION 3 — EXTREME PROGRAMMING (XP) [12]
+  // ─────────────────────────────────────────────
+
+  {
+    id: "ITSEA_W2_Q12",
+    type: "multiple-choice",
+    tags: ["code quality", "software processes"],
+    sectionLabel: "3.1",
+    text: "Which XP practice **directly** supports collective ownership of software?",
+    options: [
+      "Sprint reviews",
+      "Pair programming",
+      "Requirements freezing",
+      "Architectural sign-off",
+    ],
+    correctAnswers: ["Pair programming"],
+    points: 1,
+    explanation:
+      "**Pair programming** supports collective ownership because knowledge is shared continuously among team members. Both developers are familiar with the code produced, reducing single-point knowledge dependency.",
+  },
+
+  {
+    id: "ITSEA_W2_Q13",
+    type: "fill-in-the-blank",
+    tags: ["requirements analysis"],
+    sectionLabel: "3.2",
+    text: "In XP, requirements are commonly expressed as ___ stories.",
+    blanks: [
+      {
+        id: "b1",
+        options: ["User", "Use Case", "Sprint", "Feature"],
+        correctAnswer: "User",
+      },
+    ],
+  },
+
+  {
+    id: "ITSEA_W2_Q14",
+    type: "multiple-choice",
+    tags: ["software testing", "validation & verification"],
+    sectionLabel: "3.3",
+    text: "A developer writes automated tests **before** implementing functionality.\n\nWhich XP practice is being used?",
+    options: [
+      "Refactoring",
+      "Pair programming",
+      "Test-first development",
+      "Component testing",
+    ],
+    correctAnswers: ["Test-first development"],
+    points: 1,
+    explanation:
+      "**Test-first development** (also called Test-Driven Development, or TDD) requires tests to be written before implementation. This ensures that functionality is verifiable from the outset and that no code is written without a corresponding test.",
+  },
+
+  {
+    id: "ITSEA_W2_Q15",
+    type: "open-ended",
+    tags: ["code quality"],
+    sectionLabel: "3.4",
+    text: "What XP activity improves software structure without changing system behaviour? *(1 word)*",
+    correctAnswers: ["Refactoring"],
+    points: 1,
     validationOptions: {
       caseSensitive: false,
       tolerance: 0,
     },
-    points: 1,
-    explanation: `**Test-first development** is the practice of writing automated test cases before implementing the corresponding functional code.`,
+    explanation:
+      "**Refactoring** improves internal code structure — removing duplication, improving naming, simplifying logic — without altering what the system does externally. It keeps the codebase clean and maintainable over time.",
   },
 
   {
-    id: "ITSEA_W2_Q2_4B",
-    type: "show-answer",
-    sectionLabel: "2.4 Part B",
-    text: "Explain how test-first development and continuous testing improve software quality in the CampusServe project.",
-    correctAnswers: [
-      "Test-first development involves writing automated test cases before implementing the corresponding functional code. This ensures that each feature is built to meet its requirements from the outset, reducing the likelihood of defects. In CampusServe, writing tests before coding the payment or notification modules ensures those features behave correctly before release. Continuous testing runs these automated tests throughout development, detecting integration issues and regressions early — before they reach users. Together, these practices lead to higher quality, more maintainable software and increase confidence in each incremental release."
+    id: "ITSEA_W2_Q16",
+    type: "multiple-choice",
+    tags: ["code quality"],
+    sectionLabel: "3.5",
+    text: "Which scenario provides the **strongest justification** for refactoring?",
+    options: [
+      "The customer requests documentation.",
+      "Similar code fragments appear throughout the system.",
+      "The project budget increases.",
+      "A sprint review is scheduled.",
     ],
-    markingGuide: "Award 1 mark for a correct definition of test-first development. Award 1 mark for explaining how it ensures code meets requirements from the start or catches errors early. Award 1 mark for explaining the role of continuous testing and linking it to quality improvement in the CampusServe context.",
-    points: 3,
-    explanation: `Test-first development involves writing automated test cases prior to implementing the functional code. This practice guarantees that every feature is built to meet its exact requirements from the very beginning, drastically reducing the likelihood of defects. For CampusServe, writing tests before coding the notification or payment modules ensures they behave correctly immediately upon release.
-
-Continuous testing runs these automated suites throughout development to detect regression and integration issues early on.
-
-Together, these practices increase confidence in every incremental release and yield higher quality, more maintainable software.`,
+    correctAnswers: ["Similar code fragments appear throughout the system."],
+    points: 1,
+    explanation:
+      "Duplicate code is one of the strongest indicators that refactoring is needed. Repeated code fragments increase maintenance effort, create inconsistency risk, and signal poor abstraction. Refactoring extracts the shared logic into a single reusable unit.",
   },
 
+  {
+    id: "ITSEA_W2_Q17",
+    type: "show-answer",
+    tags: ["code quality", "software testing", "validation & verification"],
+    sectionLabel: "3.6",
+    text: "MedSync's development team argues that **pair programming** and **test-first development** will slow delivery.\n\nCritically evaluate this claim.\n\n*(7 marks)*",
+    correctAnswers: [
+      "The claim is **partially correct in the short term** but **incorrect in the long term**.\n\n" +
+        "**Pair programming** initially requires two developers to work on a single task. However, it provides continuous peer review, knowledge transfer, and defect prevention. Errors are detected immediately rather than later during testing, which is significantly more expensive to fix.\n\n" +
+        "**Test-first development** also appears slower because developers write tests before implementation. However, automated tests provide confidence that future changes do not break existing functionality, supporting continuous integration and reducing regression risk.\n\n" +
+        "Together these practices reduce debugging effort, maintenance costs, and integration failures. The reduction in rework frequently outweighs the initial time investment.\n\n" +
+        "Consequently, while delivery velocity may appear lower initially, **overall project efficiency and software quality are generally improved**.",
+    ],
+    markingGuide: `| Criterion | Marks |
+|---|---|
+| Pair programming — short-term cost acknowledged | 1 |
+| Pair programming — long-term benefits explained | 2 |
+| Test-first development — short-term cost acknowledged | 1 |
+| Test-first development — long-term benefits explained | 1 |
+| Evaluation of trade-off (not one-sided) | 2 |
+| **Total** | **7** |
+
+**Common mistakes:**
+- Agreeing with the claim without evaluating long-term productivity
+- Listing benefits without engaging with the "slower delivery" argument
+- Confusing test-first development with test-last (component testing)`,
+    points: 7,
+  },
+
+  // ─────────────────────────────────────────────
+  // QUESTION 4 — SCALING AGILE & PROCESS IMPROVEMENT [13]
+  // ─────────────────────────────────────────────
+
+  {
+    id: "ITSEA_W2_Q18",
+    type: "multiple-choice",
+    tags: ["software processes", "project management"],
+    sectionLabel: "4.1",
+    text: "Which characteristic creates the **greatest challenge** when scaling Agile methods for MedSync?",
+    options: [
+      "Small co-located teams",
+      "Stable requirements",
+      "Multiple distributed teams developing interconnected systems",
+      "Minimal stakeholder involvement",
+    ],
+    correctAnswers: [
+      "Multiple distributed teams developing interconnected systems",
+    ],
+    points: 1,
+    explanation:
+      "Agile becomes significantly more difficult to coordinate when many distributed teams must align work across interconnected systems. Co-location, stable requirements, and strong stakeholder involvement are actually favourable conditions for Agile — not challenges.",
+  },
+
+  {
+    id: "ITSEA_W2_Q19",
+    type: "fill-in-the-blank",
+    tags: ["systems thinking", "software processes"],
+    sectionLabel: "4.2",
+    text: "Large software systems are often described as systems of ___.",
+    blanks: [
+      {
+        id: "b1",
+        options: ["components", "modules", "systems", "services"],
+        correctAnswer: "systems",
+      },
+    ],
+  },
+
+  {
+    id: "ITSEA_W2_Q20",
+    type: "multiple-choice",
+    tags: ["software processes", "system design"],
+    sectionLabel: "4.3",
+    text: "Why might **continuous integration** become difficult in very large Agile projects?",
+    options: [
+      "User stories cannot be written",
+      "Multiple independently developed systems must be integrated",
+      "Testing is prohibited",
+      "Requirements never change",
+    ],
+    correctAnswers: [
+      "Multiple independently developed systems must be integrated",
+    ],
+    points: 1,
+    explanation:
+      "Integration becomes significantly more complex when many independently developed systems must work together. Coordination overhead, interface mismatches, and conflicting release cycles all complicate continuous integration at scale.",
+  },
+
+  {
+    id: "ITSEA_W2_Q21",
+    type: "open-ended",
+    tags: ["requirements gathering", "software processes"],
+    sectionLabel: "4.4",
+    text: "Which technique allows users to experiment with system functionality **before** final delivery? *(2 words)*",
+    correctAnswers: ["System Prototyping", "Prototyping"],
+    points: 1,
+    validationOptions: {
+      caseSensitive: false,
+      allowPartialMatch: true,
+    },
+    explanation:
+      "**System Prototyping** allows stakeholders to experiment with and evaluate system functionality before the final product is delivered. It surfaces usability issues and incorrect assumptions early, reducing costly late-stage rework.",
+  },
+
+  {
+    id: "ITSEA_W2_Q22",
+    type: "multiple-choice",
+    tags: ["software processes", "project management"],
+    sectionLabel: "4.5",
+    text: "Which approach **primarily** focuses on reducing process overhead and improving responsiveness?",
+    options: [
+      "Process maturity",
+      "Agile improvement",
+      "Waterfall planning",
+      "Requirements freezing",
+    ],
+    correctAnswers: ["Agile improvement"],
+    points: 1,
+    explanation:
+      "**Agile process improvement** focuses on responsiveness and reducing unnecessary process overhead — enabling teams to react quickly without being burdened by excessive bureaucracy. Process maturity models (such as CMMI) emphasise formalisation rather than responsiveness.",
+  },
+
+  {
+    id: "ITSEA_W2_Q23",
+    type: "show-answer",
+    tags: ["software processes", "project management", "risk management"],
+    sectionLabel: "4.6",
+    text: "Senior management proposes using a **purely Agile** approach across all MedSync projects, including safety-critical healthcare systems.\n\nAssess the **risks** of this decision and explain why large-scale systems often require integration between Agile and plan-driven practices.\n\n*(8 marks)*",
+    correctAnswers: [
+      {
+        text:
+          "A purely Agile approach presents **significant risks** for safety-critical healthcare systems.\n\n" +
+          "Healthcare software must comply with regulations, support audits, provide traceability, and demonstrate verification activities. Pure Agile approaches often rely heavily on informal communication and minimal documentation, which may **not satisfy regulatory requirements** in healthcare contexts.\n\n" +
+          "Large-scale systems also involve multiple teams, legacy systems, external stakeholders, and long development lifecycles. These factors introduce complexity that requires structured governance and architectural planning — areas where Agile alone offers limited guidance.\n\n" +
+          "**Plan-driven approaches** provide stability through documentation, architecture control, and compliance management. **Agile approaches** provide adaptability through iterative development and stakeholder feedback.\n\n" +
+          "Combining both approaches allows organisations to achieve responsiveness without sacrificing governance. High-level planning can coexist with Agile implementation teams, enabling each subsystem to be delivered incrementally while the overall architecture remains controlled.\n\n" +
+          "For MedSync, a **hybrid model** reduces risk while maintaining flexibility — satisfying both regulatory requirements and the need for rapid, customer-driven delivery.",
+        diagram: {
+          type: "mermaid",
+          code: `graph LR
+A[Pure Agile Risk Areas]
+A --> R1[Insufficient documentation for audits]
+A --> R2[Weak governance at scale]
+A --> R3[Poor traceability]
+A --> R4[Coordination failure across teams]
+
+B[Hybrid Model Solution]
+B --> S1[Plan-driven: architecture & compliance]
+B --> S2[Agile: incremental module delivery]
+B --> S3[Structured testing & traceability]
+B --> S4[Customer feedback preserved]`,
+        },
+      },
+    ],
+    markingGuide: `| Criterion | Marks |
+|---|---|
+| Risks of pure Agile identified (at least 2) | 3 |
+| Large-system challenges discussed | 2 |
+| Need for plan-driven elements explained | 2 |
+| Justified recommendation | 1 |
+| **Total** | **8** |
+
+**A+ Indicators — student:**
+- Identifies *specific* regulatory risks (audit trails, traceability, documentation)
+- Discusses coordination challenges across distributed teams
+- Argues for integration of approaches rather than wholesale adoption
+
+**Common mistakes:**
+- Only discussing Agile benefits without addressing the risks
+- Vague statements such as "Agile may not work" without explaining why
+- Not linking the answer to safety-critical healthcare context`,
+    points: 8,
+  },
 ];

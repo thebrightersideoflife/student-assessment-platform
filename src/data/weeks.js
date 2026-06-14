@@ -236,7 +236,7 @@ export const weeks = {
         audioUrl: "/audio/itsea-week2-intro.mp3",
         audioDescription: "An introduction to Week 2 of the Software Engineering module, outlining the main topics and learning objectives."
       },
-      duration: 80,
+      duration: 75,
     },
     { id: "3", 
       name: "Week 3", 
@@ -338,6 +338,15 @@ export const weeks = {
       },
       duration: 120,
     },
+    { id: "14", 
+      name: "Week 14", 
+      block: 2,
+      moduleAudio: {
+        audioUrl: "/audio/itsea-week14-intro.mp3",
+        audioDescription: "An introduction to Week 14 of the Software Engineering module, outlining the main topics and learning objectives."
+      },
+      duration: 70,
+    }
     // add more weeks as you build them
   ],
 
