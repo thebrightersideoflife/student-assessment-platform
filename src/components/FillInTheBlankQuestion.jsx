@@ -40,27 +40,42 @@ export default function FillInTheBlankQuestion({
   locked = false,
   submitted = false,
   scenario = null,
+  timedMode = false,
 }) {
   const [showScenario, setShowScenario] = useState(false);
   const blanks = question.blanks || [];
   const points = blanks.length;
 
-  // selections: { [blankId]: selectedOption | null }
+  // selections: { [blankId]: selectedOption | null } — the live, editable picks
   const [selections, setSelections] = useState(() => {
     if (savedAnswer?.selections) return savedAnswer.selections;
     return Object.fromEntries(blanks.map((b) => [b.id, ""]));
   });
 
-  const [revealed, setRevealed] = useState(savedAnswer?.revealed || false);
+  // Practice mode: `revealed` means "Check Answer was clicked" — locks the
+  // dropdowns and shows colours/breakdown immediately.
+  // Timed mode: dropdowns never lock pre-submit. `savedSelections` is a
+  // snapshot of whatever was selected at last "Save Answers" click — used
+  // only to know whether the save button should be active, not to reveal
+  // anything. Colours/breakdown wait for `submitted`.
+  const [revealed, setRevealed] = useState(!timedMode && (savedAnswer?.revealed || false));
   const [checked, setChecked] = useState(savedAnswer?.checked || false);
+  const [savedSelections, setSavedSelections] = useState(
+    timedMode ? (savedAnswer?.checked ? savedAnswer?.selections : null) : null
+  );
 
   // Restore saved state
   useEffect(() => {
     if (savedAnswer?.selections) {
       setSelections(savedAnswer.selections);
-      setRevealed(savedAnswer.revealed || false);
       setChecked(savedAnswer.checked || false);
+      if (timedMode) {
+        if (savedAnswer.checked) setSavedSelections(savedAnswer.selections);
+      } else {
+        setRevealed(savedAnswer.revealed || false);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedAnswer]);
 
   const allFilled = blanks.every((b) => selections[b.id] !== "");
@@ -71,14 +86,21 @@ export default function FillInTheBlankQuestion({
 
   const isFullyCorrect = correctCount === blanks.length;
 
+  // Have the live selections drifted from what was last saved? (timed mode)
+  const selectionsMatchSaved = savedSelections
+    ? blanks.every((b) => selections[b.id] === savedSelections[b.id])
+    : false;
+  const saveDisabled = locked || submitted || !allFilled || selectionsMatchSaved;
+
   function handleSelect(blankId, value) {
-    if (locked || revealed) return;
+    if (locked || submitted) return;
+    if (!timedMode && revealed) return;
     const next = { ...selections, [blankId]: value };
     setSelections(next);
     // Reset checked state when user changes answers
-    if (checked) setChecked(false);
+    if (checked && !timedMode) setChecked(false);
 
-    if (onAnswerChange) {
+    if (onAnswerChange && !timedMode) {
       onAnswerChange(question.id, {
         selections: next,
         // Do not mark correctness until user clicks Check Answer
@@ -87,13 +109,31 @@ export default function FillInTheBlankQuestion({
         revealed: false,
       });
     }
+    // In timed mode, onAnswerChange fires only on explicit Save Answers —
+    // live edits here are local until confirmed.
+  }
+
+  function handleSaveAnswers() {
+    if (saveDisabled) return;
+    setSavedSelections(selections);
+    setChecked(true);
+    if (onAnswerChange) {
+      const correct = blanks.every((b) => selections[b.id] === b.correctAnswer);
+      onAnswerChange(question.id, {
+        selections,
+        isCorrect: correct,
+        checked: true,
+        revealed: false, // timed mode never reveals pre-submit
+      });
+    }
   }
 
   // Split sentence text on ___ markers
   const parts = (question.text || "").split("___");
 
-  // Colour helpers — only show result colours after submit or when revealed/checked
-  const showResult = submitted || revealed || checked;
+  // Colour helpers — only show result colours after submit (timed mode),
+  // or after submit/revealed/checked (practice mode, unchanged).
+  const showResult = timedMode ? submitted : (submitted || revealed || checked);
 
   function blankBorderColor(blank) {
     if (!showResult || !selections[blank.id]) return "rgba(var(--border-color-rgb), 0.6)";
@@ -154,7 +194,7 @@ export default function FillInTheBlankQuestion({
               <select
                 value={selections[blanks[i].id] || ""}
                 onChange={(e) => handleSelect(blanks[i].id, e.target.value)}
-                disabled={locked || revealed}
+                disabled={locked || submitted || (!timedMode && revealed)}
                 style={{
                   display: "inline-block",
                   margin: "0 6px",
@@ -165,7 +205,7 @@ export default function FillInTheBlankQuestion({
                   border: `2px solid ${blankBorderColor(blanks[i])}`,
                   background: blankBg(blanks[i]),
                   color: "var(--text-primary)",
-                  cursor: locked || revealed ? "not-allowed" : "pointer",
+                  cursor: (locked || submitted || (!timedMode && revealed)) ? "not-allowed" : "pointer",
                   transition: "border-color 0.2s ease, background 0.2s ease",
                   outline: "none",
                   minWidth: "160px",
@@ -231,8 +271,36 @@ export default function FillInTheBlankQuestion({
         </div>
       )}
 
-      {/* Action row: Check Answer button when not yet revealed/checked */}
-      {!showResult && !locked && !submitted && (
+      {/* Action row */}
+      {timedMode && !submitted && !locked && (
+        <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <button
+            onClick={handleSaveAnswers}
+            disabled={saveDisabled}
+            className="button solid"
+            style={{
+              padding: "8px 14px",
+              opacity: saveDisabled ? 0.5 : 1,
+              cursor: saveDisabled ? "not-allowed" : "pointer",
+            }}
+          >
+            {savedSelections && selectionsMatchSaved ? "Saved ✓" : "Save Answers"}
+          </button>
+          {savedSelections && selectionsMatchSaved && (
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+              Your answers are saved. Change a dropdown to update them.
+            </span>
+          )}
+          {!allFilled && (
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+              Fill in every blank to save.
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Practice mode: Check Answer button when not yet revealed/checked */}
+      {!timedMode && !showResult && !locked && !submitted && (
         <div style={{ marginTop: "14px", display: "flex", gap: "8px" }}>
           <button
             onClick={() => {

@@ -31,6 +31,7 @@ export default function OpenEndedQuestion({
   locked = false,
   submitted = false,
   scenario = null,
+  timedMode = false,
 }) {
   const [showScenario, setShowScenario]         = useState(false);
   const [answer, setAnswer]                     = useState(savedAnswer?.answer || "");
@@ -38,6 +39,11 @@ export default function OpenEndedQuestion({
   const [skipped, setSkipped]                   = useState(savedAnswer?.isSkipped || false);
   const [flagged, setFlagged]                   = useState(savedAnswer?.isFlagged || false);
   const [validationResult, setValidationResult] = useState(null);
+  // Timed mode: tracks the answer text as of the last "Save Answer" click,
+  // so the button can grey out until the text changes again.
+  const [savedAnswerText, setSavedAnswerText] = useState(
+    timedMode && savedAnswer?.checked ? savedAnswer?.answer || "" : null
+  );
 
   const correctAnswer = question.correctAnswers || question.answer;
 
@@ -48,7 +54,9 @@ export default function OpenEndedQuestion({
       setChecked(savedAnswer.checked || false);
       setSkipped(savedAnswer.isSkipped || false);
       setFlagged(savedAnswer.isFlagged || false);
-      if (savedAnswer.checked && savedAnswer.answer && !savedAnswer.isSkipped) {
+      if (timedMode) {
+        if (savedAnswer.checked) setSavedAnswerText(savedAnswer.answer || "");
+      } else if (savedAnswer.checked && savedAnswer.answer && !savedAnswer.isSkipped) {
         const result = AnswerValidator.validate(
           savedAnswer.answer,
           correctAnswer,
@@ -57,11 +65,14 @@ export default function OpenEndedQuestion({
         setValidationResult(result);
       }
     }
-  }, [savedAnswer, correctAnswer, question.validationOptions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedAnswer]);
 
-  // Auto-validate on submit for unchecked questions
+  // Auto-validate on submit for unchecked questions, AND for timed-mode
+  // questions that were saved but never had validation run against them
+  // (since saving in timed mode skips validation to avoid revealing anything).
   useEffect(() => {
-    if (submitted && !checked && !skipped) {
+    if (submitted && !skipped && (!checked || (timedMode && !validationResult))) {
       const result = AnswerValidator.validate(
         answer,
         correctAnswer,
@@ -70,9 +81,26 @@ export default function OpenEndedQuestion({
       setValidationResult(result);
       setChecked(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted]);
 
   function handleCheck() {
+    if (timedMode) {
+      // "Save Answer" — record the response, mark as answered for progress
+      // tracking, but never run/show validation until the assessment is submitted.
+      setSavedAnswerText(answer);
+      setChecked(true);
+      if (onAnswerChange && !locked) {
+        onAnswerChange(question.id, {
+          answer,
+          isCorrect: false, // unknown until submit — graded then
+          checked: true,
+          isSkipped: false,
+          isFlagged: flagged,
+        });
+      }
+      return;
+    }
     const result = AnswerValidator.validate(
       answer,
       correctAnswer,
@@ -96,6 +124,7 @@ export default function OpenEndedQuestion({
     setChecked(true);     // counts toward answeredCount so submit unlocks
     setAnswer("");
     setValidationResult(null);
+    if (timedMode) setSavedAnswerText("");
     if (onAnswerChange && !locked) {
       onAnswerChange(question.id, {
         answer: "",
@@ -110,6 +139,7 @@ export default function OpenEndedQuestion({
   function handleUnskip() {
     setSkipped(false);
     setChecked(false);
+    if (timedMode) setSavedAnswerText(null);
     if (onAnswerChange && !locked) {
       onAnswerChange(question.id, {
         answer: "",
@@ -136,24 +166,33 @@ export default function OpenEndedQuestion({
   }
 
   function handleAnswerChange(e) {
-    if (locked || skipped) return;
+    if (locked || submitted || skipped) return;
     const newAnswer = e.target.value;
     setAnswer(newAnswer);
-    setChecked(false);
-    if (onAnswerChange && !locked) {
-      onAnswerChange(question.id, {
-        answer: newAnswer,
-        isCorrect: false,
-        checked: false,
-        isSkipped: false,
-        isFlagged: flagged,
-      });
+    if (!timedMode) {
+      setChecked(false);
+      if (onAnswerChange && !locked) {
+        onAnswerChange(question.id, {
+          answer: newAnswer,
+          isCorrect: false,
+          checked: false,
+          isSkipped: false,
+          isFlagged: flagged,
+        });
+      }
     }
+    // Timed mode: typing is local only — onAnswerChange fires on explicit Save.
   }
 
-  const isCorrect    = validationResult?.equivalent;
-  const displayAnswer = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer];
-  const inputDisabled = locked || checked || submitted || skipped;
+  const isCorrect     = validationResult?.equivalent;
+  const displayAnswer  = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer];
+  // Timed mode: input stays editable right up to submit (re-saving updates the
+  // committed answer); only locked/submitted/skipped disable it.
+  const inputDisabled = timedMode
+    ? (locked || submitted || skipped)
+    : (locked || checked || submitted || skipped);
+  // Save button greys out once the saved snapshot matches the live text.
+  const saveDisabled = locked || submitted || !answer.trim() || (timedMode && savedAnswerText === answer);
 
   return (
     <div
@@ -324,7 +363,7 @@ export default function OpenEndedQuestion({
             style={{
               width: "100%", padding: "11px 14px",
               borderRadius: "10px",
-              border: `1px solid ${checked
+              border: `1px solid ${(checked && !timedMode)
                 ? (isCorrect ? "var(--lush-lime)" : "var(--poppy-red)")
                 : "rgba(var(--border-color-rgb), 0.5)"}`,
               background: inputDisabled
@@ -340,8 +379,56 @@ export default function OpenEndedQuestion({
             }}
           />
 
-          {/* Action row: Check Answer + I don't know */}
-          {!locked && !submitted && !checked && (
+          {/* Action row — timed mode: Save Answer (re-armable) + I don't know */}
+          {timedMode && !locked && !submitted && (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                className="button solid"
+                onClick={handleCheck}
+                disabled={saveDisabled}
+                style={{
+                  opacity: saveDisabled ? 0.5 : 1,
+                  cursor: saveDisabled ? "not-allowed" : "pointer",
+                }}
+              >
+                {checked && savedAnswerText === answer ? "Saved ✓" : "Save Answer"}
+              </button>
+
+              {checked && savedAnswerText === answer && (
+                <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                  Your answer is saved. Edit the text to update it.
+                </span>
+              )}
+
+              <button
+                onClick={handleSkip}
+                style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "10px 16px",
+                  fontSize: "14px", fontWeight: 500,
+                  borderRadius: "10px",
+                  border: "1px solid rgba(var(--border-color-rgb), 0.4)",
+                  background: "rgba(var(--bg-secondary-rgb), 0.5)",
+                  color: "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.8)";
+                  e.currentTarget.style.color = "var(--text-primary)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.4)";
+                  e.currentTarget.style.color = "var(--text-secondary)";
+                }}
+              >
+                <SkipIcon /> I don't know
+              </button>
+            </div>
+          )}
+
+          {/* Action row: Check Answer + I don't know (practice mode, unchanged) */}
+          {!timedMode && !locked && !submitted && !checked && (
             <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
               <button
                 className="button solid"
@@ -380,7 +467,9 @@ export default function OpenEndedQuestion({
         </>
       )}
 
-      {/* ── Validation result ─────────────────────────────────────── */}
+      {/* ── Validation result — never shown pre-submit in timed mode, since
+           handleCheck()/the auto-validate effect only populate validationResult
+           after submission when timedMode is true ──────────────────────── */}
       {(checked || submitted) && validationResult && !skipped && (
         <div style={{ marginTop: "14px" }}>
           <p style={{

@@ -9,6 +9,8 @@ import AssessmentGuidance from "../components/AssessmentGuidance";
 import AssessmentGate from "../components/AssessmentGate";
 import CountdownTimer from "../components/CountdownTimer";
 import FloatingTimer from "../components/FloatingTimer";
+import FloatingProgressRing from "../components/FloatingProgressRing";
+import AssessmentReview from "../components/AssessmentReview";
 import AudioPlayer from "../components/AudioPlayer";
 import {
   PrintIcon, BackIcon, RedoIcon, CheckIcon, SaveIcon,
@@ -16,6 +18,7 @@ import {
 } from "../components/AssessmentIcons";
 import useCountdownTimer from "../utils/useCountdownTimer";
 import AssessmentStorage from "../utils/assessmentStorage";
+import AnswerValidator from "../utils/answerValidator";
 import { getWeekLabel, getWeekKindConfig, getRequiredQuestions } from "../utils/questionHelpers";
 import { questions } from "../data/questions/index.js";
 import { modules } from "../data/modules";
@@ -87,6 +90,7 @@ export default function AssessmentPage() {
   const [answers,         setAnswers]         = useState(savedProgress?.answers || {});
   const [submitted,       setSubmitted]       = useState(false);
   const [showPrintView,   setShowPrintView]   = useState(false);
+  const [showReview,      setShowReview]      = useState(false);
   const [showCertificate, setShowCertificate] = useState(wasCompleted);
   const [showGuidance,    setShowGuidance]    = useState(
     () => localStorage.getItem("guidance_seen") !== "true"
@@ -122,6 +126,37 @@ export default function AssessmentPage() {
     setAnswers((prev) => ({ ...prev, [questionId]: answerData }));
   }
 
+  /**
+   * Authoritative correctness check — used by BOTH the score tally below and
+   * handleSubmitAndFinish, so they can never disagree with each other or with
+   * what the review page renders.
+   *
+   * Why this exists: open-ended answers store `isCorrect: false` at save time
+   * in timed mode (correctness must stay hidden until submit), and the actual
+   * validation only ever ran inside OpenEndedQuestion's own local state —
+   * it was never written back into `answers`. That meant the stored
+   * `isCorrect` flag could be permanently stale for any open-ended question
+   * answered under timed mode, even though the review page displayed the
+   * right verdict (because it recalculates locally). Recomputing here from
+   * the raw answer text + the question's correct answer(s) removes that
+   * single source of truth mismatch entirely — scoring no longer depends on
+   * any component having pushed the right value up in time.
+   */
+  function isQuestionCorrect(q, answerData) {
+    if (q.type === "open-ended") {
+      if (answerData?.isSkipped) return false;
+      const result = AnswerValidator.validate(
+        answerData?.answer || "",
+        q.correctAnswers || q.answer,
+        q.validationOptions || {}
+      );
+      return result.equivalent;
+    }
+    // multiple-choice and any other single-answer type already store a
+    // reliable isCorrect at the moment of selection — no re-derivation needed.
+    return !!answerData?.isCorrect;
+  }
+
   const handleSubmitAndFinish = useCallback(() => {
     let score = 0;
     let totalPoints = 0;
@@ -143,7 +178,7 @@ export default function AssessmentPage() {
         questionCorrect = blanks.length > 0 && blankCorrect === blanks.length;
       } else {
         totalPoints += 1;
-        questionCorrect = !!answers[q.id]?.isCorrect;
+        questionCorrect = isQuestionCorrect(q, answers[q.id]);
         if (questionCorrect) score += 1;
       }
 
@@ -165,7 +200,11 @@ export default function AssessmentPage() {
     notifyAssessmentCompleted();
     setWasTimedMode(timedMode);
     setSubmitted(true);
-    setShowCertificate(true);
+    if (timedMode) {
+      setShowReview(true);
+    } else {
+      setShowCertificate(true);
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requiredQuestions, answers, moduleId, weekId, timedMode]);
@@ -185,6 +224,7 @@ export default function AssessmentPage() {
     AssessmentStorage.clearProgress(moduleId, weekId);
     setAnswers({});
     setSubmitted(false);
+    setShowReview(false);
     setShowCertificate(false);
     setSelectedMode(null);   // re-show gate on redo for timed weeks
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -204,7 +244,7 @@ export default function AssessmentPage() {
         }
       } else {
         t += 1;
-        if (answers[q.id]?.isCorrect) s += 1;
+        if (isQuestionCorrect(q, answers[q.id])) s += 1;
       }
     }
     return { score: s, total: t };
@@ -234,6 +274,27 @@ export default function AssessmentPage() {
         questions={moduleQuestions}
         examData={null}
         onBack={() => setShowPrintView(false)}
+      />
+    );
+  }
+
+  /* ── Review view — timed mode only, shown between submit and certificate ── */
+  if (showReview) {
+    return (
+      <AssessmentReview
+        moduleId={moduleId}
+        moduleName={moduleInfo?.name || moduleId}
+        weekId={weekId}
+        weekLabel={weekLabel}
+        questions={moduleQuestions}
+        answers={answers}
+        score={correctCount}
+        totalQuestions={totalGradable}
+        onDone={() => {
+          setShowReview(false);
+          setShowCertificate(true);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
       />
     );
   }
@@ -542,6 +603,7 @@ export default function AssessmentPage() {
                   locked={false}
                   submitted={submitted}
                   scenario={null}
+                  timedMode={timedMode}
                 />
               </div>
             );
@@ -558,6 +620,7 @@ export default function AssessmentPage() {
                 locked={false}
                 submitted={submitted}
                 scenario={lastScenario}
+                timedMode={timedMode}
               />
             </div>
           );
@@ -620,9 +683,14 @@ export default function AssessmentPage() {
         </p>
       </div>
 
-      {/* Floating mini-timer — fixed position, only in timed mode */}
+      {/* Floating mini-timer — fixed position, right side, only in timed mode */}
       {timedMode && gateCleared && !submitted && (
         <FloatingTimer timeRemaining={timeRemaining} hasExpired={hasExpired} />
+      )}
+
+      {/* Floating progress ring — fixed position, left side, both modes */}
+      {!submitted && (!showGate || gateCleared) && (
+        <FloatingProgressRing answered={answeredCount} total={requiredQuestions.length} />
       )}
     </div>
   );

@@ -12,6 +12,7 @@ export default function QuestionRenderer({
   locked = false,
   submitted = false,
   scenario = null,
+  timedMode = false,
 }) {
   switch (question.type) {
 
@@ -29,6 +30,7 @@ export default function QuestionRenderer({
           locked={locked}
           submitted={submitted}
           scenario={scenario}
+          timedMode={timedMode}
         />
       );
 
@@ -42,6 +44,7 @@ export default function QuestionRenderer({
           locked={locked}
           submitted={submitted}
           scenario={scenario}
+          timedMode={timedMode}
         />
       );
 
@@ -55,6 +58,7 @@ export default function QuestionRenderer({
           locked={locked}
           submitted={submitted}
           scenario={scenario}
+          timedMode={timedMode}
         />
       );
 
