@@ -10,6 +10,7 @@ import AssessmentGate from "../components/AssessmentGate";
 import CountdownTimer from "../components/CountdownTimer";
 import FloatingTimer from "../components/FloatingTimer";
 import FloatingProgressRing from "../components/FloatingProgressRing";
+import FloatingFlagWidget from "../components/FloatingFlagWidget";
 import AssessmentReview from "../components/AssessmentReview";
 import AudioPlayer from "../components/AudioPlayer";
 import {
@@ -97,8 +98,21 @@ export default function AssessmentPage() {
   );
 
   // ── Gate + timed mode state ──────────────────────────────
-  // "practice" | "timed" | null (not yet chosen)
-  const [selectedMode, setSelectedMode] = useState(null);
+  // "practice" | "timed" | null (not yet chosen).
+  // Restored from saved progress on mount — if the student already picked a
+  // mode and answered at least one question, remounting (navigate away and
+  // back, or a hard refresh) resumes silently instead of re-showing the
+  // gate. This also matters for the timer: useCountdownTimer only restores
+  // its sessionStorage'd remaining time when `enabled` is already true on
+  // its FIRST render (its initial state is a lazy useState initializer, so
+  // it only gets one chance). Without restoring selectedMode here, `enabled`
+  // would be false on that first render every time the page remounts, and
+  // the timer would silently reset to the full duration instead of resuming
+  // — which was the actual bug being fixed.
+  const [selectedMode, setSelectedMode] = useState(() => {
+    const savedMode = savedProgress?.mode;
+    return (savedMode === "practice" || savedMode === "timed") ? savedMode : null;
+  });
   const gateCleared = selectedMode !== null;
   const timedMode   = selectedMode === "timed";
   const [wasTimedMode, setWasTimedMode] = useState(false);
@@ -116,11 +130,37 @@ export default function AssessmentPage() {
   // CHANGED: getRequiredQuestions() from questionHelpers replaces the inline filter
   const requiredQuestions = getRequiredQuestions(moduleQuestions);
 
+  /**
+   * Maps every question's id to the same 1-based number the question cards
+   * themselves display ("Question N"). Mirrors the counting logic in the
+   * main render loop below exactly: every non-scenario question increments
+   * the counter, including show-answer/essay questions.
+   *
+   * Why this can't just be requiredQuestions.indexOf(q) + 1: requiredQuestions
+   * is filtered to GRADABLE_TYPES only (multiple-choice/open-ended/fill-in-
+   * the-blank), which excludes show-answer questions — but the on-screen
+   * numbering does NOT exclude them. Any show-answer question appearing
+   * before a given question puts requiredQuestions' index one or more behind
+   * the number actually printed on that question's card. That mismatch is
+   * exactly what produced "I flagged Question 9 but the label said Question
+   * 8" — FloatingFlagWidget was deriving its number from the wrong list.
+   */
+  const displayNumberById = (() => {
+    const map = {};
+    let counter = 0;
+    for (const q of moduleQuestions) {
+      if (q.type === "scenario") continue;
+      counter += 1;
+      map[q.id] = counter;
+    }
+    return map;
+  })();
+
   useEffect(() => {
     if (!wasCompleted && !submitted && Object.keys(answers).length > 0) {
-      AssessmentStorage.saveProgress(moduleId, weekId, answers);
+      AssessmentStorage.saveProgress(moduleId, weekId, answers, selectedMode);
     }
-  }, [answers, moduleId, weekId, wasCompleted, submitted]);
+  }, [answers, moduleId, weekId, wasCompleted, submitted, selectedMode]);
 
   function handleAnswerChange(questionId, answerData) {
     setAnswers((prev) => ({ ...prev, [questionId]: answerData }));
@@ -131,16 +171,15 @@ export default function AssessmentPage() {
    * handleSubmitAndFinish, so they can never disagree with each other or with
    * what the review page renders.
    *
-   * Why this exists: open-ended answers store `isCorrect: false` at save time
-   * in timed mode (correctness must stay hidden until submit), and the actual
-   * validation only ever ran inside OpenEndedQuestion's own local state —
-   * it was never written back into `answers`. That meant the stored
-   * `isCorrect` flag could be permanently stale for any open-ended question
-   * answered under timed mode, even though the review page displayed the
-   * right verdict (because it recalculates locally). Recomputing here from
-   * the raw answer text + the question's correct answer(s) removes that
-   * single source of truth mismatch entirely — scoring no longer depends on
-   * any component having pushed the right value up in time.
+   * Open-ended answers don't carry an `isCorrect` field at all — grading
+   * something a student typed requires comparing it against the question's
+   * accepted answers, and that comparison only ever has one correct place to
+   * happen: here, at scoring time, against the data both the review page and
+   * the certificate ultimately read from. (Previously each question
+   * component tried to self-report correctness via onAnswerChange, which
+   * meant timed-mode answers — graded as "unknown" until submit — could
+   * never get corrected afterward. Re-deriving here removes that entire
+   * class of bug rather than patching one instance of it.)
    */
   function isQuestionCorrect(q, answerData) {
     if (q.type === "open-ended") {
@@ -152,24 +191,37 @@ export default function AssessmentPage() {
       );
       return result.equivalent;
     }
-    // multiple-choice and any other single-answer type already store a
-    // reliable isCorrect at the moment of selection — no re-derivation needed.
+    // multiple-choice and any other single-answer type set a reliable
+    // isCorrect once, at the moment of selection — it never goes stale,
+    // so there's nothing to re-derive.
     return !!answerData?.isCorrect;
   }
 
-  const handleSubmitAndFinish = useCallback(() => {
+  /**
+   * Single source of truth for scoring — used by handleSubmitAndFinish
+   * (writes the permanent record) and the live score display below. They
+   * used to be two separately-maintained loops with the same fill-in-the-
+   * blank weighting logic copy-pasted between them; that's exactly the kind
+   * of duplication that drifts out of sync silently, which is how the
+   * isQuestionCorrect bug above went unnoticed for a while. One function,
+   * one place to fix anything in the future.
+   *
+   * @param {Array}  qs       — requiredQuestions
+   * @param {object} answersMap — current `answers` state
+   * @returns {{ score: number, total: number, questionResults: Array }}
+   */
+  function computeScore(qs, answersMap) {
     let score = 0;
-    let totalPoints = 0;
-
-    // Per-question results for topic breakdown — only recorded when tags exist.
+    let total = 0;
     const questionResults = [];
 
-    for (const q of requiredQuestions) {
+    for (const q of qs) {
       let questionCorrect = false;
+
       if (q.type === "fill-in-the-blank") {
         const blanks = q.blanks || [];
-        totalPoints += blanks.length;
-        const sels = answers[q.id]?.selections || {};
+        total += blanks.length;
+        const sels = answersMap[q.id]?.selections || {};
         let blankCorrect = 0;
         for (const b of blanks) {
           if (sels[b.id] === b.correctAnswer) { score += 1; blankCorrect += 1; }
@@ -177,12 +229,13 @@ export default function AssessmentPage() {
         // Counts as correct for topic purposes only when all blanks are right.
         questionCorrect = blanks.length > 0 && blankCorrect === blanks.length;
       } else {
-        totalPoints += 1;
-        questionCorrect = isQuestionCorrect(q, answers[q.id]);
+        total += 1;
+        questionCorrect = isQuestionCorrect(q, answersMap[q.id]);
         if (questionCorrect) score += 1;
       }
 
-      // Only record questions that carry at least one tag
+      // Only record questions that carry at least one tag — used for the
+      // topic-breakdown feature, harmless to skip when nothing reads it.
       if (Array.isArray(q.tags) && q.tags.length > 0) {
         questionResults.push({
           questionId: q.id,
@@ -191,6 +244,12 @@ export default function AssessmentPage() {
         });
       }
     }
+
+    return { score, total, questionResults };
+  }
+
+  const handleSubmitAndFinish = useCallback(() => {
+    const { score, total: totalPoints, questionResults } = computeScore(requiredQuestions, answers);
 
     AssessmentStorage.markCompleted(
       moduleId, weekId, score, totalPoints,
@@ -222,6 +281,11 @@ export default function AssessmentPage() {
     // Only clear the in-progress draft — completion record and attempts[] stay intact.
     // markCompleted() will append the new attempt when they finish.
     AssessmentStorage.clearProgress(moduleId, weekId);
+    // Also clear the timer's own persisted countdown — useCountdownTimer only
+    // wipes this on expiry, not on a manual redo, so without this a fresh
+    // timed attempt could silently resume from whatever time was left over
+    // in the previous attempt instead of starting at the full duration.
+    try { sessionStorage.removeItem(`timer_${moduleId}_${weekId}`); } catch (_) {}
     setAnswers({});
     setSubmitted(false);
     setShowReview(false);
@@ -230,25 +294,13 @@ export default function AssessmentPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Current score and total points — include per-blank weighting for fill-in-the-blank
-  const { score: correctCount, total: totalGradable } = (function() {
-    if (wasCompleted && completionStatus) return { score: completionStatus.score, total: completionStatus.totalQuestions };
-    let s = 0, t = 0;
-    for (const q of requiredQuestions) {
-      if (q.type === "fill-in-the-blank") {
-        const blanks = q.blanks || [];
-        t += blanks.length;
-        const sels = answers[q.id]?.selections || {};
-        for (const b of blanks) {
-          if (sels[b.id] === b.correctAnswer) s += 1;
-        }
-      } else {
-        t += 1;
-        if (isQuestionCorrect(q, answers[q.id])) s += 1;
-      }
-    }
-    return { score: s, total: t };
-  })();
+  // Current score and total points — include per-blank weighting for fill-in-the-blank.
+  // Falls back to the stored completion record once available (so a redo of an
+  // already-completed attempt still shows last time's score until resubmitted),
+  // otherwise computes live from the same computeScore() used at submit time.
+  const { score: correctCount, total: totalGradable } = wasCompleted && completionStatus
+    ? { score: completionStatus.score, total: completionStatus.totalQuestions }
+    : computeScore(requiredQuestions, answers);
 
   const answeredCount  = requiredQuestions.filter((q) => answers[q.id]?.checked).length;
   const allAnswered    = answeredCount === requiredQuestions.length;
@@ -528,60 +580,6 @@ export default function AssessmentPage() {
             borderRadius: "4px",
           }} />
         </div>
-
-        {/* Flagged questions list */}
-        {flaggedQuestions.length > 0 && (
-          <div style={{
-            marginTop: "14px",
-            paddingTop: "12px",
-            borderTop: "1px solid rgba(var(--border-color-rgb), 0.3)",
-          }}>
-            <p style={{
-              fontSize: "12px", fontWeight: 700, letterSpacing: "0.05em",
-              textTransform: "uppercase", color: "var(--golden-amber)",
-              marginBottom: "8px",
-              display: "flex", alignItems: "center", gap: "5px",
-            }}>
-              <FlagIcon /> Flagged for review
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {flaggedQuestions.map((q, i) => {
-                // Find the display index of this question among required questions
-                const displayIdx = requiredQuestions.indexOf(q);
-                return (
-                  <button
-                    key={q.id}
-                    onClick={() => {
-                      // Scroll to the question card by its id
-                      const el = document.querySelector(`[data-question-id="${q.id}"]`);
-                      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }}
-                    style={{
-                      fontSize: "12px", fontWeight: 600,
-                      color: "var(--golden-amber)",
-                      background: "rgba(244,169,0,0.08)",
-                      border: "1px solid rgba(244,169,0,0.3)",
-                      borderRadius: "8px", padding: "4px 10px",
-                      cursor: "pointer",
-                      transition: "all 0.14s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(244,169,0,0.16)";
-                      e.currentTarget.style.borderColor = "rgba(244,169,0,0.55)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "rgba(244,169,0,0.08)";
-                      e.currentTarget.style.borderColor = "rgba(244,169,0,0.3)";
-                    }}
-                    title="Jump to this question"
-                  >
-                    Q{displayIdx + 1}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Questions */}
@@ -691,6 +689,21 @@ export default function AssessmentPage() {
       {/* Floating progress ring — fixed position, left side, both modes */}
       {!submitted && (!showGate || gateCleared) && (
         <FloatingProgressRing answered={answeredCount} total={requiredQuestions.length} />
+      )}
+
+      {/* Floating flagged-questions widget — stacks above the progress ring.
+          Replaces the old inline "Flagged for review" list that lived next
+          to the progress bar near the top — that one was easy to lose track
+          of once scrolled past. Same navigate-to-question mechanism. */}
+      {!submitted && (!showGate || gateCleared) && (
+        <FloatingFlagWidget
+          flaggedQuestions={flaggedQuestions}
+          displayNumberById={displayNumberById}
+          onNavigate={(q) => {
+            const el = document.querySelector(`[data-question-id="${q.id}"]`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
       )}
     </div>
   );

@@ -246,7 +246,7 @@ export default function CompletionBadge({
         <button
           className="button no-print"
           onClick={handlePrint}
-          style={{ padding: "12px 32px", fontSize: "16px", background: "var(--accent-primary)" }}
+          style={{ padding: "12px 32px", fontSize: "16px", background: "var(--accent-secondary)" }}
         >
           🖨️ Print Certificate
         </button>

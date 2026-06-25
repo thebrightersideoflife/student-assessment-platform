@@ -6,9 +6,12 @@
  *
  * Storage schema (per assessment key):
  * {
- *   version: "1.0.1",  // NEW: version of the app when data was saved
+ *   version: "1.0.1",          // app version when data was saved
+ *   scoringVersion: 1,         // grading-algorithm version when LATEST attempt was saved
  *   attempts: [
- *     { score, totalQuestions, percentage, completedDate, moduleId, weekId },
+ *     { score, totalQuestions, percentage, completedDate, moduleId, weekId,
+ *       scoringVersion,        // grading-algorithm version for THIS attempt
+ *       questionResults },     // optional per-question tag breakdown
  *     ...
  *   ],
  *   // Convenience fields — always mirror the latest attempt for backward compat
@@ -22,10 +25,20 @@
  * }
  *
  * Migration: records written before this version (no `attempts` array) are
- * silently promoted to the new shape on first read.
- * 
+ * silently promoted to the new shape on first read. Records/attempts written
+ * before scoringVersion existed simply have no `scoringVersion` field —
+ * isScoringStale() treats that the same as an old version, no separate
+ * migration needed.
+ *
  * Version tracking: data saved with a different APP_VERSION is considered stale
  * and will be cleared to avoid showing outdated questions or progress.
+ *
+ * Scoring version tracking is intentionally separate from APP_VERSION: a UI
+ * or feature change bumps the app version without invalidating anyone's
+ * grades, and a grading-logic fix (like the one SCORING_VERSION=2 captures —
+ * see computeScore()/isQuestionCorrect() in AssessmentPage) shouldn't force
+ * an unrelated full data wipe. It only marks affected attempts so the UI can
+ * eventually decide what to do with them (e.g. prompt a retake).
  */
 
 import { APP_VERSION, isVersionCurrent } from "./appVersion.js";
@@ -34,6 +47,11 @@ const STORAGE_KEY_PREFIX = "assessment_completion_";
 const PROGRESS_KEY_PREFIX = "assessment_progress_";
 const STORAGE_EVENT = "assessmentStorageUpdate";
 const APP_VERSION_KEY = "app_version";
+
+// Bump this whenever grading logic changes in a way that could change a
+// stored score for the same answers (e.g. the open-ended re-grading fix this
+// version was introduced for). Independent of APP_VERSION — see file header.
+const SCORING_VERSION = 1;
 
 class AssessmentStorage {
   // ─── Initialization & Version Management ────────────────────────────────────
@@ -126,13 +144,26 @@ class AssessmentStorage {
 
   /**
    * Save in-progress answers (temporary, cleared on completion).
+   *
+   * @param {string} moduleId
+   * @param {string} weekId
+   * @param {object} answers
+   * @param {string} [mode] — "practice" | "timed", whichever the student
+   *        picked at the gate. Persisted so a remount (navigating away and
+   *        back, or a hard refresh) can silently resume the same mode
+   *        instead of re-showing the gate. Optional — omitted entirely for
+   *        weeks with no gate (no `duration`), and existing records saved
+   *        before this field existed just come back as `mode: undefined`,
+   *        which AssessmentPage treats as "show the gate" (unchanged
+   *        behaviour for anyone mid-attempt when this shipped).
    */
-  static saveProgress(moduleId, weekId, answers) {
+  static saveProgress(moduleId, weekId, answers, mode) {
     try {
       const key = this.getProgressKey(moduleId, weekId);
       const data = {
         version: APP_VERSION,
         answers,
+        ...(mode ? { mode } : {}),
         lastUpdated: new Date().toISOString(),
         moduleId,
         weekId,
@@ -186,8 +217,12 @@ class AssessmentStorage {
    * @param {string} weekId
    * @param {number} score
    * @param {number} totalQuestions
+   * @param {Array}  [questionResults] — optional per-question tag breakdown,
+   *        used by the streak/topic features. (Previously accepted by every
+   *        call site but not declared here, so it was silently dropped —
+   *        fixed alongside the scoring-version field below.)
    */
-  static markCompleted(moduleId, weekId, score, totalQuestions) {
+  static markCompleted(moduleId, weekId, score, totalQuestions, questionResults) {
     try {
       const key = this.getCompletionKey(moduleId, weekId);
       const newAttempt = {
@@ -197,6 +232,11 @@ class AssessmentStorage {
         completedDate: new Date().toISOString(),
         moduleId,
         weekId,
+        // Stamped per-attempt (not just per-record) so a future scoring fix
+        // can tell exactly which historical attempts were graded under the
+        // old logic, even within the same record's attempts[] array.
+        scoringVersion: SCORING_VERSION,
+        ...(questionResults && questionResults.length > 0 ? { questionResults } : {}),
       };
 
       // Load existing record and migrate if needed
@@ -205,6 +245,7 @@ class AssessmentStorage {
 
       const data = {
         version: APP_VERSION,
+        scoringVersion: SCORING_VERSION,
         completed: true,
         attempts,
         // Convenience fields — always the latest attempt
@@ -224,6 +265,28 @@ class AssessmentStorage {
       console.error("Error saving completion:", error);
       return false;
     }
+  }
+
+  /**
+   * Returns true if a completion record (or individual attempt) was graded
+   * under an older scoring algorithm than the one currently running.
+   *
+   * Doesn't recompute or clear anything by itself — deliberately just a
+   * signal. The 9/19-instead-of-13/19 bug that prompted this field can't be
+   * auto-corrected from stored data alone (the raw per-blank/per-question
+   * answers aren't retained, only the final tally), so the honest move is
+   * to flag affected records for a human/UI prompt ("this score was graded
+   * under an earlier version — would you like to retake?") rather than
+   * silently rewriting history.
+   *
+   * @param {object} recordOrAttempt — anything with a `scoringVersion` field
+   * @returns {boolean}
+   */
+  static isScoringStale(recordOrAttempt) {
+    if (!recordOrAttempt) return false;
+    // Records written before this field existed have no scoringVersion at
+    // all — treat that as stale too, since they predate this tracking.
+    return recordOrAttempt.scoringVersion !== SCORING_VERSION;
   }
 
   /**

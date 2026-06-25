@@ -87,13 +87,15 @@ export default function OpenEndedQuestion({
   function handleCheck() {
     if (timedMode) {
       // "Save Answer" — record the response, mark as answered for progress
-      // tracking, but never run/show validation until the assessment is submitted.
+      // tracking, but never run/show validation until the assessment is
+      // submitted. Correctness is no longer sent here at all — AssessmentPage
+      // re-derives it from the raw answer text against the question's
+      // accepted answers at scoring time, so there's nothing to keep in sync.
       setSavedAnswerText(answer);
       setChecked(true);
       if (onAnswerChange && !locked) {
         onAnswerChange(question.id, {
           answer,
-          isCorrect: false, // unknown until submit — graded then
           checked: true,
           isSkipped: false,
           isFlagged: flagged,
@@ -111,7 +113,6 @@ export default function OpenEndedQuestion({
     if (onAnswerChange && !locked) {
       onAnswerChange(question.id, {
         answer,
-        isCorrect: result.equivalent,
         checked: true,
         isSkipped: false,
         isFlagged: flagged,
@@ -128,7 +129,6 @@ export default function OpenEndedQuestion({
     if (onAnswerChange && !locked) {
       onAnswerChange(question.id, {
         answer: "",
-        isCorrect: false,
         checked: true,
         isSkipped: true,
         isFlagged: flagged,
@@ -143,7 +143,6 @@ export default function OpenEndedQuestion({
     if (onAnswerChange && !locked) {
       onAnswerChange(question.id, {
         answer: "",
-        isCorrect: false,
         checked: false,
         isSkipped: false,
         isFlagged: flagged,
@@ -157,7 +156,6 @@ export default function OpenEndedQuestion({
     if (onAnswerChange && !locked) {
       onAnswerChange(question.id, {
         answer,
-        isCorrect: validationResult?.equivalent || false,
         checked,
         isSkipped: skipped,
         isFlagged: next,
@@ -174,7 +172,6 @@ export default function OpenEndedQuestion({
       if (onAnswerChange && !locked) {
         onAnswerChange(question.id, {
           answer: newAnswer,
-          isCorrect: false,
           checked: false,
           isSkipped: false,
           isFlagged: flagged,

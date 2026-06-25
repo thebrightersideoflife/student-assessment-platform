@@ -46,6 +46,13 @@ export default function AssessmentReview({
 }) {
   const printRef = useRef(null);
   const requiredQuestions = getRequiredQuestions(questions);
+  // A Set of ids rather than `requiredQuestions.includes(question)` — the
+  // latter only works because getRequiredQuestions() happens to filter the
+  // exact same array reference passed in. If `questions` is ever mapped,
+  // spread, or cloned before reaching this component, identity breaks
+  // silently and every question renders with the wrong index. IDs don't have
+  // that failure mode.
+  const requiredQuestionIds = new Set(requiredQuestions.map((q) => q.id));
   const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
   // Scroll to top on mount so the score summary is the first thing seen.
@@ -186,7 +193,7 @@ export default function AssessmentReview({
             );
           }
 
-          const isRequired = requiredQuestions.includes(question);
+          const isRequired = requiredQuestionIds.has(question.id);
           const idx = isRequired ? questionIndex++ : null;
 
           return (
@@ -199,7 +206,10 @@ export default function AssessmentReview({
               locked={true}
               submitted={true}
               scenario={null}
-              timedMode={true}
+              // No timedMode prop here on purpose: submitted=true already
+              // makes every question component reveal fully regardless of
+              // mode, so timedMode would be inert — passing it anyway read
+              // as if it mattered, which it didn't.
             />
           );
         })}
