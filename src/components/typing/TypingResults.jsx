@@ -5,7 +5,194 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceDot,
 } from "recharts";
-import { saveSession, deriveStats, computeSessionStats } from "../../utils/typingStorage";
+import { useContext } from "react";
+import { ThemeContext } from "../../context/ThemeContext";
+import { saveSession, deriveStats, computeSessionStats, loadSessions } from "../../utils/typingStorage";
+
+// ── Goal confetti ─────────────────────────────────────────────────────────────
+//
+// Fires on mount when a goal is reached. Two modes:
+//   "wpm"  — rich confetti burst + two clapping-hands emoji that arc up and
+//             fade, timed to feel like a crowd reaction
+//   "time" — lighter confetti-only shower (the time goal is cumulative and
+//             quieter to celebrate — no emoji)
+//
+// Theme-aware palette: dark mode uses golden-amber + lime + cyan (the app's
+// accent triad); light mode swaps amber for royal-blue so nothing washes out
+// against the pale background.
+//
+// Respects prefers-reduced-motion: skips the canvas animation entirely and
+// just fires the emoji pop (a static position flash that disappears quickly).
+
+const CONFETTI_PALETTES = {
+  dark:  ["#F4A900", "#76D13D", "#00BFFF", "#FF7F24", "#EAF2FF", "#FF4040"],
+  light: ["#2A5CA7", "#3aa729", "#00BFFF", "#FF7F24", "#0B0F1A", "#FF4040"],
+};
+
+function GoalConfetti({ mode, theme }) {
+  const canvasRef = useRef(null);
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const palette = CONFETTI_PALETTES[theme === "light" ? "light" : "dark"];
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+
+    // Particle count: more for wpm (the bigger celebration)
+    const COUNT = reducedMotion ? 0 : mode === "wpm" ? 140 : 75;
+
+    // All particles burst from screen centre.
+    // Launch cone: pointing upward, roughly ±65° off vertical (π/2 ± 65°→rad).
+    // This keeps the fan tight enough to read as a single burst rather than
+    // a scattered spray, while still spreading naturally as gravity pulls them down.
+    const CX = W / 2;  // horizontal centre
+    const CY = H / 2;  // vertical centre — burst origin
+
+    // Fade threshold: particles start fading when they fall back below 80% of
+    // screen height. This ensures they vanish well before the bottom edge
+    // regardless of speed, giving the "disappears before it hits the ground" feel.
+    const FADE_Y = H * 0.80;
+
+    const particles = Array.from({ length: COUNT }, () => {
+      // Angle measured from positive-x axis. We want upward (−y), so we
+      // rotate π/2 (pointing straight up) by ±65° = ±1.13 rad.
+      const spread = (Math.random() - 0.5) * 2.26;          // ±65° in radians
+      const angle  = -Math.PI / 2 + spread;                  // centred on straight up
+      const speed  = 8 + Math.random() * 13;
+      return {
+        x:     CX + (Math.random() - 0.5) * 24,             // tiny jitter at origin
+        y:     CY,
+        vx:    Math.cos(angle) * speed,
+        vy:    Math.sin(angle) * speed,                      // negative = upward
+        color: palette[Math.floor(Math.random() * palette.length)],
+        size:  4 + Math.random() * 7,
+        rot:   Math.random() * Math.PI * 2,
+        rotV:  (Math.random() - 0.5) * 0.28,
+        shape: Math.random() < 0.55 ? "rect" : "circle",
+        alpha: 1,
+      };
+    });
+
+    const GRAVITY = 0.40;
+    const DRAG    = 0.993;
+    let   raf;
+
+    const tick = () => {
+      ctx.clearRect(0, 0, W, H);
+
+      let alive = false;
+      for (const p of particles) {
+        p.vy += GRAVITY;
+        p.vx *= DRAG;
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.rot += p.rotV;
+
+        // Fade in once the particle has fallen back below FADE_Y on the way down.
+        // Rate is proportional to how far past FADE_Y it's gone, so the fade
+        // accelerates naturally as particles fall further — crisp disappearance
+        // well before the screen edge.
+        if (p.y > FADE_Y) {
+          const excess = (p.y - FADE_Y) / (H - FADE_Y); // 0→1 over the bottom 20%
+          p.alpha = Math.max(0, 1 - excess * 2.5);
+        }
+
+        if (p.alpha <= 0) continue;
+        alive = true;
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle   = p.color;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        if (p.shape === "rect") {
+          ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      if (alive) raf = requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, W, H);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clapping hands — two emoji that arc upward and fade; WPM mode only.
+  // Reduced-motion users get a brief static flash instead of the arc.
+  const [handsVisible, setHandsVisible] = useState(mode === "wpm");
+  useEffect(() => {
+    if (mode !== "wpm") return;
+    const t = setTimeout(() => setHandsVisible(false), reducedMotion ? 600 : 1800);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      {/* Full-viewport canvas — pointer-events:none so it never blocks clicks */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position:      "fixed",
+          inset:         0,
+          zIndex:        9999,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Clapping hands — WPM goal only */}
+      {mode === "wpm" && handsVisible && (
+        <div
+          aria-hidden="true"
+          style={{
+            position:   "fixed",
+            top:        "12%",
+            left:       "50%",
+            transform:  "translateX(-50%)",
+            zIndex:     10000,
+            display:    "flex",
+            gap:        "18px",
+            fontSize:   "clamp(38px, 6vw, 64px)",
+            pointerEvents: "none",
+            animation:  reducedMotion
+              ? "tr-hands-flash 0.5s ease forwards"
+              : "tr-hands-arc 1.8s cubic-bezier(0.22,1,0.36,1) forwards",
+          }}
+        >
+          <span>👏</span>
+          <span style={{ animationDelay: "0.08s" }}>👏</span>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes tr-hands-arc {
+          0%   { opacity: 0; transform: translateX(-50%) translateY(30px) scale(0.6); }
+          18%  { opacity: 1; transform: translateX(-50%) translateY(0px)  scale(1.15); }
+          55%  { opacity: 1; transform: translateX(-50%) translateY(-18px) scale(1.05); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(0.9); }
+        }
+        @keyframes tr-hands-flash {
+          0%   { opacity: 0; }
+          30%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `}</style>
+    </>
+  );
+}
 
 // ── WPM chart ─────────────────────────────────────────────────────────────────
 
@@ -81,6 +268,37 @@ function MiniStat({ label, value, subLabel }) {
       </div>
       {subLabel && <div style={{ fontSize: "10px", color: "var(--text-secondary)" }}>{subLabel}</div>}
     </div>
+  );
+}
+
+// Sits in the same mini-stat grid cell that "passages" used to occupy —
+// replaced because a raw passage count wasn't a useful metric. Unlike a
+// plain MiniStat, this is a real action, so it's deliberately NOT styled
+// like the plain-text stats around it — a solid accent-filled pill (the
+// same "this is clearly clickable" language as .button.solid elsewhere in
+// the app) so it reads as a button at a glance, not as data to read.
+//
+// Two bits of motion, both intentionally subtle:
+//   - the arrow glyphs nudge forward (tr-arrow-nudge)
+//   - three ripple rings expand outward from the border and fade
+//     (tr-ripple), staggered by a third of the cycle each, on a slow
+//     loop. The rings live on a wrapping span (.tr-next-test-wrap), not
+//     the button itself, so they can expand past the button's own edges
+//     without needing the button's box-shadow/border to do double duty.
+function NextTestMiniButton({ onClick }) {
+  return (
+    <span className="tr-next-test-wrap">
+      <span className="tr-ripple tr-ripple-1" aria-hidden="true" />
+      <span className="tr-ripple tr-ripple-2" aria-hidden="true" />
+      <span className="tr-ripple tr-ripple-3" aria-hidden="true" />
+      <button onClick={onClick} className="button solid" style={{ width: "100%", justifyContent: "center", padding: "10px 8px", borderRadius: "10px", fontSize: "13px", fontWeight: 700, gap: "5px", position: "relative", zIndex: 1 }}>
+        Next Test
+        <span className="tr-next-test-arrows" aria-hidden="true" style={{ display: "inline-flex" }}>
+          <span className="tr-arrow-1">›</span>
+          <span className="tr-arrow-2">›</span>
+        </span>
+      </button>
+    </span>
   );
 }
 
@@ -172,13 +390,18 @@ function DailyGoalBars({ wpm, elapsedSeconds, goalWpm, goalTime }) {
 }
 
 // ── Raise-goal prompt ─────────────────────────────────────────────────────────
-// Shown once per results screen when the WPM goal was just reached. Offers a
-// one-tap +5 bump. Dismissing just hides it for this results screen — it
-// isn't a "never ask again" choice, it'll show up again next time a goal
-// is freshly reached.
+// Shown once per results screen when the WPM goal was just reached. Suggests
+// a new goal based on how fast the person actually just typed, not a flat
+// +5 on the old goal — someone who blew past their goal (e.g. goal 40,
+// typed 52) should be offered 55, not a token 45. The suggestion is always
+// the next multiple of 5 strictly above their actual wpm.
 
-function RaiseGoalPrompt({ goalWpm, onAccept, onDismiss }) {
-  const newGoal = goalWpm + 5;
+function nextGoalSuggestion(wpm) {
+  return Math.ceil((wpm + 1) / 5) * 5;
+}
+
+function RaiseGoalPrompt({ goalWpm, wpm, onAccept, onDismiss }) {
+  const newGoal = Math.max(nextGoalSuggestion(wpm), goalWpm + 5);
 
   return (
     <div
@@ -330,10 +553,11 @@ export default function TypingResults({
   onTypingReport, onGoToModule,
   onRetry, onNextTest, onChangeModule,
 }) {
-  const { correctChars, incorrectChars, completedPassages, elapsedSeconds, snapshots = [] } = result;
+  const { theme } = useContext(ThemeContext);
+  const { correctChars, incorrectChars, rawErrors, elapsedSeconds, snapshots = [] } = result;
 
   const { wpm, rawWpm, accuracy, score, consistency: consistencyNum } = computeSessionStats({
-    correctChars, incorrectChars, elapsedSeconds, snapshots,
+    correctChars, incorrectChars, rawErrors, elapsedSeconds, snapshots,
   });
   const consistency = consistencyNum === null ? "—" : `${consistencyNum}%`;
 
@@ -354,8 +578,23 @@ export default function TypingResults({
   const wpmGoalReached = dailyGoalWpm && wpm >= dailyGoalWpm;
   const [raiseGoalDismissed, setRaiseGoalDismissed] = useState(false);
 
+  // ── Today's accumulated typing time (from session log) ─────────────────
+  // saveSessionDetail is called before setResult in handleFinish, so the
+  // current session is already in localStorage by the time this mounts.
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayTotalSeconds = loadSessions()
+    .filter((s) => s.date === todayISO)
+    .reduce((sum, s) => sum + (s.duration ?? 0), 0);
+
+  // Time goal reached = cumulative today minutes ≥ goalTime
+  const timeGoalReached = dailyGoalTime && (todayTotalSeconds / 60) >= dailyGoalTime;
+
+  // Confetti: wpm goal wins if both are true (bigger celebration)
+  const confettiMode = wpmGoalReached ? "wpm" : timeGoalReached ? "time" : null;
+
   return (
     <div>
+      {confettiMode && <GoalConfetti mode={confettiMode} theme={theme} />}
       {/* ── Header row ── */}
       <div style={{
         display: "flex", alignItems: "flex-start", justifyContent: "space-between",
@@ -387,10 +626,11 @@ export default function TypingResults({
             {moduleName} · {durationLabel}
           </p>
           <MetricsBar wpm={wpm} accuracy={accuracy} score={score} derived={derived} />
-          <DailyGoalBars wpm={wpm} elapsedSeconds={elapsedSeconds} goalWpm={dailyGoalWpm} goalTime={dailyGoalTime} />
+          <DailyGoalBars wpm={wpm} elapsedSeconds={todayTotalSeconds} goalWpm={dailyGoalWpm} goalTime={dailyGoalTime} />
           {wpmGoalReached && onRaiseGoal && !raiseGoalDismissed && (
             <RaiseGoalPrompt
               goalWpm={dailyGoalWpm}
+              wpm={wpm}
               onAccept={(newGoal) => { onRaiseGoal(newGoal); setRaiseGoalDismissed(true); }}
               onDismiss={() => setRaiseGoalDismissed(true)}
             />
@@ -423,42 +663,25 @@ export default function TypingResults({
             <ActionButton onClick={() => onOpenSettings("goal")}       icon={<Icons.Goal />}    label="Daily goal"   />
             <ActionButton onClick={() => onOpenSettings("difficulty")} icon={<Icons.Sliders />} label="Difficulty"   />
             <ActionButton onClick={() => onOpenSettings("duration")}   icon={<Icons.Clock />}   label="Change time"  />
-            <ActionButton onClick={onChangeModule}                     icon={<Icons.Back />}    label="Change Module"       />
+            <ActionButton onClick={onChangeModule}                     icon={<Icons.Back />}    label="Module"       />
           </div>
 
-          {/* Bottom tier — repeat / next */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px" }}>
-            <button
-              onClick={onRetry}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
-                padding: "8px 10px", borderRadius: "8px", border: "none", cursor: "pointer",
-                fontSize: "12px", fontWeight: 700,
-                background: "rgba(var(--border-color-rgb), 0.25)",
-                color: "var(--text-primary)",
-                transition: "background 0.15s ease",
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(var(--border-color-rgb), 0.45)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(var(--border-color-rgb), 0.25)"}
-            >
-              <Icons.Retry /> Repeat
-            </button>
-            <button
-              onClick={onNextTest}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
-                padding: "8px 10px", borderRadius: "8px", border: "none", cursor: "pointer",
-                fontSize: "12px", fontWeight: 700,
-                background: "rgba(var(--border-color-rgb), 0.25)",
-                color: "var(--text-primary)",
-                transition: "background 0.15s ease",
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(var(--border-color-rgb), 0.45)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(var(--border-color-rgb), 0.25)"}
-            >
-              <Icons.Next /> Next
-            </button>
-          </div>
+          {/* Bottom tier — repeat (Next Test now lives in the stats row below) */}
+          <button
+            onClick={onRetry}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
+              padding: "8px 10px", borderRadius: "8px", border: "none", cursor: "pointer",
+              fontSize: "12px", fontWeight: 700,
+              background: "rgba(var(--border-color-rgb), 0.25)",
+              color: "var(--text-primary)",
+              transition: "background 0.15s ease",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(var(--border-color-rgb), 0.45)"}
+            onMouseLeave={e => e.currentTarget.style.background = "rgba(var(--border-color-rgb), 0.25)"}
+          >
+            <Icons.Retry /> Repeat
+          </button>
         </div>
       </div>
 
@@ -474,7 +697,7 @@ export default function TypingResults({
 
         <div style={{ borderTop: "1px solid rgba(var(--border-color-rgb), 0.4)", margin: "20px 0 16px" }} />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px", alignItems: "center" }}>
           <MiniStat label="test type" value={`time ${Math.round(elapsedSeconds)}`} />
           <MiniStat label="raw" value={rawWpm} />
           <MiniStat
@@ -489,11 +712,68 @@ export default function TypingResults({
             subLabel="correct / incorrect"
           />
           <MiniStat label="consistency" value={consistency} />
-          <MiniStat label="passages" value={completedPassages} />
+          <NextTestMiniButton onClick={onNextTest} />
         </div>
 
-
       </div>
+
+      <style>{`
+        /* Only the arrow glyphs animate — not the button, not the label —
+           a slow, gentle horizontal nudge suggesting "go on to the next one".
+           The second arrow lags slightly so the pair reads as a forward
+           gesture rather than two things just twitching in sync. */
+        @keyframes tr-arrow-nudge {
+          0%, 100% { transform: translateX(0); opacity: 0.55; }
+          50%      { transform: translateX(3px); opacity: 1; }
+        }
+        .tr-arrow-1 {
+          display: inline-block;
+          animation: tr-arrow-nudge 1.4s ease-in-out infinite;
+        }
+        .tr-arrow-2 {
+          display: inline-block;
+          margin-left: -3px;
+          animation: tr-arrow-nudge 1.4s ease-in-out infinite;
+          animation-delay: 0.12s;
+        }
+
+        /* Ripple: rings expand outward from the button's edge and fade as
+           they grow — three of them, staggered by a third of the cycle
+           each, so at any moment there are two rings visible at clearly
+           different sizes (one freshly born, one mid-expansion) rather
+           than a single ring quietly fading in and out. That distinction
+           — multiple simultaneous, differently-sized rings — is what
+           actually reads as "ripple" instead of "pulsing outline."
+
+           Animates the "inset" property in fixed pixels rather than
+           transform:scale(). scale() multiplies both axes by the same factor, which looks
+           fine on a circle/square but is wrong on a wide pill: 12% of a
+           ~90px width is a much bigger jump than 12% of a ~38px height,
+           so the ring visibly stretched sideways and barely moved
+           vertically. Pushing all four edges outward by the same pixel
+           amount expands evenly in every direction regardless of the
+           button's aspect ratio. */
+        .tr-next-test-wrap {
+          position: relative;
+          display: block;
+          width: 100%;
+        }
+        .tr-ripple {
+          position: absolute;
+          inset: 0;
+          border-radius: 10px;
+          border: 1.5px solid var(--accent-primary);
+          pointer-events: none;
+          animation: tr-ripple 3.6s ease-out infinite;
+        }
+        .tr-ripple-2 { animation-delay: 1.2s; }
+        .tr-ripple-3 { animation-delay: 2.4s; }
+        @keyframes tr-ripple {
+          0%   { inset: 0;      border-radius: 10px; opacity: 0.55; }
+          75%  { inset: -14px;  border-radius: 20px; opacity: 0; }
+          100% { inset: -14px;  border-radius: 20px; opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

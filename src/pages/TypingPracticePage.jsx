@@ -18,7 +18,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ThemeContext } from "../context/ThemeContext";
 import { modules } from "../data/modules";
 import { extractPassages, applyMode, shuffleArray, TYPING_MODES } from "../utils/typingExtractor";
-import { loadSettings, saveSettings, saveSessionDetail, computeSessionStats } from "../utils/typingStorage";
+import { loadSettings, saveSettings, saveSessionDetail, computeSessionStats, recordGoalChange } from "../utils/typingStorage";
 import Breadcrumb from "../components/Breadcrumb";
 import { DurationSelect } from "../components/typing/TypingSetup";
 import TypingModuleGrid  from "../components/TypingModuleGrid";
@@ -490,6 +490,14 @@ export default function TypingPracticePage() {
     if (goalWpm  !== null) setDailyGoalWpm(goalWpm);
     if (goalTime !== null) setDailyGoalTime(goalTime);
 
+    // Log this as a goal-history event if the goal actually changed —
+    // recordGoalChange itself no-ops if it matches the currently-active
+    // goal, but we also gate on `!== null` here since the modal can be
+    // submitted with goalWpm untouched (null = "no change").
+    if (goalWpm !== null) {
+      recordGoalChange(goalWpm);
+    }
+
     const modeChanged     = mode     !== selectedMode;
     const durationChanged = duration.seconds !== selectedDuration?.seconds;
 
@@ -514,9 +522,11 @@ export default function TypingPracticePage() {
 
   // Raise-goal prompt (shown on results when the WPM goal was just hit) —
   // a lighter path than the full SettingsModal: bumps only goalWpm and
-  // persists it the same way handleSettingsSave does.
+  // persists it the same way handleSettingsSave does, including logging
+  // the change to goal history.
   const handleRaiseGoal = (newGoalWpm) => {
     setDailyGoalWpm(newGoalWpm);
+    recordGoalChange(newGoalWpm);
     saveSettings({ goalWpm: newGoalWpm, goalSet: true });
   };
 

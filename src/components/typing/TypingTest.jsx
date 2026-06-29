@@ -258,7 +258,7 @@ export default function TypingTest({ passages, duration, onFinish }) {
       {/* ── Countdown ────────────────────────────────────────────── */}
       {started && (
         <div style={{
-          fontSize:           "15px",
+          fontSize:           "32px",
           fontWeight:         700,
           fontVariantNumeric: "tabular-nums",
           color:              secondsLeft <= 15 && !isPaused
@@ -268,18 +268,18 @@ export default function TypingTest({ passages, duration, onFinish }) {
           transition:         "color 0.3s ease",
           display:            "flex",
           alignItems:         "center",
-          gap:                "8px",
+          gap:                "10px",
         }}>
           {secondsLeft}
           {/* Paused indicator next to the number */}
           {isPaused && (
             <span style={{
-              fontSize:      "11px",
+              fontSize:      "13px",
               fontWeight:    700,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               color:         "var(--golden-amber)",
-              padding:       "2px 8px",
+              padding:       "3px 10px",
               borderRadius:  "4px",
               border:        "1px solid var(--golden-amber)",
               opacity:       0.9,

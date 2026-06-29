@@ -333,18 +333,28 @@ const SESSIONS_KEY = "typing:sessions:v1";
 const MAX_SESSIONS = 50;
 
 /**
- * saveSessionDetail(detail) — appends a record to the capped session log.
+ * saveSessionDetail(detail) — appends a record to the capped session log,
+ * advances the dedicated uncapped session counter, and checks whether this
+ * session's wpm just cleared the currently-active goal period (closing it
+ * out as "reached" if so). Returns the post-increment session count, in
+ * case the caller wants it (e.g. for its own goal-aware messaging).
+ *
  * Silently no-ops on storage failure (e.g. quota exceeded) rather than
  * throwing — losing one detail record should never break the typing flow.
  */
 export function saveSessionDetail(detail) {
+  let sessionCount = getSessionCount();
   try {
     const existing = loadSessions();
     const updated  = [...existing, detail].slice(-MAX_SESSIONS);
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
+
+    sessionCount = incrementSessionCount();
+    checkGoalReached(detail.wpm, sessionCount);
   } catch (err) {
     console.warn("[typingStorage] Failed to save session detail:", err);
   }
+  return sessionCount;
 }
 
 /**
@@ -387,4 +397,216 @@ export function aggregateCharErrors(sessions) {
   return Object.entries(totals)
     .map(([char, count]) => ({ char, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+// ── Goal history ─────────────────────────────────────────────────────────
+//
+// Tracks every WPM-goal period the user has set, and how long (in sessions)
+// it took to reach each one — or whether it was abandoned (changed before
+// being reached). This is intentionally a separate, append-mostly log from
+// the live `goalWpm` field in settings: that field only ever holds the
+// *current* goal, with no memory of what came before or how it went.
+//
+// Session counting here uses a DEDICATED uncapped counter
+// (`typing:sessionCount:v1`), incremented by saveSessionDetail itself,
+// rather than the global record's `totalSessions` (see saveSession above).
+// Two reasons:
+//   1. The session detail log (typing:sessions:v1) is capped at
+//      MAX_SESSIONS and rolls old entries off, so loadSessions().length
+//      isn't a stable basis for "sessions to reach a goal" once the ring
+//      buffer wraps past 50.
+//   2. The global record's totalSessions is incremented by saveSession(),
+//      which is called from TypingResults.jsx as an async side effect on
+//      mount — NOT synchronously from the same place saveSessionDetail is
+//      called in TypingPracticePage.jsx. Relying on it here would risk
+//      reading a stale pre-increment value due to that ordering gap.
+// A dedicated counter, incremented in the same synchronous call as
+// saveSessionDetail, has neither problem.
+
+const SESSION_COUNT_KEY = "typing:sessionCount:v1";
+
+function getSessionCount() {
+  try {
+    const raw = localStorage.getItem(SESSION_COUNT_KEY);
+    const n = raw ? parseInt(raw, 10) : 0;
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function incrementSessionCount() {
+  const next = getSessionCount() + 1;
+  try {
+    localStorage.setItem(SESSION_COUNT_KEY, String(next));
+  } catch (err) {
+    console.warn("[typingStorage] Failed to persist session count:", err);
+  }
+  return next;
+}
+
+// Storage key: `typing:goalHistory:v1`
+// Value: JSON array of GoalPeriod, oldest first, uncapped (this is a small,
+// slow-growing list — one entry per goal change, not per session — so
+// there's no realistic need to cap it the way the session log is capped).
+//
+// GoalPeriod = {
+//   goalWpm:           number,
+//   setAt:              number,        // Date.now() when this goal became active
+//   setAtSessionIdx:    number,        // session count at that moment
+//   reachedAt:          number | null, // Date.now() of the session that first hit it
+//   reachedSessionIdx:  number | null,
+//   sessionsToReach:    number | null, // reachedSessionIdx - setAtSessionIdx
+//   status:             "active" | "reached" | "abandoned",
+// }
+//
+// "abandoned" means the goal was changed to a new value before ever being
+// reached — still useful signal (e.g. someone set an unrealistic goal and
+// walked it back), distinct from "reached".
+
+const GOAL_HISTORY_KEY = "typing:goalHistory:v1";
+
+function loadGoalHistoryRaw() {
+  try {
+    const raw = localStorage.getItem(GOAL_HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveGoalHistoryRaw(history) {
+  try {
+    localStorage.setItem(GOAL_HISTORY_KEY, JSON.stringify(history));
+  } catch (err) {
+    console.warn("[typingStorage] Failed to save goal history:", err);
+  }
+}
+
+/**
+ * loadGoalHistory() → GoalPeriod[]
+ * Returns the full goal history, oldest first. Never throws.
+ */
+export function loadGoalHistory() {
+  return loadGoalHistoryRaw();
+}
+
+/**
+ * recordGoalChange(newGoalWpm) — call whenever the user's goalWpm setting
+ * is being changed (from handleSettingsSave or the raise-goal prompt),
+ * BEFORE the new value is persisted to settings.
+ *
+ * Closes out the previously-active period as "abandoned" if one exists and
+ * was never reached, then opens a new "active" period for newGoalWpm.
+ * No-ops if newGoalWpm matches the currently-active goal exactly (so saving
+ * the settings modal without actually changing the goal doesn't create a
+ * spurious duplicate period).
+ */
+export function recordGoalChange(newGoalWpm) {
+  if (newGoalWpm == null) return;
+
+  const history = loadGoalHistoryRaw();
+  const active  = history.find((p) => p.status === "active");
+
+  if (active && active.goalWpm === newGoalWpm) return; // no real change
+
+  if (active) {
+    active.status = "abandoned";
+  }
+
+  history.push({
+    goalWpm:           newGoalWpm,
+    setAt:             Date.now(),
+    setAtSessionIdx:   getSessionCount(),
+    reachedAt:         null,
+    reachedSessionIdx: null,
+    sessionsToReach:   null,
+    status:            "active",
+  });
+
+  saveGoalHistoryRaw(history);
+}
+
+/**
+ * clearGoalHistory() — wipes the goal history log.
+ */
+export function clearGoalHistory() {
+  localStorage.removeItem(GOAL_HISTORY_KEY);
+}
+
+/**
+ * checkGoalReached(sessionWpm, sessionCount) — called internally by
+ * saveSessionDetail right after the session counter is incremented. If
+ * there's an active goal period and this session's wpm clears it, closes
+ * the period out as "reached" with sessionsToReach computed. No-ops if
+ * there's no active goal, or it isn't yet reached. Not exported — this is
+ * always derived from a session being saved, never called standalone.
+ */
+function checkGoalReached(sessionWpm, sessionCount) {
+  const history = loadGoalHistoryRaw();
+  const active  = history.find((p) => p.status === "active");
+  if (!active) return;
+  if (sessionWpm < active.goalWpm) return;
+
+  active.status            = "reached";
+  active.reachedAt         = Date.now();
+  active.reachedSessionIdx = sessionCount;
+  active.sessionsToReach   = sessionCount - active.setAtSessionIdx;
+
+  saveGoalHistoryRaw(history);
+}
+
+// ── Streaks ──────────────────────────────────────────────────────────────
+//
+// Pure derived data — no storage of its own. Entirely reconstructed from
+// the `date` field already present on every SessionDetail, so there's
+// nothing here that can drift out of sync with the session log; recompute
+// on every report load instead of caching.
+
+/**
+ * computeStreaks(sessions) → { current, longest, practicedToday }
+ *
+ * current  — consecutive days up to and including the most recent
+ *             practice day, counting backward from today. If the most
+ *             recent session isn't today or yesterday, current is 0
+ *             (the streak has already lapsed).
+ * longest  — the longest consecutive-day run anywhere in the log.
+ * practicedToday — whether today's date appears in the session log.
+ */
+export function computeStreaks(sessions) {
+  if (sessions.length === 0) return { current: 0, longest: 0, practicedToday: false };
+
+  const uniqueDates = [...new Set(sessions.map((s) => s.date))].sort();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  const toUTCDay = (iso) => Date.parse(`${iso}T00:00:00Z`) / dayMs;
+
+  // Longest run anywhere in the log
+  let longest = 1;
+  let run     = 1;
+  for (let i = 1; i < uniqueDates.length; i++) {
+    const gap = toUTCDay(uniqueDates[i]) - toUTCDay(uniqueDates[i - 1]);
+    run = gap === 1 ? run + 1 : 1;
+    longest = Math.max(longest, run);
+  }
+
+  // Current streak: walk backward from the most recent practice day only
+  // if that day is today or yesterday — otherwise the streak has lapsed.
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayDay = toUTCDay(todayISO);
+  const lastDay  = toUTCDay(uniqueDates[uniqueDates.length - 1]);
+
+  let current = 0;
+  if (todayDay - lastDay <= 1) {
+    current = 1;
+    for (let i = uniqueDates.length - 1; i > 0; i--) {
+      const gap = toUTCDay(uniqueDates[i]) - toUTCDay(uniqueDates[i - 1]);
+      if (gap === 1) current += 1;
+      else break;
+    }
+  }
+
+  return { current, longest, practicedToday: lastDay === todayDay };
 }

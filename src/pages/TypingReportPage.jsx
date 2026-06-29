@@ -15,7 +15,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { loadSessions, loadSettings, loadRecord } from "../utils/typingStorage";
+import { loadSessions, loadSettings, loadRecord, loadGoalHistory } from "../utils/typingStorage";
 import TypingProgressReport from "../components/typing/TypingProgressReport";
 import "../assets/styles/typingReport.css";
 
@@ -33,22 +33,25 @@ export default function TypingReportPage() {
   // we attach here, is what a true POP would otherwise return).
   const restoreResults = location.state?.restoreResults ?? null;
 
-  const [sessions, setSessions] = useState([]);
-  const [settings, setSettings] = useState(null);
-  const [record,   setRecord]   = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [sessions,    setSessions]    = useState([]);
+  const [settings,    setSettings]    = useState(null);
+  const [record,      setRecord]      = useState(null);
+  const [goalHistory, setGoalHistory] = useState([]);
+  const [loading,     setLoading]     = useState(true);
 
   // ── Load data once on mount ───────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const sessionData = loadSessions();
-      const settingsData = loadSettings();
-      const recordData = await loadRecord();
+      const sessionData    = loadSessions();
+      const settingsData   = loadSettings();
+      const recordData     = await loadRecord();
+      const goalHistoryData = loadGoalHistory();
       if (!mounted) return;
       setSessions(sessionData);
       setSettings(settingsData);
       setRecord(recordData);
+      setGoalHistory(goalHistoryData);
       setLoading(false);
     })();
     return () => { mounted = false; };
@@ -107,6 +110,7 @@ export default function TypingReportPage() {
             record={record}
             goalWpm={settings?.goalWpm ?? null}
             goalTime={settings?.goalTime ?? null}
+            goalHistory={goalHistory}
           />
         )}
       </div>
