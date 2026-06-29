@@ -11,6 +11,8 @@ import ProgressPage from "../pages/ProgressPage";
 import SupportPage from "../pages/SupportPage";
 import QuestionSearchPage from "../pages/QuestionSearchPage";
 import RevisionPage from "../pages/RevisionPage";
+import TypingPracticePage from "../pages/TypingPracticePage";
+import TypingReportPage from "../pages/TypingReportPage";
 
 export default function AppRouter() {
   return (
@@ -39,6 +41,12 @@ export default function AppRouter() {
         <Route path="/module/:moduleId/roadmap" element={<RoadmapPage />}/>
 
         <Route path="/revision" element={<RevisionPage />} />
+
+        {/* Typing practice — new top-level feature */}
+        <Route path="/typing" element={<TypingPracticePage />} />
+
+        {/* Typing progress report — printable charts, reads from local session log */}
+        <Route path="/typing/report" element={<TypingReportPage />} />
       </Routes>
     </BrowserRouter>
   );

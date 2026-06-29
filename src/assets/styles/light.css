@@ -11,6 +11,14 @@
  
   --text-primary:   #0B0F1A;
   --text-secondary: #4A5A75;
+
+  /* Deeper than the original #76D13D — that yellow-green sits at only
+     ~1.9:1 contrast against white/near-white, well under WCAG's 3:1
+     floor for graphical elements, so it visually disappears into the
+     background here. This is a true grass green: same family, but with
+     enough depth to register clearly (~5.5:1 against this theme's
+     backgrounds) without going dark/muddy or losing its "lime" identity. */
+  --lush-lime: #3aa729;
  
   --accent-primary:   var(--royal-blue);
   --accent-secondary: var(--sunset-orange);

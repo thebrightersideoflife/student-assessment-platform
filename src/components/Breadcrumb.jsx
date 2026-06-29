@@ -5,7 +5,8 @@
     <Breadcrumb items={[
       { label: "Modules", path: "/modules" },
       { label: "ITNSA", path: "/module/ITNSA" },
-      { label: "Week 2" },   // no path = current page (dimmed, not clickable)
+      { label: "Week 2" },             // no path = current page (dimmed, not clickable)
+      { label: "Typing Practice", onClick: handleChangeModule }, // onClick for state-based nav
     ]} />
 */
 
@@ -19,16 +20,27 @@ const ChevronIcon = () => (
   </svg>
 );
 
+const clickableStyle = {
+  fontFamily:     "inherit",
+  fontSize:       "14px",
+  fontWeight:     600,
+  color:          "var(--text-primary)",
+  textDecoration: "none",
+  opacity:        0.75,
+  transition:     "opacity 0.15s ease",
+  letterSpacing:  "0.01em",
+};
+
 export default function Breadcrumb({ items = [] }) {
   if (!items.length) return null;
 
   return (
     <nav aria-label="Breadcrumb" style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "6px",
+      display:      "flex",
+      alignItems:   "center",
+      gap:          "6px",
       marginBottom: "28px",
-      flexWrap: "wrap",
+      flexWrap:     "wrap",
     }}>
       {items.map((item, i) => {
         const isLast = i === items.length - 1;
@@ -39,28 +51,34 @@ export default function Breadcrumb({ items = [] }) {
             {item.path && !isLast ? (
               <Link
                 to={item.path}
-                style={{
-                  fontFamily: "inherit",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "var(--text-primary)",
-                  textDecoration: "none",
-                  opacity: 0.75,
-                  transition: "opacity 0.15s ease",
-                  letterSpacing: "0.01em",
-                }}
+                style={clickableStyle}
                 onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "0.75"}
               >
                 {item.label}
               </Link>
+            ) : item.onClick && !isLast ? (
+              <button
+                onClick={item.onClick}
+                style={{
+                  ...clickableStyle,
+                  background: "none",
+                  border:     "none",
+                  padding:    0,
+                  cursor:     "pointer",
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                onMouseLeave={e => e.currentTarget.style.opacity = "0.75"}
+              >
+                {item.label}
+              </button>
             ) : (
               <span style={{
-                fontFamily: "inherit",
-                fontSize: "14px",
-                fontWeight: isLast ? 400 : 600,
-                color: isLast ? "var(--text-secondary)" : "var(--text-primary)",
-                opacity: isLast ? 0.65 : 0.75,
+                fontFamily:    "inherit",
+                fontSize:      "14px",
+                fontWeight:    isLast ? 400 : 600,
+                color:         isLast ? "var(--text-secondary)" : "var(--text-primary)",
+                opacity:       isLast ? 0.65 : 0.75,
                 letterSpacing: "0.01em",
               }}>
                 {item.label}

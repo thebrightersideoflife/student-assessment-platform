@@ -3,7 +3,6 @@
   /* Artistic palette */
   --golden-amber: #F4A900;
   --vibrant-cyan: #00BFFF;
-  --lush-lime: #76D13D;
   --royal-blue: #2A5CA7;
   --sunset-orange: #FF7F24;
 
@@ -12,3 +11,12 @@
   --daisy-white: #F0F8FF;
 
 }
+
+/* --lush-lime moved to light.css / dark.css, each with its own value.
+   Every current use of --lush-lime is semantic (correct chars, goal
+   reached, positive trend, accuracy "good" tier) — never decorative — so
+   it needs to read clearly against whichever background it's on. The
+   original #76D13D is a near-9:1 contrast win against dark backgrounds
+   but only ~1.9:1 against white, well under WCAG's 3:1 floor for
+   graphical/UI elements. Light mode gets a deeper, more saturated green
+   with real contrast; dark mode keeps the original lime exactly as-is. */

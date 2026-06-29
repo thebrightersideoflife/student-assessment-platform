@@ -1,0 +1,270 @@
+/* ============================================================
+   Typing Progress Report — screen (theme-aware) + print (forced light)
+   Unlike print.css's exam shell, this page keeps the real app header
+   visible on screen — the bar below sits in normal flow (sticky) under
+   it, not stacked over a hidden header. The header is hidden only for
+   @media print, same as the exam shell. Reuses print.css's print-only
+   MECHANICS (.no-print, the print-color-adjust trick, @page A4) but not
+   its palette/classes — this is a chart report, not an exam paper, so
+   it gets its own `tpr-*` token set and class family.
+   ============================================================ */
+
+/* ── Screen tokens — light theme of the report itself ───────────────────── */
+.tpr-root {
+  --tpr-accent:        var(--accent-primary);
+  --tpr-accent-soft:   rgba(var(--bg-card-rgb), 0.6);
+  --tpr-good:          var(--lush-lime);
+  --tpr-warn:          var(--golden-amber);
+  --tpr-bad:           var(--poppy-red);
+  --tpr-info:          var(--vibrant-cyan);
+
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding-bottom: 60px;
+  font-family: Inter, system-ui, Arial, sans-serif;
+}
+
+/* ── Bar (screen only) ────────────────────────────────────────────────────
+   The real app header now stays visible on this page, so this bar sits in
+   normal flow right below it — sticky, not fixed, and with no separate
+   "fake header" strip underneath it (that strip existed only to stand in
+   for a hidden header; it's no longer needed). */
+.tpr-bar {
+  position: sticky;
+  top: 0;
+  background: rgba(var(--bg-secondary-rgb), 0.92);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-bottom: 1px solid rgba(var(--border-color-rgb), 0.5);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+  z-index: 900;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.tpr-bar span { color: var(--text-secondary); }
+
+.tpr-bar-btn {
+  background: color-mix(in srgb, var(--accent-primary) 85%, transparent);
+  color: white;
+  border: none;
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: filter 0.18s ease, transform 0.18s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tpr-bar-btn:hover { filter: brightness(0.94); transform: translateY(-1px); }
+
+.tpr-back-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid rgba(var(--border-color-rgb), 0.5);
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tpr-back-btn:hover {
+  background: rgba(var(--border-color-rgb), 0.25);
+  color: var(--text-primary);
+}
+
+/* ── Page wrap ─────────────────────────────────────────────────────────── */
+.tpr-page {
+  max-width: 880px;
+  margin: 32px auto 60px;
+}
+
+/* ── Cover ─────────────────────────────────────────────────────────────── */
+.tpr-cover {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+  border-bottom: 3px solid var(--tpr-accent);
+}
+
+.tpr-cover h1 {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+.tpr-cover .tpr-generated {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tpr-cover-stats {
+  display: flex;
+  gap: 28px;
+  flex-shrink: 0;
+}
+
+.tpr-cover-stat {
+  text-align: right;
+}
+
+.tpr-cover-stat .tpr-cover-stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--tpr-accent);
+  line-height: 1;
+}
+
+.tpr-cover-stat .tpr-cover-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ── Section ───────────────────────────────────────────────────────────── */
+.tpr-section {
+  margin-bottom: 28px;
+}
+
+.tpr-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tpr-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tpr-section-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ── Stat pill (used in the "By difficulty" section) ──────────────────── */
+.tpr-pill-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tpr-pill {
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.tpr-pill .tpr-pill-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.tpr-pill .tpr-pill-wpm {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--tpr-accent);
+  line-height: 1;
+}
+
+.tpr-pill .tpr-pill-sessions {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────── */
+.tpr-empty {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--text-secondary);
+}
+
+.tpr-empty h2 {
+  color: var(--text-primary);
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+.tpr-footer {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(var(--border-color-rgb), 0.4);
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ============================================================
+   Print — forced light, A4, same mechanics as print.css
+   ============================================================ */
+@media print {
+  @page { size: A4; margin: 14mm 16mm; }
+
+  html, body, * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body { background: white !important; font-size: 10pt; }
+  body::before, body::after { display: none !important; }
+
+  .tpr-bar, .no-print, .app-header { display: none !important; }
+
+  .tpr-root {
+    background: white !important;
+    color: #0B0F1A !important;
+    padding: 0;
+    margin-top: 0;
+  }
+
+  /* Force every CSS-var-driven surface to plain light values for print —
+     forced light regardless of the on-screen theme, per spec. */
+  .tpr-root, .tpr-root * {
+    --bg-primary: #ffffff;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-rgb: 255, 255, 255;
+    --bg-secondary-rgb: 255, 255, 255;
+    --text-primary: #0B0F1A;
+    --text-secondary: #4A5A75;
+    --border-color: #D6E0F5;
+    --border-color-rgb: 214, 224, 245;
+  }
+
+  .tpr-page { max-width: 100%; margin: 0; }
+
+  .tpr-section { break-inside: avoid; margin-bottom: 22px; }
+  .tpr-cover { break-after: avoid; }
+  .tpr-pill-row { break-inside: avoid; }
+}

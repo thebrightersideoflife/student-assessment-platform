@@ -307,6 +307,9 @@ export default function Header() {
           <Link to="/progress" className={`nav-link ${isActive("/progress") ? "active" : ""}`}>
             My Progress
           </Link>
+          <Link to="/typing" className={`nav-link ${isActive("/typing") ? "active" : ""}`}>
+            Typing
+          </Link>
           <Link to="/support" className={`nav-link ${isActive("/support") ? "active" : ""}`}>
             Support
           </Link>
@@ -452,7 +455,8 @@ export default function Header() {
           <div className="mobile-menu-inner">
             <button className={`mobile-nav-item ${isActive("/resources") ? "active" : ""}`} onClick={() => navigateTo("/resources")}>Resources</button>
             <button className={`mobile-nav-item ${isActive("/modules") ? "active" : ""}`} onClick={() => navigateTo("/modules")}>Modules</button>
-            <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>
+            <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>            
+            <button className={`mobile-nav-item ${isActive("/typing") ? "active" : ""}`} onClick={() => navigateTo("/typing")}>Typing Practice</button>
             <button className={`mobile-nav-item ${isActive("/support") ? "active" : ""}`} onClick={() => navigateTo("/support")}>Support</button>
             <button className={`mobile-nav-item ${isActive("/search/questions") ? "active" : ""}`} onClick={() => navigateTo("/search/questions")}>Search Questions</button>
           </div>

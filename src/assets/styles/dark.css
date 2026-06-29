@@ -14,6 +14,10 @@
   --text-primary: #EAF2FF;
   --text-secondary: #9FB3C8;
 
+  /* Unchanged from the original global value — already ~10:1 against
+     this theme's backgrounds, no reason to touch it. */
+  --lush-lime: #76D13D;
+
   --accent-primary: var(--golden-amber);
   --accent-secondary: var(--vibrant-cyan);
 
