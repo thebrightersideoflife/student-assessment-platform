@@ -56,6 +56,14 @@ export default function TypingTest({ passages, duration, onFinish }) {
   const isPausedRef   = useRef(false);
   const idleTimerRef  = useRef(null);
 
+  // ── Inter-part spacebar forgiveness ───────────────────────────────────────
+  // Set to true immediately after a part/passage advances. The next onChange
+  // event will silently absorb one leading space (the user's habitual
+  // between-paragraph spacebar) without scoring it as an error. If the very
+  // next character is not a space the flag is cleared immediately — no space
+  // is ever *required*, the forgiveness only prevents a penalty.
+  const absorbSpaceRef = useRef(false);
+
   useEffect(() => { passagesRef.current  = passages;  }, [passages]);
   useEffect(() => { snapshotsRef.current = snapshots; }, [snapshots]);
 
@@ -183,6 +191,42 @@ export default function TypingTest({ passages, duration, onFinish }) {
     const target = currentPart.text;
     const prev   = typedRef.current;
 
+    // ── Inter-part spacebar forgiveness ──────────────────────────────────
+    // If the user reflexively hit space between parts/passages, absorb it
+    // silently — no error, no character added to typed. If they skipped the
+    // space and went straight into the next word, clear the flag so normal
+    // scoring resumes from the first character.
+    if (absorbSpaceRef.current) {
+      absorbSpaceRef.current = false;
+      if (value === " ") {
+        // Swallow the space: keep typed as "" and do not score
+        typedRef.current = "";
+        setTyped("");
+        return;
+      }
+      // Not a space — fall through and score normally from here
+    }
+
+    // ── Error cap — block further input when too many consecutive errors ────
+    // Count how many trailing characters in `value` are wrong. If the streak
+    // has hit MAX_ERRORS the user must backspace before they can type more.
+    // This matches MonkeyType / Keybr behaviour and prevents mindlessly
+    // hammering through an entire wrong word without backspacing.
+    const MAX_ERRORS = 10;
+    if (value.length > prev.length) {
+      let errorStreak = 0;
+      for (let i = 0; i < value.length && i < target.length; i++) {
+        if (value[i] !== target[i]) errorStreak++;
+        else errorStreak = 0; // reset on any correct character
+      }
+      if (errorStreak >= MAX_ERRORS) {
+        // Reject the keystroke — restore previous value without scoring
+        typedRef.current = prev;
+        setTyped(prev);
+        return;
+      }
+    }
+
     // ── Count new character accuracy ──────────────────────────────────────
     if (value.length > prev.length) {
       const idx = value.length - 1;
@@ -210,15 +254,25 @@ export default function TypingTest({ passages, duration, onFinish }) {
         setPartIndex(nextPart);
       } else {
         passagesCompRef.current += 1;
-        const nextPassage = passageIdxRef.current + 1 < passagesRef.current.length
-          ? passageIdxRef.current + 1
-          : 0;
-        passageIdxRef.current = nextPassage;
-        partIdxRef.current    = 0;
-        setPassageIndex(nextPassage);
+        const isLastPassage = passageIdxRef.current + 1 >= passagesRef.current.length;
+
+        if (isLastPassage) {
+          // Re-shuffle the pool before wrapping so the next cycle is a
+          // fresh order — prevents the same sequence repeating endlessly
+          // within a single session.
+          const shuffled = [...passagesRef.current].sort(() => Math.random() - 0.5);
+          passagesRef.current = shuffled;
+          passageIdxRef.current = 0;
+        } else {
+          passageIdxRef.current = passageIdxRef.current + 1;
+        }
+
+        partIdxRef.current = 0;
+        setPassageIndex(passageIdxRef.current);
         setPartIndex(0);
       }
 
+      absorbSpaceRef.current = true; // forgive one leading space on the next part
       typedRef.current = "";
       setTyped("");
       return;

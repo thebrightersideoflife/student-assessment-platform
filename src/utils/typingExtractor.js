@@ -70,7 +70,19 @@ function toPlain(str) {
 
 // ─── Answer extraction ────────────────────────────────────────────────────────
 
-function extractAnswer(correctAnswers) {
+function extractAnswer(correctAnswers, blanks) {
+  // fill-in-the-blank questions store their answer(s) on blanks[].correctAnswer
+  // rather than a top-level correctAnswers field. Assemble them here so the
+  // answer part is never silently skipped for this question type.
+  if (!correctAnswers && Array.isArray(blanks) && blanks.length > 0) {
+    const parts = blanks
+      .map((b) => (b && typeof b.correctAnswer === "string" ? toPlain(b.correctAnswer) : null))
+      .filter(Boolean);
+    if (parts.length === 0) return null;
+    // Join multiple blanks with " / " so "Word1 / Word2" reads naturally as a typed answer
+    return parts.join(" / ") || null;
+  }
+
   if (!correctAnswers) return null;
 
   if (typeof correctAnswers === "string") {
@@ -117,13 +129,21 @@ function buildPassage(question) {
   qText = qText.replace(/\s+Your (discussion|answer) should (include|address)[^.]*\.?.*$/i, ".").trim();
   if (!isTypeable(qText)) return null;
 
-  const answerText = extractAnswer(question.correctAnswers);
+  const answerText = extractAnswer(question.correctAnswers, question.blanks);
   const expText    = toPlain(question.explanation || "");
+
+  // fill-in-the-blank answers are often a single word (e.g. "Contingency",
+  // "Velocity") which are well below MIN_PART_LENGTH but still meaningful to
+  // type in context. Use a lower floor of 3 chars for answers only, so the
+  // student types the correct word after typing the question sentence.
+  const MIN_ANSWER_LENGTH = 3;
 
   const parts = [];
   parts.push({ role: "question", text: qText });
-  if (answerText && isTypeable(answerText)) parts.push({ role: "answer",      text: answerText });
-  if (expText    && isTypeable(expText))    parts.push({ role: "explanation", text: expText });
+  if (answerText && answerText.length >= MIN_ANSWER_LENGTH && isTypeable(answerText)) {
+    parts.push({ role: "answer", text: answerText });
+  }
+  if (expText && isTypeable(expText)) parts.push({ role: "explanation", text: expText });
 
   return {
     id:    question.id || Math.random().toString(36).slice(2),

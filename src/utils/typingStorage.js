@@ -200,7 +200,7 @@ export async function saveSession({ wpm, accuracy }) {
  *   isNewBest,
  * }
  */
-export function deriveStats(record, currentWpm = null) {
+export function deriveStats(record, currentWpm = null, durationSeconds = 60) {
   if (!record) return null;
 
   const { bestWpm, recentWpm, recentAccuracy, totalSessions } = record;
@@ -212,14 +212,35 @@ export function deriveStats(record, currentWpm = null) {
   const averageAccuracy = avg(recentAccuracy);
   const recentMin       = recentWpm.length > 0 ? Math.min(...recentWpm) : 0;
 
-  let trend = "stable";
-  if (recentWpm.length >= 4) {
-    const recent   = avg(recentWpm.slice(-3));
-    const previous = avg(recentWpm.slice(-6, -3));
+  // Trend: compare the average of the most recent 5 sessions against the
+  // 5 sessions before that. Requires at least 10 sessions total so both
+  // halves of the comparison are fully populated — fewer than that and a
+  // single outlier session can swing the label either way on short tests.
+  // Returns null when there isn't enough data yet so the UI can hide the
+  // label entirely rather than show a meaningless guess.
+  //
+  // Threshold scales with test duration because shorter tests have higher
+  // session-to-session WPM variance — a single awkward passage on a 30s
+  // test moves the number much more than the same passage on a 120s test:
+  //   ≤ 30s  → ±6 WPM  (high noise)
+  //   ≤ 60s  → ±4 WPM  (medium noise)
+  //   > 60s  → ±3 WPM  (lower noise, longer sample per session)
+  const TREND_WINDOW = 5; // sessions per half
+  const TREND_MIN    = TREND_WINDOW * 2; // need both halves full
+
+  const TREND_THRESHOLD =
+    durationSeconds <= 30 ? 6 :
+    durationSeconds <= 60 ? 4 : 3;
+
+  let trend = null;
+  if (recentWpm.length >= TREND_MIN) {
+    const recent   = avg(recentWpm.slice(-TREND_WINDOW));
+    const previous = avg(recentWpm.slice(-(TREND_WINDOW * 2), -TREND_WINDOW));
     if (previous > 0) {
       const delta = recent - previous;
-      if (delta >  2) trend = "up";
-      if (delta < -2) trend = "down";
+      if (delta >  TREND_THRESHOLD) trend = "up";
+      else if (delta < -TREND_THRESHOLD) trend = "down";
+      else trend = "stable";
     }
   }
 

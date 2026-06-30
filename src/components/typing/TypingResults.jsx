@@ -333,8 +333,8 @@ function MetricsBar({ wpm, accuracy, score, derived }) {
       {sep}
       <span>Score: <strong style={{ color: "var(--accent-primary)" }}>{score}</strong><Delta value={scoreDelta} /></span>
       {derived && <>{sep}<span>Best <strong style={{ color: "var(--accent-primary)" }}>{derived.bestWpm}wpm</strong></span></>}
-      {derived && <>{sep}<span>Avg <strong style={{ color: "var(--accent-primary)" }}>{derived.averageWpm}wpm</strong> <span style={{ fontSize: "12px" }}>({Math.min(derived.totalSessions, 10)} sessions)</span></span></>}
-      {derived && <>{sep}<span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>Trend <TrendIcon trend={derived.trend} /><strong style={{ color: derived.trend === "up" ? "var(--lush-lime)" : derived.trend === "down" ? "var(--poppy-red)" : "var(--text-secondary)" }}>{derived.trend === "up" ? "improving" : derived.trend === "down" ? "declining" : "stable"}</strong></span></>}
+      {derived && <>{sep}<span>Avg <strong style={{ color: "var(--accent-primary)" }}>{derived.averageWpm}wpm</strong> <span style={{ fontSize: "12px" }}>({derived.totalSessions} session{derived.totalSessions !== 1 ? "s" : ""})</span></span></>}
+      {derived && derived.trend !== null && <>{sep}<span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>Trend <TrendIcon trend={derived.trend} /><strong style={{ color: derived.trend === "up" ? "var(--lush-lime)" : derived.trend === "down" ? "var(--poppy-red)" : "var(--text-secondary)" }}>{derived.trend === "up" ? "improving" : derived.trend === "down" ? "declining" : "stable"}</strong></span></>}
     </div>
   );
 }
@@ -572,7 +572,7 @@ export default function TypingResults({
   useEffect(() => {
     if (savedRef.current) return;
     savedRef.current = true;
-    saveSession({ wpm, accuracy }).then((rec) => setDerived(deriveStats(rec, wpm)));
+    saveSession({ wpm, accuracy }).then((rec) => setDerived(deriveStats(rec, wpm, elapsedSeconds)));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const wpmGoalReached = dailyGoalWpm && wpm >= dailyGoalWpm;

@@ -12,7 +12,7 @@
  * - Increment the major version (e.g., 1.0.0 → 2.0.0) for breaking changes
  */
 
-export const APP_VERSION = "1.4.0";
+export const APP_VERSION = "1.5.0";
 
 /**
  * Check if stored data version matches current app version.
