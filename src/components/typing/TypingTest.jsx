@@ -17,7 +17,7 @@ import TypingDisplay from "./TypingDisplay";
 
 const IDLE_TIMEOUT_MS = 5000;
 
-export default function TypingTest({ passages, duration, onFinish }) {
+export default function TypingTest({ passages, duration, onFinish, onFirstAttempt }) {
   // ── Passage + part position ───────────────────────────────────────────────
   const [passageIndex, setPassageIndex] = useState(0);
   const [partIndex,    setPartIndex]    = useState(0);
@@ -172,7 +172,10 @@ export default function TypingTest({ passages, duration, onFinish }) {
     const value = e.target.value;
 
     // First keystroke starts the test
-    if (!started && value.length > 0) setStarted(true);
+    if (!started && value.length > 0) {
+      setStarted(true);
+      onFirstAttempt?.();
+    }
 
     // Any keystroke while paused → resume first, then process the character
     if (isPausedRef.current) {
@@ -280,7 +283,7 @@ export default function TypingTest({ passages, duration, onFinish }) {
 
     typedRef.current = value;
     setTyped(value);
-  }, [started, triggerResume, triggerPause, resetIdleTimer]);
+  }, [started, triggerResume, triggerPause, resetIdleTimer, onFirstAttempt]);
 
   // ── End early ─────────────────────────────────────────────────────────────
   const handleEndEarly = useCallback(() => {

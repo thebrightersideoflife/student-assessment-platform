@@ -2,6 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getTypingReadyModules } from "../src/utils/typingContent.js";
 
+test("getTypingReadyModules falls back to the app's built-in registries when none are supplied", () => {
+  const modules = [{ id: "ITDSA", name: "Data Structures" }];
+  const ready = getTypingReadyModules(modules);
+
+  assert.ok(ready.some((mod) => mod.id === "ITDSA"));
+});
+
 test("getTypingReadyModules returns only modules that actually have extractable typing passages", () => {
   const modules = [
     { id: "ITDSA", name: "Data Structures" },
