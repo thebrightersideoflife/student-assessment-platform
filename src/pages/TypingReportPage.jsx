@@ -2,7 +2,7 @@
 //
 // Thin orchestration page for the typing progress report. All the actual
 // rendering lives in TypingProgressReport.jsx — this file's only job is:
-//   - load data from localStorage (sessions, settings, global record)
+//   - load data from localStorage (sessions, settings, goal history)
 //   - set document.title so a "Print to PDF" gives a sensible filename
 //   - own the print button / back button
 //
@@ -15,7 +15,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { loadSessions, loadSettings, loadAllRecords, loadGoalHistory, TYPING_MODE_IDS } from "../utils/typingStorage";
+import { loadSessions, loadSettings, loadGoalHistory, TYPING_MODE_IDS } from "../utils/typingStorage";
 import TypingProgressReport from "../components/typing/TypingProgressReport";
 import "../assets/styles/typingReport.css";
 
@@ -37,7 +37,6 @@ export default function TypingReportPage() {
 
   const [sessions,    setSessions]    = useState([]);
   const [settings,    setSettings]    = useState(null);
-  const [records,     setRecords]     = useState(null); // { beginner, intermediate, normal }
   const [goalHistory, setGoalHistory] = useState([]);
   const [loading,     setLoading]     = useState(true);
 
@@ -53,12 +52,10 @@ export default function TypingReportPage() {
     (async () => {
       const sessionData     = loadSessions();
       const settingsData    = loadSettings();
-      const recordsData     = await loadAllRecords();
       const goalHistoryData = loadGoalHistory();
       if (!mounted) return;
       setSessions(sessionData);
       setSettings(settingsData);
-      setRecords(recordsData);
       setGoalHistory(goalHistoryData);
       setActiveMode((prev) => prev ?? settingsData?.mode ?? "beginner");
       setLoading(false);
@@ -84,8 +81,7 @@ export default function TypingReportPage() {
   const modeSummaries = useMemo(() => {
     return TYPING_MODE_IDS.map((modeId) => {
       const filtered = sessions.filter((s) => s.mode === modeId);
-      const record = records?.[modeId] ?? null;
-      const bestWpm = record?.bestWpm ?? (filtered.length > 0 ? Math.max(...filtered.map((s) => s.wpm)) : 0);
+      const bestWpm = filtered.length > 0 ? Math.max(...filtered.map((s) => s.wpm)) : 0;
       const avgAccuracy = filtered.length > 0
         ? Math.round(filtered.reduce((sum, s) => sum + s.accuracy, 0) / filtered.length)
         : 0;
@@ -96,7 +92,7 @@ export default function TypingReportPage() {
         avgAccuracy,
       };
     });
-  }, [records, sessions]);
+  }, [sessions]);
 
   // ── document.title for the PDF filename ───────────────────────────────────
   useEffect(() => {
@@ -180,7 +176,6 @@ export default function TypingReportPage() {
               key={activeMode}
               mode={activeMode}
               sessions={modeSessions}
-              record={records?.[activeMode] ?? null}
               goalWpm={settings?.goalWpm?.[activeMode] ?? null}
               goalTime={settings?.goalTime ?? null}
               goalHistory={modeGoalHistory}

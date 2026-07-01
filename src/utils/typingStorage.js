@@ -1,92 +1,41 @@
 // src/utils/typingStorage.js
 // Persistent performance storage for the typing practice feature.
 //
-// ── Per-difficulty record ────────────────────────────────────────────────
-// Stats are split by difficulty mode (beginner / intermediate / normal),
-// NOT by module. Raw typing speed and accuracy are a property of the
-// person practising at a given difficulty — but "beginner" (lowercase, no
-// punctuation) and "normal" (full punctuation, sentence case) measure
-// meaningfully different skills. Blending them into one record made a
-// beginner-mode PR look like a plateau-then-crash the moment someone tried
-// Normal, which is misleading rather than motivating. Each mode gets its
-// own bests, its own recent-session window, and its own trend.
+// ── One session log, one source of truth ─────────────────────────────────
+// There used to be two independent stores: a per-mode "record" summary
+// (`typing:perf:v1:<mode>` — bestWpm + a 20-session ring buffer + an
+// uncapped totalSessions counter, written by TypingResults on mount) and
+// this session detail log (`typing:sessions:v1`, written synchronously by
+// TypingPracticePage.handleFinish). TypingResults read its stats from the
+// former; TypingReportPage read from the latter. They drifted apart —
+// different averaging windows, different session counts, and a save-order
+// gap (the record was written asynchronously, after the results screen
+// had already mounted) meant a session could land in one store and not
+// the other. The record store is gone. Everything — results screen,
+// progress report, "new best" detection — now derives from this one
+// session log via deriveStats() below, so there's nothing left to
+// disagree with itself.
 //
-// Storage key: `typing:perf:v1:<mode>`  (previously the single
-// `typing:perf:v1:global` key, which is no longer read — records reset
-// per mode the first time this version runs. That's intentional: a
-// conflated global "best" wasn't a meaningful number to carry forward.)
+// Stats are still split by difficulty mode (beginner / intermediate /
+// normal), NOT by module: "beginner" (lowercase, no punctuation) and
+// "normal" (full punctuation, sentence case) measure meaningfully
+// different skills, so every stat a caller computes here should be over a
+// single mode's sessions, never blended across modes.
 //
-// ── Tamper protection ───────────────────────────────────────────────────────
-// Every record is stored alongside an HMAC-SHA-256 signature. On read,
-// the signature is recomputed and compared; a mismatch silently discards
-// the record. Stops casual console edits; a reader of this source can
-// still forge a valid sig — acceptable for a study tool.
-//
-// ── Storage schema ──────────────────────────────────────────────────────────
-// Key:   `typing:perf:v1:<mode>`
-// Value: JSON string of { data: RecordData, sig: string }
-//
-// RecordData = {
-//   bestWpm:        number,
-//   recentWpm:      number[],   // ring buffer, last MAX_RECENT sessions
-//   recentAccuracy: number[],
-//   totalSessions:  number,
-//   lastPlayed:     string,     // ISO date "YYYY-MM-DD"
-// }
+// ── Storage schema ──────────────────────────────────────────────────────
+// Key:   `typing:sessions:v1`
+// Value: JSON array of SessionDetail (see below), oldest-first, capped at
+// MAX_SESSIONS_PER_MODE entries *per mode* (older sessions of that same
+// mode are dropped first — see capSessionsPerMode()). Note this cap is
+// per-mode, not shared: previously all three modes shared one 50-entry
+// cap, so practising two modes could silently evict a third mode's
+// history far sooner than its own "totalSessions" counter suggested.
 
-const STORAGE_VERSION = "v1";
 export const TYPING_MODE_IDS = ["beginner", "intermediate", "normal"];
-const recordKey = (mode) => `typing:perf:${STORAGE_VERSION}:${mode}`;
-const MAX_RECENT      = 20;   // larger window makes sense for a per-mode record
 
 function assertMode(mode) {
   if (!TYPING_MODE_IDS.includes(mode)) {
     throw new Error(`[typingStorage] Unknown mode "${mode}" — expected one of ${TYPING_MODE_IDS.join(", ")}`);
-  }
-}
-
-// ── HMAC key ─────────────────────────────────────────────────────────────────
-// Bump HMAC_SECRET if you change the RecordData schema in a breaking way —
-// that will invalidate existing records so users start fresh.
-const HMAC_SECRET = "tp-perf-hmac-key-2026-v3-per-mode";
-
-// ── Crypto helpers ────────────────────────────────────────────────────────────
-
-let _cryptoKey = null;
-
-async function getCryptoKey() {
-  if (_cryptoKey) return _cryptoKey;
-  const enc     = new TextEncoder();
-  const keyData = enc.encode(HMAC_SECRET);
-  _cryptoKey    = await crypto.subtle.importKey(
-    "raw", keyData,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign", "verify"]
-  );
-  return _cryptoKey;
-}
-
-async function sign(payload) {
-  const key    = await getCryptoKey();
-  const enc    = new TextEncoder();
-  const sigBuf = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
-  return Array.from(new Uint8Array(sigBuf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function verify(payload, hexSig) {
-  try {
-    const expected = await sign(payload);
-    if (expected.length !== hexSig.length) return false;
-    let diff = 0;
-    for (let i = 0; i < expected.length; i++) {
-      diff |= expected.charCodeAt(i) ^ hexSig.charCodeAt(i);
-    }
-    return diff === 0;
-  } catch {
-    return false;
   }
 }
 
@@ -128,111 +77,40 @@ export function computeSessionStats({ correctChars, incorrectChars, elapsedSecon
   return { wpm, rawWpm, accuracy, score, consistency };
 }
 
-// ── Read ──────────────────────────────────────────────────────────────────────
-
-/**
- * loadRecord(mode) → RecordData | null
- *
- * Returns the typing record for the given difficulty mode, or null if:
- *   - nothing stored yet for that mode
- *   - JSON is malformed
- *   - signature doesn't match (tampered or HMAC_SECRET bumped)
- */
-export async function loadRecord(mode) {
-  assertMode(mode);
-  try {
-    const raw = localStorage.getItem(recordKey(mode));
-    if (!raw) return null;
-
-    const { data, sig } = JSON.parse(raw);
-    if (!data || !sig) return null;
-
-    const dataStr = JSON.stringify(data);
-    const valid   = await verify(dataStr, sig);
-    if (!valid) {
-      console.warn(`[typingStorage] Signature mismatch — "${mode}" record discarded.`);
-      localStorage.removeItem(recordKey(mode));
-      return null;
-    }
-
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * loadAllRecords() → { beginner: RecordData|null, intermediate: RecordData|null, normal: RecordData|null }
- * Convenience helper for screens (like the progress report) that need every mode at once.
- */
-export async function loadAllRecords() {
-  const entries = await Promise.all(TYPING_MODE_IDS.map(async (mode) => [mode, await loadRecord(mode)]));
-  return Object.fromEntries(entries);
-}
-
-// ── Write ─────────────────────────────────────────────────────────────────────
-
-/**
- * saveSession({ wpm, accuracy, mode }) → RecordData
- *
- * Merges a completed session into the record for that difficulty mode and
- * returns the updated record. Creates a new record if none exists yet for
- * that mode.
- */
-export async function saveSession({ wpm, accuracy, mode }) {
-  assertMode(mode);
-  const existing = await loadRecord(mode);
-
-  const prev = existing ?? {
-    bestWpm:        0,
-    recentWpm:      [],
-    recentAccuracy: [],
-    totalSessions:  0,
-    lastPlayed:     null,
-  };
-
-  const recentWpm      = [...prev.recentWpm,      wpm].slice(-MAX_RECENT);
-  const recentAccuracy = [...prev.recentAccuracy, accuracy].slice(-MAX_RECENT);
-
-  const updated = {
-    bestWpm:       Math.max(prev.bestWpm, wpm),
-    recentWpm,
-    recentAccuracy,
-    totalSessions: prev.totalSessions + 1,
-    lastPlayed:    new Date().toISOString().slice(0, 10),
-  };
-
-  const dataStr = JSON.stringify(updated);
-  const sig     = await sign(dataStr);
-
-  localStorage.setItem(recordKey(mode), JSON.stringify({ data: updated, sig }));
-
-  return updated;
-}
-
 // ── Derived stats ─────────────────────────────────────────────────────────────
 
 /**
- * deriveStats(record, currentWpm?) → DerivedStats | null
+ * deriveStats(modeSessions, currentWpm?, durationSeconds?) → DerivedStats | null
+ *
+ * modeSessions must already be filtered to a single difficulty mode and
+ * oldest-first (exactly what `loadSessions().filter(s => s.mode === mode)`
+ * gives you) — this is the SAME array TypingReportPage / TypingProgressReport
+ * use to draw their charts, so anything computed here will always agree
+ * with what the report shows.
  *
  * DerivedStats = {
  *   bestWpm, averageWpm, averageAccuracy, recentMin,
- *   trend: "up" | "down" | "stable",
+ *   trend: "up" | "down" | "stable" | null,
  *   totalSessions,
  *   isNewBest,
  * }
  */
-export function deriveStats(record, currentWpm = null, durationSeconds = 60) {
-  if (!record) return null;
+export function deriveStats(modeSessions, currentWpm = null, durationSeconds = 60) {
+  if (!modeSessions || modeSessions.length === 0) return null;
 
-  const { bestWpm, recentWpm, recentAccuracy, totalSessions } = record;
+  const wpmVals = modeSessions.map((s) => s.wpm);
+  const accVals = modeSessions.map((s) => s.accuracy);
 
   const avg = (arr) =>
     arr.length === 0 ? 0 : Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
 
-  const averageWpm      = avg(recentWpm);
-  const averageAccuracy = avg(recentAccuracy);
-  const recentMin       = recentWpm.length > 0 ? Math.min(...recentWpm) : 0;
+  const bestWpm          = Math.max(...wpmVals);
+  const averageWpm       = avg(wpmVals);
+  const averageAccuracy  = avg(accVals);
+
+  const RECENT_WINDOW  = 20;
+  const recentWpmVals  = wpmVals.slice(-RECENT_WINDOW);
+  const recentMin      = recentWpmVals.length > 0 ? Math.min(...recentWpmVals) : 0;
 
   // Trend: compare the average of the most recent 5 sessions against the
   // 5 sessions before that. Requires at least 10 sessions total so both
@@ -255,9 +133,9 @@ export function deriveStats(record, currentWpm = null, durationSeconds = 60) {
     durationSeconds <= 60 ? 4 : 3;
 
   let trend = null;
-  if (recentWpm.length >= TREND_MIN) {
-    const recent   = avg(recentWpm.slice(-TREND_WINDOW));
-    const previous = avg(recentWpm.slice(-(TREND_WINDOW * 2), -TREND_WINDOW));
+  if (wpmVals.length >= TREND_MIN) {
+    const recent   = avg(wpmVals.slice(-TREND_WINDOW));
+    const previous = avg(wpmVals.slice(-(TREND_WINDOW * 2), -TREND_WINDOW));
     if (previous > 0) {
       const delta = recent - previous;
       if (delta >  TREND_THRESHOLD) trend = "up";
@@ -266,25 +144,26 @@ export function deriveStats(record, currentWpm = null, durationSeconds = 60) {
     }
   }
 
-  const isNewBest = currentWpm !== null && currentWpm >= bestWpm;
+  // isNewBest compares the just-finished session's wpm against the best of
+  // everything BEFORE it (not including it) — modeSessions is expected to
+  // already contain the current session as its last entry (saveSessionDetail
+  // runs synchronously before the results screen mounts), so we exclude that
+  // last entry to get the "prior" best to beat.
+  const priorWpmVals = wpmVals.slice(0, -1);
+  const priorBest    = priorWpmVals.length > 0 ? Math.max(...priorWpmVals) : 0;
+  const isNewBest    = currentWpm !== null && currentWpm >= priorBest;
 
-  return { bestWpm, averageWpm, averageAccuracy, recentMin, trend, totalSessions, isNewBest };
+  return {
+    bestWpm,
+    averageWpm,
+    averageAccuracy,
+    recentMin,
+    trend,
+    totalSessions: modeSessions.length,
+    isNewBest,
+  };
 }
 
-/**
- * clearRecord(mode) — wipes the typing record for one difficulty mode.
- */
-export async function clearRecord(mode) {
-  assertMode(mode);
-  localStorage.removeItem(recordKey(mode));
-}
-
-/**
- * clearAllRecords() — wipes the typing record for every difficulty mode.
- */
-export async function clearAllRecords() {
-  for (const mode of TYPING_MODE_IDS) localStorage.removeItem(recordKey(mode));
-}
 // ── Settings persistence ──────────────────────────────────────────────────────
 // Stores the user's chosen duration, mode, and WPM goal(s) across page loads.
 // No HMAC needed — these are preferences, not performance records.
@@ -376,17 +255,17 @@ export function saveSettings(partial) {
   }
 }
 
-// ── Session detail log (for the progress report) ───────────────────────────
+// ── Session detail log ───────────────────────────────────────────────────
 //
-// A richer, per-session record used only by the typing progress report's
-// charts. The existing `typing:perf:v1:global` record above is left
-// completely untouched — it still backs the results-page stats and trend.
-// This is separate, analytical data: no HMAC, since there's nothing here
-// worth tampering with and signature overhead isn't justified.
+// The single record of every completed session. Backs both the results
+// screen's stats (via deriveStats, above) and the progress report's
+// charts. No HMAC: there's nothing here worth tampering with and signature
+// overhead isn't justified for a study tool.
 //
 // Storage key: `typing:sessions:v1`
-// Value: JSON array of SessionDetail, capped at MAX_SESSIONS entries
-// (oldest dropped first — a simple ring buffer via Array.slice).
+// Value: JSON array of SessionDetail, oldest-first, capped at
+// MAX_SESSIONS_PER_MODE entries *per mode* (oldest of that mode dropped
+// first — see capSessionsPerMode()).
 //
 // SessionDetail = {
 //   ts:             number,   // Date.now()
@@ -406,14 +285,41 @@ export function saveSettings(partial) {
 // }
 
 const SESSIONS_KEY = "typing:sessions:v1";
-const MAX_SESSIONS = 50;
+const MAX_SESSIONS_PER_MODE = 50;
 
 /**
- * saveSessionDetail(detail) — appends a record to the capped session log,
- * advances the dedicated uncapped session counter, and checks whether this
- * session's wpm just cleared the currently-active goal period (closing it
- * out as "reached" if so). Returns the post-increment session count, in
- * case the caller wants it (e.g. for its own goal-aware messaging).
+ * capSessionsPerMode(sessions) → SessionDetail[]
+ *
+ * Keeps at most MAX_SESSIONS_PER_MODE most-recent entries FOR EACH MODE,
+ * dropping older overflow of that same mode, and returns the result back
+ * in oldest-first order (required by deriveStats' trend calc and the
+ * report's charts, which both assume chronological order).
+ *
+ * This replaces a single shared 50-entry cap across all three modes,
+ * which meant practising two modes could quietly evict a third mode's
+ * history long before that mode's own session count reached 50.
+ */
+function capSessionsPerMode(sessions) {
+  const countByMode = {};
+  const kept = [];
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const s = sessions[i];
+    const count = countByMode[s.mode] || 0;
+    if (count < MAX_SESSIONS_PER_MODE) {
+      kept.push(s);
+      countByMode[s.mode] = count + 1;
+    }
+  }
+  return kept.reverse();
+}
+
+/**
+ * saveSessionDetail(detail) — appends a record to the per-mode-capped
+ * session log, advances the dedicated uncapped session counter, and checks
+ * whether this session's wpm just cleared the currently-active goal period
+ * (closing it out as "reached" if so). Returns the post-increment session
+ * count, in case the caller wants it (e.g. for its own goal-aware
+ * messaging).
  *
  * Silently no-ops on storage failure (e.g. quota exceeded) rather than
  * throwing — losing one detail record should never break the typing flow.
@@ -422,7 +328,7 @@ export function saveSessionDetail(detail) {
   let sessionCount = getSessionCount();
   try {
     const existing = loadSessions();
-    const updated  = [...existing, detail].slice(-MAX_SESSIONS);
+    const updated  = capSessionsPerMode([...existing, detail]);
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
 
     sessionCount = incrementSessionCount();
@@ -485,19 +391,11 @@ export function aggregateCharErrors(sessions) {
 //
 // Session counting here uses a DEDICATED uncapped counter
 // (`typing:sessionCount:v1`), incremented by saveSessionDetail itself,
-// rather than the global record's `totalSessions` (see saveSession above).
-// Two reasons:
-//   1. The session detail log (typing:sessions:v1) is capped at
-//      MAX_SESSIONS and rolls old entries off, so loadSessions().length
-//      isn't a stable basis for "sessions to reach a goal" once the ring
-//      buffer wraps past 50.
-//   2. The global record's totalSessions is incremented by saveSession(),
-//      which is called from TypingResults.jsx as an async side effect on
-//      mount — NOT synchronously from the same place saveSessionDetail is
-//      called in TypingPracticePage.jsx. Relying on it here would risk
-//      reading a stale pre-increment value due to that ordering gap.
-// A dedicated counter, incremented in the same synchronous call as
-// saveSessionDetail, has neither problem.
+// rather than deriveStats' `totalSessions` (which is just modeSessions.length).
+// The session detail log (typing:sessions:v1) is capped per mode at
+// MAX_SESSIONS_PER_MODE and rolls old entries off, so loadSessions().length
+// isn't a stable basis for "sessions to reach a goal" once a mode's window
+// wraps past that cap. A dedicated, never-capped counter avoids that.
 
 const SESSION_COUNT_KEY = "typing:sessionCount:v1";
 

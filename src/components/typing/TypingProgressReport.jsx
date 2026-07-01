@@ -244,9 +244,9 @@ const MODE_LABELS = { beginner: "Beginner", intermediate: "Intermediate", normal
 // page filters before this component ever sees them), so every stat below
 // — best WPM, average WPM, average accuracy — reflects that one mode only.
 
-function Cover({ sessions, record, mode }) {
+function Cover({ sessions, mode }) {
   const totalSessions = sessions.length;
-  const bestWpm = record?.bestWpm ?? (sessions.length > 0 ? Math.max(...sessions.map((s) => s.wpm)) : 0);
+  const bestWpm = sessions.length > 0 ? Math.max(...sessions.map((s) => s.wpm)) : 0;
   const avgWpm = sessions.length > 0
     ? Math.round(sessions.reduce((sum, s) => sum + s.wpm, 0) / sessions.length)
     : 0;
@@ -286,7 +286,7 @@ function Cover({ sessions, record, mode }) {
 
 // ── Main export ───────────────────────────────────────────────────────────
 
-export default function TypingProgressReport({ sessions, record, goalWpm, goalTime, mode }) {
+export default function TypingProgressReport({ sessions, goalWpm, goalTime, mode }) {
   const modeLabel = MODE_LABELS[mode] || mode;
 
   if (sessions.length === 0) {
@@ -300,7 +300,7 @@ export default function TypingProgressReport({ sessions, record, goalWpm, goalTi
 
   return (
     <div>
-      <Cover sessions={sessions} record={record} mode={mode} />
+      <Cover sessions={sessions} mode={mode} />
 
       {sessions.length < 4 && (
         <p className="tpr-section-note" style={{ marginBottom: "20px" }}>

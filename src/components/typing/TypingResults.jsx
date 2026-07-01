@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { useContext } from "react";
 import { ThemeContext } from "../../context/ThemeContext";
-import { saveSession, deriveStats, computeSessionStats, loadSessions } from "../../utils/typingStorage";
+import { deriveStats, computeSessionStats, loadSessions } from "../../utils/typingStorage";
 
 // ── Goal confetti ─────────────────────────────────────────────────────────────
 //
@@ -567,12 +567,17 @@ export default function TypingResults({
                  : "var(--poppy-red)";
 
   const [derived, setDerived] = useState(null);
-  const savedRef = useRef(false);
 
+  // saveSessionDetail (in typingStorage) is called synchronously in
+  // TypingPracticePage's handleFinish, BEFORE setResult — so by the time
+  // this component mounts, the just-finished session is already the last
+  // entry in the session log. Reading it back here (instead of maintaining
+  // a separate write-your-own-summary record) guarantees these stats can
+  // never drift from what TypingReportPage shows, since both read the
+  // exact same mode-filtered array.
   useEffect(() => {
-    if (savedRef.current) return;
-    savedRef.current = true;
-    saveSession({ wpm, accuracy, mode }).then((rec) => setDerived(deriveStats(rec, wpm, elapsedSeconds)));
+    const modeSessions = loadSessions().filter((s) => s.mode === mode);
+    setDerived(deriveStats(modeSessions, wpm, elapsedSeconds));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const wpmGoalReached = dailyGoalWpm && wpm >= dailyGoalWpm;
