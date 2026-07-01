@@ -3,6 +3,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { modules } from "../data/modules";
 import { weeks as weekRegistry } from "../data/weeks";
 import HeroSection from "../components/home/HeroSection";
+import TypingPracticeSection from "../components/home/TypingPracticeSection";
 import PodcastSection from "../components/home/PodcastSection";
 import FeaturedModulesSection from "../components/home/FeaturedModulesSection";
 import OfflineSection from "../components/home/OfflineSection";
@@ -24,6 +25,7 @@ export default function HomePage() {
   return (
     <div style={{ overflowX: "hidden" }}>
       <HeroSection theme={theme} totalWeeks={totalWeeks} />
+      <TypingPracticeSection theme={theme} />
       <PodcastSection theme={theme} />
 
       {/* ════════════════════════════════════════════════════

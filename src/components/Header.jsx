@@ -181,7 +181,23 @@ export default function Header() {
     }
 
     const results = queryIndex(searchIndex, searchQuery, 8);
-    setSearchResults(results);
+    const typedModuleMatches = searchIndex
+      .filter((item) => item.type === "module" && item._norm?.includes(normalize(searchQuery)))
+      .slice(0, 3);
+
+    const typingResults = typedModuleMatches.length > 0
+      ? typedModuleMatches.map((item) => ({
+          type: "typing",
+          id: `${item.id}_typing`,
+          label: `${item.label} — typing practice`,
+          sublabel: "Practice typing with this module",
+          path: `/typing?module=${item.id}`,
+          _norm: item._norm,
+        }))
+      : [];
+
+    const mergedResults = [...typingResults, ...results].slice(0, 8);
+    setSearchResults(mergedResults);
     setSelectedIndex(-1);
   }, [searchQuery, searchIndex]);
 
@@ -257,6 +273,8 @@ export default function Header() {
     closeSearch();
   };
 
+  const normalize = (s = "") => String(s).toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+
   const ResultIcon = ({ type }) => {
     if (type === "roadmap") {
       return (
@@ -271,6 +289,18 @@ export default function Header() {
           <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
           <line x1="8" y1="21" x2="16" y2="21"/>
           <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      );
+    }
+    if (type === "typing") {
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <line x1="6" y1="10" x2="6" y2="10" strokeWidth="2.5" />
+          <line x1="10" y1="10" x2="10" y2="10" strokeWidth="2.5" />
+          <line x1="14" y1="10" x2="14" y2="10" strokeWidth="2.5" />
+          <line x1="18" y1="10" x2="18" y2="10" strokeWidth="2.5" />
+          <line x1="8" y1="16" x2="16" y2="16" strokeWidth="2" />
         </svg>
       );
     }
@@ -301,17 +331,17 @@ export default function Header() {
           <Link to="/modules" className={`nav-link ${isActive("/modules") ? "active" : ""}`}>
             Modules
           </Link>
-          <Link to="/search/questions" className={`nav-link ${isActive("/search/questions") ? "active" : ""}`}>
-            Search Questions
-          </Link>
-          <Link to="/progress" className={`nav-link ${isActive("/progress") ? "active" : ""}`}>
-            My Progress
-          </Link>
           <Link to="/typing" className={`nav-link ${isActive("/typing") ? "active" : ""}`}>
             Typing
           </Link>
+          <Link to="/search/questions" className={`nav-link ${isActive("/search/questions") ? "active" : ""}`}>
+            Search Questions
+          </Link>
           <Link to="/support" className={`nav-link ${isActive("/support") ? "active" : ""}`}>
             Support
+          </Link>          
+          <Link to="/progress" className={`nav-link ${isActive("/progress") ? "active" : ""}`}>
+            My Progress
           </Link>
         </nav>
 
@@ -382,7 +412,7 @@ export default function Header() {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search modules, weeks, roadmaps…"
+              placeholder="Search modules, weeks, roadmaps, typing…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}

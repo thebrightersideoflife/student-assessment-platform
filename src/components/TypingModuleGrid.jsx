@@ -149,23 +149,38 @@ export default function TypingModuleGrid({ modules, loading, onSelect }) {
 
   return (
     <>
-      <div
-        className="typing-module-grid"
-        style={{
-          display:             "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap:                 "20px",
-        }}
-      >
-        {available.map(mod => (
-          <ModuleCard
-            key={mod.id}
-            module={mod}
-            loading={loading}
-            onSelect={onSelect}
-          />
-        ))}
-      </div>
+      {available.length > 0 ? (
+        <div
+          className="typing-module-grid"
+          style={{
+            display:             "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap:                 "20px",
+          }}
+        >
+          {available.map(mod => (
+            <ModuleCard
+              key={mod.id}
+              module={mod}
+              loading={loading}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      ) : (
+        <div
+          style={{
+            padding: "28px",
+            borderRadius: "20px",
+            border: "1px dashed rgba(var(--border-color-rgb), 0.45)",
+            background: "rgba(var(--bg-card-rgb), 0.6)",
+            textAlign: "center",
+            color: "var(--text-secondary)",
+          }}
+        >
+          No modules match that search yet. Try a different term or clear the filter.
+        </div>
+      )}
 
       <style>{`
         @media (max-width: 640px) {

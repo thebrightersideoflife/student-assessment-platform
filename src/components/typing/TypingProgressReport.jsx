@@ -236,36 +236,15 @@ function StrugglingCharsChart({ sessions }) {
   );
 }
 
-// ── Section: performance by difficulty ─────────────────────────────────────
-
 const MODE_LABELS = { beginner: "Beginner", intermediate: "Intermediate", normal: "Normal" };
 
-function ByDifficultyPills({ sessions }) {
-  const modes = ["beginner", "intermediate", "normal"];
-  const stats = modes.map((mode) => {
-    const inMode = sessions.filter((s) => s.mode === mode);
-    const avgWpm = inMode.length > 0
-      ? Math.round(inMode.reduce((sum, s) => sum + s.wpm, 0) / inMode.length)
-      : null;
-    return { mode, avgWpm, count: inMode.length };
-  });
-
-  return (
-    <div className="tpr-pill-row">
-      {stats.map(({ mode, avgWpm, count }) => (
-        <div key={mode} className="card tpr-pill">
-          <div className="tpr-pill-label">{MODE_LABELS[mode]}</div>
-          <div className="tpr-pill-wpm">{avgWpm !== null ? `${avgWpm} wpm` : "—"}</div>
-          <div className="tpr-pill-sessions">{count} {count === 1 ? "session" : "sessions"}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ── Cover ─────────────────────────────────────────────────────────────────
+//
+// `sessions` here is already scoped to a single difficulty mode (the report
+// page filters before this component ever sees them), so every stat below
+// — best WPM, average WPM, average accuracy — reflects that one mode only.
 
-function Cover({ sessions, record }) {
+function Cover({ sessions, record, mode }) {
   const totalSessions = sessions.length;
   const bestWpm = record?.bestWpm ?? (sessions.length > 0 ? Math.max(...sessions.map((s) => s.wpm)) : 0);
   const avgWpm = sessions.length > 0
@@ -280,7 +259,7 @@ function Cover({ sessions, record }) {
   return (
     <div className="tpr-cover">
       <div>
-        <h1>Typing Progress Report</h1>
+        <h1>Typing Progress Report — {MODE_LABELS[mode] || mode}</h1>
         <div className="tpr-generated">Generated {generated} · last {totalSessions} {totalSessions === 1 ? "session" : "sessions"}</div>
       </div>
       <div className="tpr-cover-stats">
@@ -307,19 +286,21 @@ function Cover({ sessions, record }) {
 
 // ── Main export ───────────────────────────────────────────────────────────
 
-export default function TypingProgressReport({ sessions, record, goalWpm, goalTime }) {
+export default function TypingProgressReport({ sessions, record, goalWpm, goalTime, mode }) {
+  const modeLabel = MODE_LABELS[mode] || mode;
+
   if (sessions.length === 0) {
     return (
       <div className="tpr-empty">
-        <h2>No sessions yet</h2>
-        <p>Complete your first typing test to see your progress here.</p>
+        <h2>No {modeLabel} sessions yet</h2>
+        <p>Complete a typing test in {modeLabel} mode to see your progress here.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <Cover sessions={sessions} record={record} />
+      <Cover sessions={sessions} record={record} mode={mode} />
 
       {sessions.length < 4 && (
         <p className="tpr-section-note" style={{ marginBottom: "20px" }}>
@@ -347,19 +328,12 @@ export default function TypingProgressReport({ sessions, record, goalWpm, goalTi
         <ConsistencyChart sessions={sessions} />
       </ChartCard>
 
-      <ChartCard title="Struggling characters" note="Top 10, across all sessions">
+      <ChartCard title="Struggling characters" note={`Top 10, across ${modeLabel} sessions`}>
         <StrugglingCharsChart sessions={sessions} />
       </ChartCard>
 
-      <div className="tpr-section">
-        <div className="tpr-section-header">
-          <div className="tpr-section-title">Performance by difficulty</div>
-        </div>
-        <ByDifficultyPills sessions={sessions} />
-      </div>
-
       <div className="tpr-footer">
-        <span>Typing Practice — Progress Report</span>
+        <span>Typing Practice — Progress Report · {modeLabel}</span>
         <span>{sessions.length} sessions on record</span>
       </div>
     </div>

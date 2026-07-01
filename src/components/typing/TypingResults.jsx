@@ -547,7 +547,7 @@ const Icons = {
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export default function TypingResults({
-  result, moduleId, moduleName, durationLabel,
+  result, moduleId, moduleName, durationLabel, mode,
   dailyGoalWpm, dailyGoalTime,
   onOpenSettings, onRaiseGoal,
   onTypingReport, onGoToModule,
@@ -572,7 +572,7 @@ export default function TypingResults({
   useEffect(() => {
     if (savedRef.current) return;
     savedRef.current = true;
-    saveSession({ wpm, accuracy }).then((rec) => setDerived(deriveStats(rec, wpm, elapsedSeconds)));
+    saveSession({ wpm, accuracy, mode }).then((rec) => setDerived(deriveStats(rec, wpm, elapsedSeconds)));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const wpmGoalReached = dailyGoalWpm && wpm >= dailyGoalWpm;

@@ -1,15 +1,20 @@
 // src/utils/typingStorage.js
 // Persistent performance storage for the typing practice feature.
 //
-// ── Global (cross-module) record ────────────────────────────────────────────
-// Stats are intentionally NOT split by module. The point of the typing
-// feature is to improve raw typing speed and accuracy — those metrics
-// are a property of the person, not of the study module they happen to
-// be practising. A single global record gives meaningful trend data much
-// faster than per-module silos that each only accumulate a handful of
-// sessions before the student moves on.
+// ── Per-difficulty record ────────────────────────────────────────────────
+// Stats are split by difficulty mode (beginner / intermediate / normal),
+// NOT by module. Raw typing speed and accuracy are a property of the
+// person practising at a given difficulty — but "beginner" (lowercase, no
+// punctuation) and "normal" (full punctuation, sentence case) measure
+// meaningfully different skills. Blending them into one record made a
+// beginner-mode PR look like a plateau-then-crash the moment someone tried
+// Normal, which is misleading rather than motivating. Each mode gets its
+// own bests, its own recent-session window, and its own trend.
 //
-// Storage key: `typing:perf:v1:global`  (previously `typing:perf:v1:<moduleId>`)
+// Storage key: `typing:perf:v1:<mode>`  (previously the single
+// `typing:perf:v1:global` key, which is no longer read — records reset
+// per mode the first time this version runs. That's intentional: a
+// conflated global "best" wasn't a meaningful number to carry forward.)
 //
 // ── Tamper protection ───────────────────────────────────────────────────────
 // Every record is stored alongside an HMAC-SHA-256 signature. On read,
@@ -18,7 +23,7 @@
 // still forge a valid sig — acceptable for a study tool.
 //
 // ── Storage schema ──────────────────────────────────────────────────────────
-// Key:   `typing:perf:v1:global`
+// Key:   `typing:perf:v1:<mode>`
 // Value: JSON string of { data: RecordData, sig: string }
 //
 // RecordData = {
@@ -30,13 +35,20 @@
 // }
 
 const STORAGE_VERSION = "v1";
-const GLOBAL_KEY      = `typing:perf:${STORAGE_VERSION}:global`;
-const MAX_RECENT      = 20;   // larger window makes sense for a global record
+export const TYPING_MODE_IDS = ["beginner", "intermediate", "normal"];
+const recordKey = (mode) => `typing:perf:${STORAGE_VERSION}:${mode}`;
+const MAX_RECENT      = 20;   // larger window makes sense for a per-mode record
+
+function assertMode(mode) {
+  if (!TYPING_MODE_IDS.includes(mode)) {
+    throw new Error(`[typingStorage] Unknown mode "${mode}" — expected one of ${TYPING_MODE_IDS.join(", ")}`);
+  }
+}
 
 // ── HMAC key ─────────────────────────────────────────────────────────────────
 // Bump HMAC_SECRET if you change the RecordData schema in a breaking way —
 // that will invalidate existing records so users start fresh.
-const HMAC_SECRET = "tp-perf-hmac-key-2026-v2-global";
+const HMAC_SECRET = "tp-perf-hmac-key-2026-v3-per-mode";
 
 // ── Crypto helpers ────────────────────────────────────────────────────────────
 
@@ -119,16 +131,17 @@ export function computeSessionStats({ correctChars, incorrectChars, elapsedSecon
 // ── Read ──────────────────────────────────────────────────────────────────────
 
 /**
- * loadRecord() → RecordData | null
+ * loadRecord(mode) → RecordData | null
  *
- * Returns the global typing record, or null if:
- *   - nothing stored yet
+ * Returns the typing record for the given difficulty mode, or null if:
+ *   - nothing stored yet for that mode
  *   - JSON is malformed
  *   - signature doesn't match (tampered or HMAC_SECRET bumped)
  */
-export async function loadRecord() {
+export async function loadRecord(mode) {
+  assertMode(mode);
   try {
-    const raw = localStorage.getItem(GLOBAL_KEY);
+    const raw = localStorage.getItem(recordKey(mode));
     if (!raw) return null;
 
     const { data, sig } = JSON.parse(raw);
@@ -137,8 +150,8 @@ export async function loadRecord() {
     const dataStr = JSON.stringify(data);
     const valid   = await verify(dataStr, sig);
     if (!valid) {
-      console.warn("[typingStorage] Signature mismatch — global record discarded.");
-      localStorage.removeItem(GLOBAL_KEY);
+      console.warn(`[typingStorage] Signature mismatch — "${mode}" record discarded.`);
+      localStorage.removeItem(recordKey(mode));
       return null;
     }
 
@@ -148,18 +161,27 @@ export async function loadRecord() {
   }
 }
 
+/**
+ * loadAllRecords() → { beginner: RecordData|null, intermediate: RecordData|null, normal: RecordData|null }
+ * Convenience helper for screens (like the progress report) that need every mode at once.
+ */
+export async function loadAllRecords() {
+  const entries = await Promise.all(TYPING_MODE_IDS.map(async (mode) => [mode, await loadRecord(mode)]));
+  return Object.fromEntries(entries);
+}
+
 // ── Write ─────────────────────────────────────────────────────────────────────
 
 /**
- * saveSession({ wpm, accuracy }) → RecordData
+ * saveSession({ wpm, accuracy, mode }) → RecordData
  *
- * Merges a completed session into the global record and returns the
- * updated record. Creates a new record if none exists.
- *
- * Note: moduleId param removed — record is now global.
+ * Merges a completed session into the record for that difficulty mode and
+ * returns the updated record. Creates a new record if none exists yet for
+ * that mode.
  */
-export async function saveSession({ wpm, accuracy }) {
-  const existing = await loadRecord();
+export async function saveSession({ wpm, accuracy, mode }) {
+  assertMode(mode);
+  const existing = await loadRecord(mode);
 
   const prev = existing ?? {
     bestWpm:        0,
@@ -183,7 +205,7 @@ export async function saveSession({ wpm, accuracy }) {
   const dataStr = JSON.stringify(updated);
   const sig     = await sign(dataStr);
 
-  localStorage.setItem(GLOBAL_KEY, JSON.stringify({ data: updated, sig }));
+  localStorage.setItem(recordKey(mode), JSON.stringify({ data: updated, sig }));
 
   return updated;
 }
@@ -250,13 +272,21 @@ export function deriveStats(record, currentWpm = null, durationSeconds = 60) {
 }
 
 /**
- * clearRecord() — wipes the global typing record.
+ * clearRecord(mode) — wipes the typing record for one difficulty mode.
  */
-export async function clearRecord() {
-  localStorage.removeItem(GLOBAL_KEY);
+export async function clearRecord(mode) {
+  assertMode(mode);
+  localStorage.removeItem(recordKey(mode));
+}
+
+/**
+ * clearAllRecords() — wipes the typing record for every difficulty mode.
+ */
+export async function clearAllRecords() {
+  for (const mode of TYPING_MODE_IDS) localStorage.removeItem(recordKey(mode));
 }
 // ── Settings persistence ──────────────────────────────────────────────────────
-// Stores the user's chosen duration, mode, and WPM goal across page loads.
+// Stores the user's chosen duration, mode, and WPM goal(s) across page loads.
 // No HMAC needed — these are preferences, not performance records.
 //
 // Key: `typing:settings:v1`
@@ -265,8 +295,10 @@ export async function clearRecord() {
 // TypingSettings = {
 //   duration: { label: string, seconds: number } | null,
 //   mode:     "beginner" | "intermediate" | "normal" | null,
-//   goalWpm:  number | null,
-//   goalTime: number,   // minutes, default 15
+//   goalWpm:  { beginner: number|null, intermediate: number|null, normal: number|null },
+//   goalTime: number,   // minutes, default 15 — shared across modes; it's a
+//                       // "time spent practising today" goal, not a speed goal,
+//                       // so it doesn't need to be split per difficulty.
 //   goalSet:  boolean,  // true once the user has been through the goal modal
 //                       // at least once — gates the auto-open-on-first-visit
 //                       // prompt in TypingPracticePage. Was previously written
@@ -274,16 +306,33 @@ export async function clearRecord() {
 //                       // return whitelist, so the prompt reappeared on every
 //                       // visit — fixed by including it below.
 // }
+//
+// ── goalWpm migration ────────────────────────────────────────────────────
+// goalWpm used to be a single number shared across every difficulty. On
+// first load under this version, a legacy number is fanned out into all
+// three modes so nobody's existing goal silently vanishes — they can then
+// diverge it per mode going forward.
 
 const SETTINGS_KEY = "typing:settings:v1";
 
 export const DEFAULT_SETTINGS = {
   duration: null,
   mode:     null,
-  goalWpm:  35,
+  goalWpm:  { beginner: 35, intermediate: 35, normal: 35 },
   goalTime: 15,
   goalSet:  false,
 };
+
+function normaliseGoalWpm(goalWpm) {
+  if (typeof goalWpm === "number") {
+    // Legacy single-value goal — seed every mode with it.
+    return { beginner: goalWpm, intermediate: goalWpm, normal: goalWpm };
+  }
+  if (goalWpm && typeof goalWpm === "object") {
+    return { ...DEFAULT_SETTINGS.goalWpm, ...goalWpm };
+  }
+  return { ...DEFAULT_SETTINGS.goalWpm };
+}
 
 /**
  * loadSettings() → TypingSettings
@@ -292,28 +341,34 @@ export const DEFAULT_SETTINGS = {
 export function loadSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return { ...DEFAULT_SETTINGS };
+    if (!raw) return { ...DEFAULT_SETTINGS, goalWpm: { ...DEFAULT_SETTINGS.goalWpm } };
     const parsed = JSON.parse(raw);
     return {
       duration: parsed.duration ?? DEFAULT_SETTINGS.duration,
       mode:     parsed.mode     ?? DEFAULT_SETTINGS.mode,
-      goalWpm:  parsed.goalWpm  ?? DEFAULT_SETTINGS.goalWpm,
+      goalWpm:  normaliseGoalWpm(parsed.goalWpm),
       goalTime: parsed.goalTime ?? DEFAULT_SETTINGS.goalTime,
       goalSet:  parsed.goalSet  ?? DEFAULT_SETTINGS.goalSet,
     };
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    return { ...DEFAULT_SETTINGS, goalWpm: { ...DEFAULT_SETTINGS.goalWpm } };
   }
 }
 
 /**
  * saveSettings(partial) — merges partial into stored settings and writes back.
- * Pass only the fields you want to update.
+ * Pass only the fields you want to update. `partial.goalWpm`, if present, is
+ * itself merged key-by-key into the existing per-mode goal object rather than
+ * replacing it wholesale — so `saveSettings({ goalWpm: { normal: 60 } })`
+ * updates only the Normal goal and leaves Beginner/Intermediate untouched.
  */
 export function saveSettings(partial) {
   try {
     const current = loadSettings();
     const updated = { ...current, ...partial };
+    if (partial.goalWpm && typeof partial.goalWpm === "object") {
+      updated.goalWpm = { ...current.goalWpm, ...partial.goalWpm };
+    }
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
     return updated;
   } catch {
@@ -371,7 +426,7 @@ export function saveSessionDetail(detail) {
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
 
     sessionCount = incrementSessionCount();
-    checkGoalReached(detail.wpm, sessionCount);
+    checkGoalReached(detail.mode, detail.wpm, sessionCount);
   } catch (err) {
     console.warn("[typingStorage] Failed to save session detail:", err);
   }
@@ -472,6 +527,7 @@ function incrementSessionCount() {
 // there's no realistic need to cap it the way the session log is capped).
 //
 // GoalPeriod = {
+//   mode:               "beginner" | "intermediate" | "normal",
 //   goalWpm:           number,
 //   setAt:              number,        // Date.now() when this goal became active
 //   setAtSessionIdx:    number,        // session count at that moment
@@ -515,21 +571,25 @@ export function loadGoalHistory() {
 }
 
 /**
- * recordGoalChange(newGoalWpm) — call whenever the user's goalWpm setting
- * is being changed (from handleSettingsSave or the raise-goal prompt),
- * BEFORE the new value is persisted to settings.
+ * recordGoalChange(mode, newGoalWpm) — call whenever the user's goalWpm
+ * setting is being changed for a given difficulty mode (from
+ * handleSettingsSave or the raise-goal prompt), BEFORE the new value is
+ * persisted to settings.
  *
- * Closes out the previously-active period as "abandoned" if one exists and
- * was never reached, then opens a new "active" period for newGoalWpm.
- * No-ops if newGoalWpm matches the currently-active goal exactly (so saving
- * the settings modal without actually changing the goal doesn't create a
- * spurious duplicate period).
+ * Closes out the previously-active period FOR THAT MODE as "abandoned" if
+ * one exists and was never reached, then opens a new "active" period for
+ * newGoalWpm under that same mode. No-ops if newGoalWpm matches the
+ * currently-active goal for that mode exactly (so saving the settings modal
+ * without actually changing the goal doesn't create a spurious duplicate
+ * period). Periods belonging to other modes are left untouched — each mode
+ * has its own independent goal timeline, same as its own record and session log.
  */
-export function recordGoalChange(newGoalWpm) {
+export function recordGoalChange(mode, newGoalWpm) {
   if (newGoalWpm == null) return;
+  assertMode(mode);
 
   const history = loadGoalHistoryRaw();
-  const active  = history.find((p) => p.status === "active");
+  const active  = history.find((p) => p.status === "active" && p.mode === mode);
 
   if (active && active.goalWpm === newGoalWpm) return; // no real change
 
@@ -538,6 +598,7 @@ export function recordGoalChange(newGoalWpm) {
   }
 
   history.push({
+    mode,
     goalWpm:           newGoalWpm,
     setAt:             Date.now(),
     setAtSessionIdx:   getSessionCount(),
@@ -558,16 +619,17 @@ export function clearGoalHistory() {
 }
 
 /**
- * checkGoalReached(sessionWpm, sessionCount) — called internally by
+ * checkGoalReached(mode, sessionWpm, sessionCount) — called internally by
  * saveSessionDetail right after the session counter is incremented. If
- * there's an active goal period and this session's wpm clears it, closes
- * the period out as "reached" with sessionsToReach computed. No-ops if
- * there's no active goal, or it isn't yet reached. Not exported — this is
- * always derived from a session being saved, never called standalone.
+ * there's an active goal period FOR THAT MODE and this session's wpm clears
+ * it, closes the period out as "reached" with sessionsToReach computed.
+ * No-ops if there's no active goal for that mode, or it isn't yet reached.
+ * Not exported — this is always derived from a session being saved, never
+ * called standalone.
  */
-function checkGoalReached(sessionWpm, sessionCount) {
+function checkGoalReached(mode, sessionWpm, sessionCount) {
   const history = loadGoalHistoryRaw();
-  const active  = history.find((p) => p.status === "active");
+  const active  = history.find((p) => p.status === "active" && p.mode === mode);
   if (!active) return;
   if (sessionWpm < active.goalWpm) return;
 
