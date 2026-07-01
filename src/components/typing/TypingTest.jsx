@@ -360,6 +360,7 @@ export default function TypingTest({ passages, duration, onFinish }) {
           totalParts={totalParts}
           onSkip={handleSkip}
           isPaused={isPaused}
+          blankHighlights={currentPart.blankHighlights}
         />
 
         {/* Idle overlay — sits over the card when paused */}

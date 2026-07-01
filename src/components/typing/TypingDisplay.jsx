@@ -33,7 +33,7 @@ const VISIBLE_LINES  = 5; // lines shown in the viewport at once
 const SCROLL_TRIGGER = 3; // caret must reach this line index before scrolling starts (0-based)
                            // i.e. lines 0-2 are fully typed before the block starts moving
 
-export default function TypingDisplay({ target, typed, role, partIndex, totalParts, onSkip, isPaused }) {
+export default function TypingDisplay({ target, typed, role, partIndex, totalParts, onSkip, isPaused, blankHighlights = [] }) {
   const meta  = ROLE_META[role] || ROLE_META.question;
   const chars = target.split("");
 
@@ -237,6 +237,7 @@ export default function TypingDisplay({ target, typed, role, partIndex, totalPar
             const isCaret = i === typed.length;
             const correct = isTyped && typed[i] === char;
             const wrong   = isTyped && typed[i] !== char;
+            const isHighlighted = blankHighlights.some((highlight) => highlight.start >= 0 && i >= highlight.start && i < highlight.end);
 
             return (
               <span
@@ -249,11 +250,15 @@ export default function TypingDisplay({ target, typed, role, partIndex, totalPar
                   color:          isCaret ? "var(--daisy-white)"
                                 : correct  ? "var(--lush-lime)"
                                 : wrong    ? "var(--poppy-red)"
-                                :            "var(--text-secondary)",
-                  background:     isCaret ? "var(--accent-primary)" : "transparent",
+                                : isHighlighted ? "var(--text-primary)" : "var(--text-secondary)",
+                  background:     isCaret ? "var(--accent-primary)"
+                                : isHighlighted ? "rgba(244, 169, 0, 0.20)" : "transparent",
                   textDecoration: wrong ? "underline" : "none",
-                  borderRadius:   isCaret ? "2px" : "0",
-                  transition:     "color 0.05s ease",
+                  borderRadius:   isCaret ? "2px" : isHighlighted ? "3px" : "0",
+                  fontWeight:     isHighlighted ? 700 : 400,
+                  boxShadow:      isHighlighted ? "inset 0 -1px 0 rgba(244, 169, 0, 0.45)" : "none",
+                  padding:        isHighlighted ? "0 1px" : "0",
+                  transition:     "color 0.05s ease, background 0.05s ease",
                 }}
               >
                 {char}

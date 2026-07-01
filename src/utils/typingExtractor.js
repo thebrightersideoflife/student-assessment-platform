@@ -119,6 +119,81 @@ function isTypeable(str) {
   return alpha / str.length >= 0.55;
 }
 
+function buildFillInTheBlankQuestionText(question, rawText) {
+  const blankAnswers = Array.isArray(question?.blanks)
+    ? question.blanks
+        .map((blank) => (blank && typeof blank.correctAnswer === "string" ? toPlain(blank.correctAnswer) : null))
+        .filter(Boolean)
+    : [];
+
+  const qText = toPlain(rawText)
+    .replace(/\s*Answer in \w+ word[s]? only\.?\s*$/i, "")
+    .trim()
+    .replace(/\s+Your (discussion|answer) should (include|address)[^.]*\.?\.?.*$/i, ".")
+    .trim();
+
+  if (blankAnswers.length === 0) {
+    const answerText = extractAnswer(question.correctAnswers, question.blanks);
+    return {
+      text: answerText ? `${qText} ${answerText}`.trim() : qText,
+      blankHighlights: answerText
+        ? [{ text: answerText, start: qText.length + 1, end: qText.length + 1 + answerText.length }]
+        : [],
+    };
+  }
+
+  const blankPattern = /_{3,}|\[blank\]|\[blank\d*\]/gi;
+  const blankHighlights = [];
+  let resolvedText = "";
+  let lastIndex = 0;
+  let match;
+  let answerIndex = 0;
+
+  while ((match = blankPattern.exec(rawText)) !== null) {
+    const prefix = rawText.slice(lastIndex, match.index);
+    resolvedText += toPlain(prefix);
+    const answer = blankAnswers[answerIndex] || "";
+    const start = resolvedText.length;
+    if (resolvedText && !/\s$/.test(resolvedText) && answer) {
+      resolvedText += " ";
+    }
+    resolvedText += answer;
+    if (answer) {
+      blankHighlights.push({ text: answer, start, end: resolvedText.length });
+    }
+    // Handle spacing after the blank: preserve existing whitespace or add one if missing
+    const nextCharIndex = match.index + match[0].length;
+    const nextChar = rawText[nextCharIndex];
+    if (nextChar === " " || nextChar === "\t" || nextChar === "\n") {
+      // There's whitespace after the blank, preserve it
+      resolvedText += nextChar;
+      lastIndex = nextCharIndex + 1;
+    } else if (nextChar && !/\s/.test(nextChar)) {
+      // Next char is non-whitespace, add a space
+      resolvedText += " ";
+      lastIndex = nextCharIndex;
+    } else {
+      // No next char or other edge case
+      lastIndex = nextCharIndex;
+    }
+    answerIndex += 1;
+  }
+
+  resolvedText += toPlain(rawText.slice(lastIndex));
+
+  if (blankHighlights.length > 0) {
+    return { text: resolvedText.trim(), blankHighlights };
+  }
+
+  const answerText = blankAnswers.join(" / ");
+  return {
+    text: `${qText} ${answerText}`.trim(),
+    blankHighlights: answerText
+      ? [{ text: answerText, start: qText.length + 1, end: qText.length + 1 + answerText.length }]
+      : [],
+  };
+}
+
 function buildPassage(question) {
   if (!question || typeof question !== "object") return null;
   if (question.type === "scenario") return null;
@@ -129,6 +204,12 @@ function buildPassage(question) {
   qText = qText.replace(/\s+Your (discussion|answer) should (include|address)[^.]*\.?.*$/i, ".").trim();
   if (!isTypeable(qText)) return null;
 
+  const isFillInTheBlank = question.type === "fill-in-the-blank";
+  const questionData = isFillInTheBlank
+    ? buildFillInTheBlankQuestionText(question, rawQ)
+    : { text: qText, blankHighlights: [] };
+  const questionText = questionData.text;
+  const blankHighlights = questionData.blankHighlights || [];
   const answerText = extractAnswer(question.correctAnswers, question.blanks);
   const expText    = toPlain(question.explanation || "");
 
@@ -139,8 +220,8 @@ function buildPassage(question) {
   const MIN_ANSWER_LENGTH = 3;
 
   const parts = [];
-  parts.push({ role: "question", text: qText });
-  if (answerText && answerText.length >= MIN_ANSWER_LENGTH && isTypeable(answerText)) {
+  parts.push({ role: "question", text: questionText, blankHighlights });
+  if (!isFillInTheBlank && answerText && answerText.length >= MIN_ANSWER_LENGTH && isTypeable(answerText)) {
     parts.push({ role: "answer", text: answerText });
   }
   if (expText && isTypeable(expText)) parts.push({ role: "explanation", text: expText });
@@ -215,6 +296,28 @@ function transformText(text, mode) {
   return t;
 }
 
+function rebuildBlankHighlights(part, transformedText, mode) {
+  if (!Array.isArray(part.blankHighlights) || part.blankHighlights.length === 0) return [];
+
+  let cursor = 0;
+  return part.blankHighlights.reduce((acc, highlight) => {
+    const transformedTextValue = transformText(highlight.text, mode);
+    if (!transformedTextValue) return acc;
+
+    const start = transformedText.indexOf(transformedTextValue, cursor);
+    if (start < 0) return acc;
+
+    cursor = start + transformedTextValue.length;
+    acc.push({
+      ...highlight,
+      text: transformedTextValue,
+      start,
+      end: start + transformedTextValue.length,
+    });
+    return acc;
+  }, []);
+}
+
 /**
  * applyMode(passages, mode) → Passage[]
  *
@@ -227,10 +330,14 @@ export function applyMode(passages, mode) {
 
   return passages.map((passage) => ({
     ...passage,
-    parts: passage.parts.map((part) => ({
-      ...part,
-      text: transformText(part.text, mode),
-    })),
+    parts: passage.parts.map((part) => {
+      const transformedText = transformText(part.text, mode);
+      return {
+        ...part,
+        text: transformedText,
+        blankHighlights: rebuildBlankHighlights(part, transformedText, mode),
+      };
+    }),
   }));
 }
 
