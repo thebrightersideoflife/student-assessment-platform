@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import "../assets/styles/header.css";
 import { buildSearchIndex, queryIndex } from "../utils/search";
+import { getTypingReadyModules } from "../utils/typingContent";
 
 const MODULE_SELECTION_KEY = "progress_tracked_modules";
 
@@ -49,6 +50,9 @@ export default function Header() {
       const questions = questionsMod.questions || {};
       const roadmaps = roadmapsMod || {};
 
+      const typingReadyModules = getTypingReadyModules(modules, weeks, questions);
+      const typingReadyIds = new Set(typingReadyModules.map((mod) => mod.id));
+
       // Filter weeks to only those that actually have question data (active)
       const activeWeeks = {};
       for (const mod of modules) {
@@ -73,7 +77,7 @@ export default function Header() {
         }
       }
 
-      setSearchIndex(buildSearchIndex(modules, activeWeeks, availableRoadmaps));
+      setSearchIndex(buildSearchIndex(modules.filter((mod) => typingReadyIds.has(mod.id)), activeWeeks, availableRoadmaps));
     }).catch(() => {
       import("../data/modules").then(({ modules }) =>
         setSearchIndex(buildSearchIndex(modules, {}))

@@ -27,6 +27,7 @@ import TypingPracticeSettingsModal from "../components/typing/TypingPracticeSett
 import TypingModuleSearchBar from "../components/typing/TypingModuleSearchBar";
 import TypingTest from "../components/typing/TypingTest";
 import TypingResults from "../components/typing/TypingResults";
+import { getTypingReadyModules } from "../utils/typingContent";
 
 const STEP = { MODULE: "module", DURATION: "duration", TYPING: "typing", RESULTS: "results" };
 
@@ -364,7 +365,9 @@ export default function TypingPracticePage() {
     handleModuleSelect(requestedModule);
   }, [location.search, modules]);
 
-  const filteredModules = modules.filter((mod) => {
+  const availableModules = getTypingReadyModules(modules, {}, {});
+
+  const filteredModules = availableModules.filter((mod) => {
     const query = moduleQuery.trim().toLowerCase();
     if (!query) return true;
     const haystack = `${mod.id} ${mod.name} ${mod.description || ""}`.toLowerCase();
