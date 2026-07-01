@@ -61,9 +61,9 @@ class AssessmentStorage {
    * Call this once from App.jsx or main.jsx to check if stored version
    * matches current app version. If not, clears stale data.
    *
-   * @returns {boolean} true if versions match (no clearing needed), false if cleared
+   * @returns {Promise<boolean>} true if versions match (no clearing needed), false if cleared
    */
-  static initializeVersion() {
+  static async initializeVersion() {
     const storedVersion = localStorage.getItem(APP_VERSION_KEY);
     
     if (!storedVersion) {
@@ -82,7 +82,13 @@ class AssessmentStorage {
       `[AssessmentStorage] Version mismatch: ${storedVersion} → ${APP_VERSION}. Clearing cached data.`
     );
     this.clearAll();
+    await this.clearServiceWorkerCache();
     localStorage.setItem(APP_VERSION_KEY, APP_VERSION);
+    
+    // Reload page to ensure new service worker is active and fresh content is loaded
+    console.log("[AssessmentStorage] Reloading page to activate fresh content...");
+    window.location.reload();
+    
     return false;
   }
 
@@ -433,6 +439,32 @@ class AssessmentStorage {
     } catch (error) {
       console.error("Error clearing all assessments:", error);
       return false;
+    }
+  }
+
+  /**
+   * Clear all service worker caches to force fresh data on version mismatch.
+   * This ensures cached question/weeks data is invalidated, not just localStorage.
+   *
+   * @private
+   */
+  static async clearServiceWorkerCache() {
+    if (!("caches" in window)) {
+      // Caches API not available (not a PWA context)
+      return;
+    }
+
+    try {
+      const cacheNames = await caches.keys();
+      const clearPromises = cacheNames.map((cacheName) =>
+        caches.delete(cacheName).catch((err) => {
+          console.error(`Error clearing cache "${cacheName}":`, err);
+        })
+      );
+      await Promise.all(clearPromises);
+      console.log("[AssessmentStorage] Service worker caches cleared.");
+    } catch (error) {
+      console.error("[AssessmentStorage] Error clearing service worker caches:", error);
     }
   }
 

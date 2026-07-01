@@ -7,9 +7,11 @@ import AssessmentStorage from "./utils/assessmentStorage.js";
 export default function App() {
   // Check and validate app version on mount
   // If user's stored version doesn't match current app version,
-  // their cached data is cleared to avoid showing stale content
+  // their cached data and service worker cache are cleared to avoid showing stale content
   useEffect(() => {
-    AssessmentStorage.initializeVersion();
+    AssessmentStorage.initializeVersion().catch((error) => {
+      console.error("Error during version initialization:", error);
+    });
   }, []);
 
   return (
