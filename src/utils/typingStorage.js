@@ -275,8 +275,11 @@ export function saveSettings(partial) {
 //   accuracy:       number,   // 0–100
 //   score:          number,
 //   consistency:    number | null,  // 0–100
-//   duration:       number,   // seconds (the test's timer setting)
+//   duration:       number,   // seconds — the timed test's setting, or the
+//                             // actual elapsed time for a Unit Typing session
 //   mode:           "beginner" | "intermediate" | "normal",
+//   testType:       "timed" | "unit",  // optional — absent on older records,
+//                             // treated as "timed" wherever it's read
 //   moduleId:       string,
 //   correctChars:   number,
 //   incorrectChars: number,

@@ -68,9 +68,9 @@ export default function TypingPracticeSettingsModal({
   };
 
   const tabs = [
-    { id: "goal", label: "Daily Goals" },
-    { id: "difficulty", label: "Difficulty" },
     { id: "duration", label: "Duration" },
+    { id: "difficulty", label: "Difficulty" },
+    { id: "goal", label: "Daily Goals" },
   ];
 
   const inputStyle = {

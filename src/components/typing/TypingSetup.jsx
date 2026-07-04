@@ -177,6 +177,205 @@ function ModeCard({ mode, selected, onSelect, accentColor, accentRgb }) {
   );
 }
 
+// ── TestTypeSelect ───────────────────────────────────────────────────────────
+// First-timer gate, shown right after module selection, before duration/mode.
+// Two big choice cards: "Unit Typing" (untimed, one Q→A→E unit typed as one
+// flowing block, parts separated by Enter) vs "Timed Mode" (the existing
+// countdown flow — duration, then difficulty).
+// onSelect("unit" | "timed") — the page decides which sub-flow to route to.
+
+export const TEST_TYPES = [
+  {
+    id:          "unit",
+    label:       "Unit Typing",
+    description: "No timer — go at your own pace",
+    detail:      "Type the question, answer, and explanation together as one flowing passage — press Enter to move from one to the next. There's no countdown; you finish when you finish.",
+  },
+  {
+    id:          "timed",
+    label:       "Timed Mode",
+    description: "Race the clock",
+    detail:      "Type as many question / answer / explanation passages as you can before time runs out. Pick 30, 45, 60 seconds — or set a custom duration.",
+  },
+];
+
+function TestTypeCard({ type, selected, onSelect, accentColor, accentRgb }) {
+  const [hovered, setHovered] = useState(false);
+  const active = selected || hovered;
+
+  return (
+    <button
+      onClick={() => onSelect(type.id)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display:              "block",
+        width:                "100%",
+        textAlign:            "left",
+        padding:              "22px 24px",
+        borderRadius:         "14px",
+        border:               selected
+          ? `1px solid rgba(${accentRgb}, 0.6)`
+          : hovered
+            ? "1px solid rgba(var(--border-color-rgb), 0.7)"
+            : "1px solid rgba(var(--border-color-rgb), 0.35)",
+        background:           selected
+          ? `rgba(${accentRgb}, 0.08)`
+          : hovered
+            ? "rgba(var(--bg-card-rgb), 0.88)"
+            : "rgba(var(--bg-card-rgb), 0.55)",
+        backdropFilter:       "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        cursor:               "pointer",
+        transition:           "all 0.18s ease",
+        transform:            active ? "translateY(-2px)" : "translateY(0)",
+        boxShadow:            active ? "0 10px 26px rgba(0,0,0,0.1)" : "none",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "6px" }}>
+        <span style={{ fontSize: "17px", fontWeight: 800, color: selected ? accentColor : "var(--text-primary)", transition: "color 0.18s ease" }}>
+          {type.label}
+        </span>
+        <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)" }}>
+          {type.description}
+        </span>
+      </div>
+      <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>
+        {type.detail}
+      </p>
+    </button>
+  );
+}
+
+export function TestTypeSelect({ moduleName, onSelect, onBack }) {
+  const { theme } = useContext(ThemeContext);
+  const accentRgb   = theme === "light" ? "42,92,167"        : "244,169,0";
+  const accentColor = theme === "light" ? "var(--royal-blue)" : "var(--golden-amber)";
+
+  const [selectedType, setSelectedType] = useState(null);
+
+  return (
+    <div style={{ maxWidth: "560px", margin: "0 auto", textAlign: "center" }}>
+      <button
+        onClick={onBack}
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          color: "var(--text-secondary)", fontSize: "13px",
+          display: "flex", alignItems: "center", gap: "6px",
+          margin: "0 auto 40px", padding: 0,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Change module
+      </button>
+
+      <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: accentColor, marginBottom: "10px" }}>
+        {moduleName}
+      </div>
+
+      <h2 style={{ margin: "0 0 10px", fontSize: "26px", fontWeight: 800, color: "var(--text-primary)" }}>
+        How do you want to practice?
+      </h2>
+      <p style={{ margin: "0 0 28px", color: "var(--text-secondary)", fontSize: "15px", lineHeight: 1.6 }}>
+        You can switch between these later from the results screen.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left", marginBottom: "28px" }}>
+        {TEST_TYPES.map((type) => (
+          <TestTypeCard
+            key={type.id}
+            type={type}
+            selected={selectedType === type.id}
+            onSelect={(id) => setSelectedType(id)}
+            accentColor={accentColor}
+            accentRgb={accentRgb}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={() => selectedType && onSelect(selectedType)}
+        disabled={!selectedType}
+        className="button solid"
+        style={{
+          padding: "16px 48px", fontSize: "16px", fontWeight: 700, borderRadius: "12px",
+          opacity: selectedType ? 1 : 0.5, cursor: selectedType ? "pointer" : "not-allowed",
+        }}
+      >
+        Continue
+      </button>
+    </div>
+  );
+}
+
+// ── UnitModeSelect ───────────────────────────────────────────────────────────
+// Difficulty-only gate for the Unit Typing flow (no duration to pick).
+// onSelect(modeId) — the page applies the mode and jumps straight into the
+// untimed unit test.
+
+export function UnitModeSelect({ moduleName, onSelect, onBack }) {
+  const { theme } = useContext(ThemeContext);
+  const accentRgb   = theme === "light" ? "42,92,167"        : "244,169,0";
+  const accentColor = theme === "light" ? "var(--royal-blue)" : "var(--golden-amber)";
+
+  const [selectedMode, setSelectedMode] = useState("beginner");
+
+  return (
+    <div style={{ maxWidth: "520px", margin: "0 auto", textAlign: "center" }}>
+      <button
+        onClick={onBack}
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          color: "var(--text-secondary)", fontSize: "13px",
+          display: "flex", alignItems: "center", gap: "6px",
+          margin: "0 auto 40px", padding: 0,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Change test type
+      </button>
+
+      <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: accentColor, marginBottom: "10px" }}>
+        {moduleName} · Unit Typing
+      </div>
+
+      <h2 style={{ margin: "0 0 10px", fontSize: "26px", fontWeight: 800, color: "var(--text-primary)" }}>
+        Choose a difficulty
+      </h2>
+      <p style={{ margin: "0 0 28px", color: "var(--text-secondary)", fontSize: "15px", lineHeight: 1.6 }}>
+        This changes what text you'll actually type — not just the UI.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left", marginBottom: "28px" }}>
+        {TYPING_MODES.map((mode) => (
+          <ModeCard
+            key={mode.id}
+            mode={mode}
+            selected={selectedMode === mode.id}
+            onSelect={setSelectedMode}
+            accentColor={accentColor}
+            accentRgb={accentRgb}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={() => onSelect(selectedMode)}
+        className="button solid"
+        style={{ padding: "16px 48px", fontSize: "16px", fontWeight: 700, borderRadius: "12px" }}
+      >
+        Start typing
+      </button>
+    </div>
+  );
+}
+
 // ── DurationSelect ────────────────────────────────────────────────────────────
 // Two-panel: duration first, then mode.
 // onSelect({ label, seconds, mode }) — mode is the TYPING_MODES id string.
