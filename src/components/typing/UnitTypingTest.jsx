@@ -12,8 +12,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import UnitTypingDisplay from "./UnitTypingDisplay";
-
-const MAX_ERRORS = 10;
+import { buildSnapshot, exceedsErrorCap } from "../../utils/typingScoring";
 
 // Builds the joined target string + per-part boundary offsets from a
 // passage's parts. Parts are separated by a single "\n" — one Enter
@@ -68,18 +67,14 @@ export default function UnitTypingTest({ passage, onFinish, onFirstAttempt, onGi
       elapsedRef.current += 1;
       setElapsedSeconds(elapsedRef.current);
 
-      const cumulativeWpm = elapsedRef.current > 0
-        ? Math.round((correctCharsRef.current / 5) / (elapsedRef.current / 60))
-        : 0;
-      const burstWpm = Math.round((secondWindowRef.current / 5) * 60);
+      const snap = buildSnapshot({
+        elapsedSeconds:      elapsedRef.current,
+        correctChars:        correctCharsRef.current,
+        incorrectChars:      incorrectCharsRef.current,
+        windowCorrectChars:  secondWindowRef.current,
+      });
       secondWindowRef.current = 0;
 
-      const snap = {
-        second: elapsedRef.current,
-        wpm:    cumulativeWpm,
-        burst:  burstWpm,
-        errors: incorrectCharsRef.current,
-      };
       setSnapshots((prev) => {
         const next = [...prev, snap];
         snapshotsRef.current = next;
@@ -114,17 +109,10 @@ export default function UnitTypingTest({ passage, onFinish, onFirstAttempt, onGi
     const prev = typedRef.current;
 
     // ── Error cap — block further input past a long wrong streak ──────────
-    if (value.length > prev.length) {
-      let errorStreak = 0;
-      for (let i = 0; i < value.length && i < target.length; i++) {
-        if (value[i] !== target[i]) errorStreak++;
-        else errorStreak = 0;
-      }
-      if (errorStreak >= MAX_ERRORS) {
-        typedRef.current = prev;
-        setTyped(prev);
-        return;
-      }
+    if (value.length > prev.length && exceedsErrorCap(value, target)) {
+      typedRef.current = prev;
+      setTyped(prev);
+      return;
     }
 
     // ── Score the newest character ─────────────────────────────────────────

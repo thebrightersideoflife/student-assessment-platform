@@ -1,13 +1,15 @@
 // src/components/typing/TypingResults.jsx
 
 import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Zap, Keyboard } from "lucide-react";
 import { ThemeContext } from "../../context/ThemeContext";
-import { deriveStats, computeSessionStats, loadSessions } from "../../utils/typingStorage";
+import { deriveStats, computeSessionStats, loadSessions, getCompetitionUnlockState } from "../../utils/typingStorage";
 import GoalConfetti from "./GoalConfetti";
 import WpmChart from "./WpmChart";
 import {
   StatBlock, MiniStat, NextTestMiniButton, MetricsBar, DailyGoalBars,
-  RaiseGoalPrompt, ActionButton, Icons,
+  RaiseGoalPrompt, ActionButton, Icons, SettingsBadgeRow,
 } from "./TypingResultsBits";
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -19,8 +21,10 @@ export default function TypingResults({
   onTypingReport, onGoToModule,
   onRetry, onNextTest, onChangeModule,
   isUnitMode = false, onUnitTest,
+  saveRejectedReason = null,
 }) {
   const { theme } = useContext(ThemeContext);
+  const navigate = useNavigate();
   const { correctChars, incorrectChars, rawErrors, elapsedSeconds, snapshots = [] } = result;
 
   const { wpm, rawWpm, accuracy, score, consistency: consistencyNum } = computeSessionStats({
@@ -35,6 +39,20 @@ export default function TypingResults({
 
   const [derived, setDerived] = useState(null);
 
+  // ── Save-rejected toast ─────────────────────────────────────────────────
+  // A pop-up rather than a persistent banner — deliberately, so the warning
+  // is noticed in the moment without becoming a standing part of the
+  // results layout. Re-triggers (resets its own 5s timer) any time
+  // saveRejectedReason itself changes, e.g. Retry producing a fresh
+  // rejection right after a previous one just faded.
+  const [showSaveToast, setShowSaveToast] = useState(false);
+  useEffect(() => {
+    if (!saveRejectedReason) { setShowSaveToast(false); return; }
+    setShowSaveToast(true);
+    const t = setTimeout(() => setShowSaveToast(false), 5000);
+    return () => clearTimeout(t);
+  }, [saveRejectedReason]);
+
   // saveSessionDetail (in typingStorage) is called synchronously in
   // TypingPracticePage's handleFinish, BEFORE setResult — so by the time
   // this component mounts, the just-finished session is already the last
@@ -46,6 +64,19 @@ export default function TypingResults({
     const modeSessions = loadSessions().filter((s) => s.mode === mode);
     setDerived(deriveStats(modeSessions, wpm, elapsedSeconds));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Competition unlock state for THIS module+difficulty. Re-derived here
+  // rather than passed down as a prop — TypingResults already mounts after
+  // saveSessionDetail has run (normal-mode sessions, not Competition's own
+  // log), so this is just a read, same pattern as `derived` above. Note:
+  // normal-mode attempts do NOT themselves count toward Competition's
+  // unlock threshold — that's tracked separately in
+  // typing:competitionSessions:v1 — so this reflects Competition's own
+  // history, not today's practice session.
+  const [competitionUnlock, setCompetitionUnlock] = useState(null);
+  useEffect(() => {
+    setCompetitionUnlock(getCompetitionUnlockState(moduleId, mode));
+  }, [moduleId, mode]);
 
   const wpmGoalReached = dailyGoalWpm && wpm >= dailyGoalWpm;
   const [raiseGoalDismissed, setRaiseGoalDismissed] = useState(false);
@@ -67,6 +98,25 @@ export default function TypingResults({
   return (
     <div>
       {confettiMode && <GoalConfetti mode={confettiMode} theme={theme} />}
+      {showSaveToast && saveRejectedReason && (
+        <div
+          className="tr-save-toast"
+          style={{
+            position: "fixed", bottom: "24px", right: "24px", zIndex: 1000,
+            display: "flex", alignItems: "center", gap: "8px",
+            padding: "12px 16px", borderRadius: "10px",
+            background: "var(--poppy-red)",
+            border: "1px solid var(--poppy-red)",
+            color: "white",
+            fontSize: "13px", fontWeight: 600,
+            maxWidth: "340px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+          }}
+        >
+          <span>⚠</span>
+          <span>This attempt wasn't saved. {saveRejectedReason}</span>
+        </div>
+      )}
       {/* ── Header row ── */}
       <div style={{
         display: "flex", alignItems: "flex-start", justifyContent: "space-between",
@@ -93,6 +143,7 @@ export default function TypingResults({
                 WPM goal reached!
               </span>
             )}
+            <SettingsBadgeRow mode={mode} durationLabel={durationLabel} goalWpm={dailyGoalWpm} />
           </div>
           <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "0 0 6px" }}>
             {moduleName} · {durationLabel}
@@ -109,8 +160,18 @@ export default function TypingResults({
           )}
         </div>
 
-        {/* Right: action buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "5px", flexShrink: 0, minWidth: "200px" }}>
+        {/* Right: action buttons — wrapped in a card surface. Several of
+            these (ActionButton, "Unit Test", "Repeat") intentionally use a
+            transparent/near-transparent background so they don't compete
+            with the primary "Report"/"Module" buttons, but that meant they
+            had nothing behind them except the bare page background —
+            floating with almost no visible boundary. A card backdrop gives
+            the whole column a defined edge so even the low-contrast buttons
+            read clearly instead of blending in. */}
+        <div className="card" style={{
+          display: "flex", flexDirection: "column", gap: "5px",
+          flexShrink: 0, minWidth: "200px", padding: "14px",
+        }}>
 
           {/* Top tier — primary navigation, side by side */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px" }}>
@@ -142,28 +203,52 @@ export default function TypingResults({
 
           {/* Unit Typing entry point — always offered on the results
               screen (timed or unit) so the user can hop into an untimed
-              single-unit session without going back through module select. */}
+              single-unit session without going back through module select.
+              Shares its row with the Compete button once this (module,
+              difficulty) pair has unlocked Competition — same two-column
+              treatment as the "Report / Module" tier above, so Unit Test
+              shrinks to make room rather than the page gaining a whole
+              separate banner section. */}
           {onUnitTest && (
-            <button
-              onClick={onUnitTest}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
-                padding: "8px 10px", borderRadius: "8px",
-                border: "1px solid rgba(var(--border-color-rgb), 0.4)",
-                cursor: "pointer",
-                fontSize: "12px", fontWeight: 700,
-                background: "transparent",
-                color: "var(--text-primary)",
-                transition: "background 0.15s ease, border-color 0.15s ease",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(var(--border-color-rgb), 0.2)"; e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.7)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.4)"; }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-              Unit Test
-            </button>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: competitionUnlock?.unlocked ? "1fr 1fr" : "1fr",
+              gap: "5px",
+            }}>
+              <button
+                onClick={onUnitTest}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                  padding: "8px 10px", borderRadius: "8px",
+                  border: "1px solid rgba(var(--border-color-rgb), 0.5)",
+                  cursor: "pointer",
+                  fontSize: "12px", fontWeight: 600,
+                  background: "transparent",
+                  color: "var(--text-secondary)",
+                  transition: "color 0.15s ease, border-color 0.15s ease",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = "var(--text-primary)"; e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.85)"; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.5)"; }}
+              >
+                <Keyboard size={13} strokeWidth={2} />
+                Unit Test
+              </button>
+
+              {/* Compete button — only rendered once this (module, mode)
+                  pair has genuinely unlocked Competition (enough historical
+                  attempts recorded). Below the threshold this whole cell
+                  simply doesn't exist, rather than showing a "0 of 3"
+                  progress banner — nothing to act on yet, so nothing shown. */}
+              {competitionUnlock?.unlocked && (
+                <button
+                  className="compete-spark-btn"
+                  onClick={() => navigate(`/typing/competition/${moduleId}/${mode}`)}
+                >
+                  <Zap size={13} strokeWidth={2.5} className="compete-spark-icon" />
+                  Compete
+                </button>
+              )}
+            </div>
           )}
 
           {/* Bottom tier — repeat (Next Test now lives in the stats row below) */}
@@ -184,6 +269,7 @@ export default function TypingResults({
           </button>
         </div>
       </div>
+
 
       {/* ── Stats card ── */}
       <div className="card" style={{ padding: "24px 28px", marginBottom: "20px" }}>
@@ -272,6 +358,77 @@ export default function TypingResults({
           0%   { inset: 0;      border-radius: 10px; opacity: 0.55; }
           75%  { inset: -14px;  border-radius: 20px; opacity: 0; }
           100% { inset: -14px;  border-radius: 20px; opacity: 0; }
+        }
+
+        /* Save-rejected toast — slides/fades in, holds, then fades out over
+           the full 5s lifetime the component keeps it mounted for. */
+        .tr-save-toast {
+          animation: tr-toast-fade 5s ease forwards;
+        }
+        @keyframes tr-toast-fade {
+          0%   { opacity: 0; transform: translateY(8px); }
+          8%   { opacity: 1; transform: translateY(0); }
+          85%  { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(8px); }
+        }
+
+        /* ── Compete button — minimal card surface, thin electric border
+           that continuously travels around it rather than a solid color
+           block. Same treatment as TypingModuleGrid's Compete CTA, so the
+           "compete" affordance reads consistently wherever it shows up. */
+        @property --spark-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+
+        .compete-spark-btn {
+          position: relative;
+          isolation: isolate;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          background: var(--bg-card);
+          color: var(--text-primary);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          transition: transform 0.16s ease;
+        }
+        .compete-spark-btn:hover { transform: translateY(-1px); }
+
+        .compete-spark-btn::before {
+          content: "";
+          position: absolute;
+          inset: -1px;
+          z-index: -1;
+          border-radius: inherit;
+          padding: 1.4px;
+          background: conic-gradient(
+            from var(--spark-angle),
+            transparent 0%,
+            var(--vibrant-cyan) 10%,
+            transparent 24%,
+            transparent 76%,
+            var(--golden-amber) 90%,
+            transparent 100%
+          );
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          animation: compete-spark-spin 2.6s linear infinite;
+        }
+        .compete-spark-btn:hover::before { filter: brightness(1.4); }
+
+        .compete-spark-icon { color: var(--vibrant-cyan); flex-shrink: 0; }
+
+        @keyframes compete-spark-spin {
+          to { --spark-angle: 360deg; }
         }
       `}</style>
     </div>

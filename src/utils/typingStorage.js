@@ -316,18 +316,60 @@ function capSessionsPerMode(sessions) {
   return kept.reverse();
 }
 
+// ── Session validity guard ──────────────────────────────────────────────
+// Rejects sessions that couldn't represent real typing — near-zero input,
+// near-zero duration, or an implausible wpm that could only come from a
+// degenerate save (e.g. clicking "finish" with nothing typed, or ending a
+// test a fraction of a second after starting). These would otherwise
+// silently enter a module+mode's candidate pool and corrupt Competition's
+// best/average/lastRecorded ghosts — a synthetic flat curve built from a
+// near-instant, near-empty session doesn't fail loudly, it just produces
+// wrong-looking ghost behavior much later, in a totally different screen.
+//
+// Returns a reason string (not just true/false) so the results screen can
+// tell the user WHY nothing was saved, rather than the rejection being a
+// silent console.warn nobody ever sees.
+const MIN_VALID_DURATION_SECONDS = 10;
+const MIN_VALID_CHARS_TYPED = 30;
+const MAX_PLAUSIBLE_WPM = 250;
+
+function validateSessionDetail(detail) {
+  const totalChars = (detail.correctChars || 0) + (detail.incorrectChars || 0);
+  // Deliberately vague on duration/chars — naming the exact thresholds
+  // would just teach someone the minimum effort needed to game a save,
+  // which defeats the point of having a validity floor at all.
+  if (!detail.duration || detail.duration < MIN_VALID_DURATION_SECONDS) {
+    return "This attempt was too short to save.";
+  }
+  if (totalChars < MIN_VALID_CHARS_TYPED) {
+    return "Not enough was typed to save this attempt.";
+  }
+  // WPM is fine to be specific about — it's a plausibility check on speed,
+  // not a "how little can I get away with" threshold, so telling the user
+  // what's realistic here doesn't help anyone cheat the floor.
+  if (detail.wpm > MAX_PLAUSIBLE_WPM) {
+    return `A speed of ${detail.wpm} wpm isn't currently considered plausible (max ${MAX_PLAUSIBLE_WPM}), so this attempt wasn't saved.`;
+  }
+  return null; // valid
+}
+
 /**
- * saveSessionDetail(detail) — appends a record to the per-mode-capped
- * session log, advances the dedicated uncapped session counter, and checks
- * whether this session's wpm just cleared the currently-active goal period
- * (closing it out as "reached" if so). Returns the post-increment session
- * count, in case the caller wants it (e.g. for its own goal-aware
- * messaging).
+ * saveSessionDetail(detail) → { saved: boolean, sessionCount: number, reason?: string }
  *
- * Silently no-ops on storage failure (e.g. quota exceeded) rather than
- * throwing — losing one detail record should never break the typing flow.
+ * Appends a record to the per-mode-capped session log, advances the
+ * dedicated uncapped session counter, and checks whether this session's
+ * wpm just cleared the currently-active goal period — but only if the
+ * session passes validateSessionDetail. Rejected sessions are never
+ * persisted, never counted, and never checked against goals; `reason` is
+ * populated so the caller can surface why to the user.
  */
 export function saveSessionDetail(detail) {
+  const rejectionReason = validateSessionDetail(detail);
+  if (rejectionReason) {
+    console.warn("[typingStorage] Rejected implausible session:", detail, rejectionReason);
+    return { saved: false, sessionCount: getSessionCount(), reason: rejectionReason };
+  }
+
   let sessionCount = getSessionCount();
   try {
     const existing = loadSessions();
@@ -338,8 +380,9 @@ export function saveSessionDetail(detail) {
     checkGoalReached(detail.mode, detail.wpm, sessionCount);
   } catch (err) {
     console.warn("[typingStorage] Failed to save session detail:", err);
+    return { saved: false, sessionCount, reason: "Couldn't save this attempt due to a storage error." };
   }
-  return sessionCount;
+  return { saved: true, sessionCount };
 }
 
 /**
@@ -593,4 +636,168 @@ export function computeStreaks(sessions) {
   }
 
   return { current, longest, practicedToday: lastDay === todayDay };
+}
+
+// ── Competition session log ────────────────────────────────────────────────
+//
+// Separate from typing:sessions:v1 on purpose: Competition's 2-line-paginated
+// engine has a different rhythm than Timed/Unit, so blending its history into
+// the same log would corrupt deriveStats' trend/best calculations for those
+// modes. This log is also grouped by (moduleId, mode) rather than just mode —
+// ghosts only make sense racing the same module's content at the same
+// difficulty, unlike the report page's per-mode-only charts.
+//
+// Storage key: `typing:competitionSessions:v1`
+// Value: JSON array of CompetitionSessionDetail, oldest-first, capped at
+// MAX_COMPETITION_SESSIONS_PER_GROUP entries per (moduleId, mode) pair.
+//
+// CompetitionSessionDetail = {
+//   ...same fields as SessionDetail (ts, date, wpm, rawWpm, accuracy, score,
+//   consistency, duration, mode, moduleId, correctChars, incorrectChars,
+//   charErrors, snapshots),
+//   targetLength: number,                          // passage char count
+//   paceCurve:    Array<{ second: number, pctComplete: number }>,
+//                                                    // 0–100, engine-tracked
+// }
+export const COMPETITION_UNLOCK_THRESHOLD = 3;
+const COMPETITION_SESSIONS_KEY = "typing:competitionSessions:v1";
+const MAX_COMPETITION_SESSIONS_PER_GROUP = 50;
+function groupKey(moduleId, mode) {
+  return `${moduleId}::${mode}`;
+}
+/**
+ * capCompetitionSessions(sessions) → CompetitionSessionDetail[]
+ * Same shape as capSessionsPerMode, but keyed by (moduleId, mode) instead of
+ * mode alone — practising Competition on one module must never evict another
+ * module's ghost history.
+ */
+function capCompetitionSessions(sessions) {
+  const countByGroup = {};
+  const kept = [];
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const s = sessions[i];
+    const key = groupKey(s.moduleId, s.mode);
+    const count = countByGroup[key] || 0;
+    if (count < MAX_COMPETITION_SESSIONS_PER_GROUP) {
+      kept.push(s);
+      countByGroup[key] = count + 1;
+    }
+  }
+  return kept.reverse();
+}
+/**
+ * loadCompetitionSessions() → CompetitionSessionDetail[]
+ * All groups, oldest-first. Never throws.
+ */
+export function loadCompetitionSessions() {
+  try {
+    const raw = localStorage.getItem(COMPETITION_SESSIONS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+/**
+ * loadCompetitionSessionsFor(moduleId, mode) → CompetitionSessionDetail[]
+ * Convenience filter — oldest-first, exactly one (module, mode) group.
+ */
+export function loadCompetitionSessionsFor(moduleId, mode) {
+  return loadCompetitionSessions().filter(
+    (s) => s.moduleId === moduleId && s.mode === mode
+  );
+}
+/**
+ * saveCompetitionSessionDetail(detail) → { saved: boolean, reason?: string }
+ *
+ * Appends to the per-group-capped competition log. Does NOT touch
+ * typing:sessions:v1, the session counter, or goal history — Competition
+ * mode has its own unlock mechanic (below) instead of WPM goals.
+ */
+export function saveCompetitionSessionDetail(detail) {
+  const rejectionReason = validateSessionDetail(detail);
+  if (rejectionReason) {
+    console.warn("[typingStorage] Rejected implausible competition session:", detail, rejectionReason);
+    return { saved: false, reason: rejectionReason };
+  }
+
+  try {
+    const existing = loadCompetitionSessions();
+    const updated  = capCompetitionSessions([...existing, detail]);
+    localStorage.setItem(COMPETITION_SESSIONS_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.warn("[typingStorage] Failed to save competition session detail:", err);
+    return { saved: false, reason: "Couldn't save this attempt due to a storage error." };
+  }
+  return { saved: true };
+}
+/**
+ * getCompetitionUnlockState(moduleId, mode) → { unlocked, attemptsRecorded, attemptsNeeded }
+ *
+ * Counts BOTH normal typing-practice attempts (typing:sessions:v1) AND
+ * dedicated Competition attempts (typing:competitionSessions:v1) for this
+ * (moduleId, mode) pair toward the unlock threshold — practising a module
+ * normally builds toward Competition too, not just racing itself. See
+ * selectGhosts in typingRace.js for how ghosts are actually built once
+ * unlocked: it draws from this same combined pool, not competition
+ * sessions alone.
+ */
+export function getCompetitionUnlockState(moduleId, mode) {
+  const competitionCount = loadCompetitionSessionsFor(moduleId, mode).length;
+  const normalCount = loadSessions().filter(
+    (s) => s.moduleId === moduleId && s.mode === mode
+  ).length;
+  const attemptsRecorded = competitionCount + normalCount;
+  return {
+    unlocked: attemptsRecorded >= COMPETITION_UNLOCK_THRESHOLD,
+    attemptsRecorded,
+    attemptsNeeded: Math.max(0, COMPETITION_UNLOCK_THRESHOLD - attemptsRecorded),
+  };
+}
+/**
+ * loadGhostCandidateSessions(moduleId, mode) → CompetitionSessionDetail[]
+ *
+ * The actual pool ghosts get built from — normal-mode SessionDetail records
+ * are normalized into the same shape Competition sessions use, with a
+ * synthetic flat paceCurve standing in for the real per-second journey that
+ * only genuine Competition attempts record (see buildSyntheticPaceCurve).
+ * `targetLength` is left null for these — createGhostRunner derives its
+ * time-rescale rate from wpm directly rather than targetLength/duration, so
+ * a missing targetLength doesn't block the projection (see that file's
+ * comment on why wpm-derived rate works for either source).
+ * Oldest-first, matching every other loader's convention.
+ */
+export function loadGhostCandidateSessions(moduleId, mode) {
+  const competition = loadCompetitionSessionsFor(moduleId, mode)
+    .map((s) => ({ ...s, __sourceType: "competition" }));
+  const normal = loadSessions()
+    .filter((s) => s.moduleId === moduleId && s.mode === mode)
+    .map((s) => ({
+      ...s,
+      targetLength: null, // unknown for normal-mode sessions — fine, see above
+      paceCurve: buildSyntheticPaceCurve(s.duration),
+      __sourceType: "normal",
+    }));
+  return [...competition, ...normal].sort((a, b) => a.ts - b.ts);
+}
+/**
+ * buildSyntheticPaceCurve(durationSeconds) → { second, pctComplete }[]
+ * A perfectly steady linear ramp — the honest stand-in for a normal-mode
+ * session's journey, since normal mode never recorded one. Real Competition
+ * attempts always have a genuine recorded curve and never hit this path.
+ */
+function buildSyntheticPaceCurve(durationSeconds) {
+  const secs = Math.max(1, Math.round(durationSeconds || 1));
+  const curve = [];
+  for (let s = 0; s <= secs; s++) {
+    curve.push({ second: s, pctComplete: Math.min(100, (s / secs) * 100) });
+  }
+  return curve;
+}
+/**
+ * clearCompetitionSessions() — wipes the entire competition log (all modules/modes).
+ */
+export function clearCompetitionSessions() {
+  localStorage.removeItem(COMPETITION_SESSIONS_KEY);
 }

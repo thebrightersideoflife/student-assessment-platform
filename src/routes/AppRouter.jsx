@@ -13,6 +13,7 @@ import QuestionSearchPage from "../pages/QuestionSearchPage";
 import RevisionPage from "../pages/RevisionPage";
 import TypingPracticePage from "../pages/TypingPracticePage";
 import TypingReportPage from "../pages/TypingReportPage";
+import CompetitionLandingPage from "../pages/CompetitionLandingPage";
 
 export default function AppRouter() {
   return (
@@ -47,6 +48,12 @@ export default function AppRouter() {
 
         {/* Typing progress report — printable charts, reads from local session log */}
         <Route path="/typing/report" element={<TypingReportPage />} />
+
+        {/* Competition mode — landing page with unlock/practice gating.
+            Scoped to a specific module+difficulty via URL params so it's
+            shareable/bookmarkable and survives a refresh. */}
+        <Route path="/typing/competition/:moduleId/:mode" element={<CompetitionLandingPage />} />
+        <Route path="/typing/competition" element={<CompetitionLandingPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -11,9 +11,36 @@
 // (applyMode) also lives there and is called in TypingPracticePage before the
 // passages reach TypingTest — nothing in this file touches the text itself.
 
-import { useContext, useState } from "react";
-import { ThemeContext } from "../../context/ThemeContext";
+import { useState } from "react";
+import { useTypingAccent } from "../../hooks/useTypingAccent";
+import { validateDuration, formatDurationLabel } from "../../utils/typingDuration";
 import { TYPING_MODES } from "../../utils/typingExtractor";
+
+// ── Shared back link ────────────────────────────────────────────────────────
+// Was defined identically three times: inline in TestTypeSelect, inline in
+// UnitModeSelect, and as a nested function inside DurationSelect (which
+// meant the other two couldn't import it even though it was the exact same
+// markup). Single module-scope component now, used by all three.
+function BackLink({ onClick, label }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        color: "var(--text-secondary)", fontSize: "13px",
+        display: "flex", alignItems: "center", gap: "6px",
+        margin: "0 auto 40px", padding: 0,
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+      {label}
+    </button>
+  );
+}
+
 
 const DURATION_OPTIONS = [
   { label: "30 sec", seconds: 30 },
@@ -248,29 +275,13 @@ function TestTypeCard({ type, selected, onSelect, accentColor, accentRgb }) {
 }
 
 export function TestTypeSelect({ moduleName, onSelect, onBack }) {
-  const { theme } = useContext(ThemeContext);
-  const accentRgb   = theme === "light" ? "42,92,167"        : "244,169,0";
-  const accentColor = theme === "light" ? "var(--royal-blue)" : "var(--golden-amber)";
+  const { accentColor, accentRgb } = useTypingAccent();
 
   const [selectedType, setSelectedType] = useState(null);
 
   return (
     <div style={{ maxWidth: "560px", margin: "0 auto", textAlign: "center" }}>
-      <button
-        onClick={onBack}
-        style={{
-          background: "none", border: "none", cursor: "pointer",
-          color: "var(--text-secondary)", fontSize: "13px",
-          display: "flex", alignItems: "center", gap: "6px",
-          margin: "0 auto 40px", padding: 0,
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Change module
-      </button>
+      <BackLink onClick={onBack} label="Change module" />
 
       <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: accentColor, marginBottom: "10px" }}>
         {moduleName}
@@ -317,29 +328,13 @@ export function TestTypeSelect({ moduleName, onSelect, onBack }) {
 // untimed unit test.
 
 export function UnitModeSelect({ moduleName, onSelect, onBack }) {
-  const { theme } = useContext(ThemeContext);
-  const accentRgb   = theme === "light" ? "42,92,167"        : "244,169,0";
-  const accentColor = theme === "light" ? "var(--royal-blue)" : "var(--golden-amber)";
+  const { accentColor, accentRgb } = useTypingAccent();
 
   const [selectedMode, setSelectedMode] = useState("beginner");
 
   return (
     <div style={{ maxWidth: "520px", margin: "0 auto", textAlign: "center" }}>
-      <button
-        onClick={onBack}
-        style={{
-          background: "none", border: "none", cursor: "pointer",
-          color: "var(--text-secondary)", fontSize: "13px",
-          display: "flex", alignItems: "center", gap: "6px",
-          margin: "0 auto 40px", padding: 0,
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Change test type
-      </button>
+      <BackLink onClick={onBack} label="Change test type" />
 
       <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: accentColor, marginBottom: "10px" }}>
         {moduleName} · Unit Typing
@@ -381,10 +376,7 @@ export function UnitModeSelect({ moduleName, onSelect, onBack }) {
 // onSelect({ label, seconds, mode }) — mode is the TYPING_MODES id string.
 
 export function DurationSelect({ moduleName, onSelect, onBack }) {
-  const { theme } = useContext(ThemeContext);
-
-  const accentRgb   = theme === "light" ? "42,92,167"        : "244,169,0";
-  const accentColor = theme === "light" ? "var(--royal-blue)" : "var(--golden-amber)";
+  const { accentColor, accentRgb } = useTypingAccent();
 
   // Duration state
   const [customSeconds, setCustomSeconds] = useState("");
@@ -405,22 +397,13 @@ export function DurationSelect({ moduleName, onSelect, onBack }) {
   };
 
   const handleCustomSubmit = () => {
-    const val = parseInt(customSeconds, 10);
-    if (!customSeconds.trim() || isNaN(val) || val < 10) {
-      setCustomError("Minimum is 10 seconds.");
-      return;
-    }
-    if (val > 3600) {
-      setCustomError("Maximum is 3600 seconds (1 hour).");
+    const result = validateDuration(customSeconds);
+    if (!result.valid) {
+      setCustomError(result.error);
       return;
     }
     setCustomError("");
-    const minutes = Math.floor(val / 60);
-    const secs    = val % 60;
-    const label   = minutes > 0
-      ? secs > 0 ? `${minutes}m ${secs}s` : `${minutes} min`
-      : `${val}s`;
-    setPendingDuration({ label, seconds: val });
+    setPendingDuration({ label: formatDurationLabel(result.seconds), seconds: result.seconds });
     setSubStep("mode");
   };
 
@@ -428,25 +411,6 @@ export function DurationSelect({ moduleName, onSelect, onBack }) {
     if (!pendingDuration) return;
     onSelect({ ...pendingDuration, mode: selectedMode });
   };
-
-  // ── Shared back link ──────────────────────────────────────────────────────
-  const BackLink = ({ onClick, label }) => (
-    <button
-      onClick={onClick}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "var(--text-secondary)", fontSize: "13px",
-        display: "flex", alignItems: "center", gap: "6px",
-        margin: "0 auto 40px", padding: 0,
-      }}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="15 18 9 12 15 6" />
-      </svg>
-      {label}
-    </button>
-  );
 
   return (
     <div style={{ maxWidth: "520px", margin: "0 auto", textAlign: "center" }}>

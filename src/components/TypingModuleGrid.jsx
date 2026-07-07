@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Zap } from "lucide-react";
 import { MODULE_META, DEFAULT_META } from "./moduleMeta";
 import { weeks as weekRegistry } from "../data/weeks";
+import { TYPING_MODE_IDS, getCompetitionUnlockState } from "../utils/typingStorage";
 
 /* ── Keyboard icon ──────────────────────────────────────────── */
 
@@ -34,9 +37,21 @@ function KeyboardIcon({ size = 22 }) {
 /* ── Individual module card ─────────────────────────────────── */
 
 function ModuleCard({ module, loading, onSelect }) {
+  const navigate     = useNavigate();
   const meta        = MODULE_META[module.id] || DEFAULT_META;
   const moduleWeeks = weekRegistry[module.id] ?? [];
   const [hovered, setHovered] = useState(false);
+
+  // Competition unlocks per (module, difficulty), not per module alone —
+  // check every difficulty and surface the CTA if ANY of them has crossed
+  // the threshold. Picks the difficulty with the most attempts recorded as
+  // the one to route into if there's a choice, so the CTA lands on the
+  // ghosts with the most history behind them.
+  const unlockedModes = TYPING_MODE_IDS
+    .map((m) => ({ mode: m, state: getCompetitionUnlockState(module.id, m) }))
+    .filter((entry) => entry.state.unlocked)
+    .sort((a, b) => b.state.attemptsRecorded - a.state.attemptsRecorded);
+  const competeMode = unlockedModes[0]?.mode ?? null;
 
   return (
     <div
@@ -121,8 +136,8 @@ function ModuleCard({ module, loading, onSelect }) {
         </p>
       </div>
 
-      {/* Week count pill only — no button */}
-      <div>
+      {/* Week count + Compete CTA */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
         <span style={{
           fontSize:      "13px",
           fontWeight:    600,
@@ -134,6 +149,22 @@ function ModuleCard({ module, loading, onSelect }) {
         }}>
           {moduleWeeks.length} week{moduleWeeks.length !== 1 ? "s" : ""}
         </span>
+        {competeMode && (
+          <button
+            type="button"
+            className="compete-spark-btn"
+            onClick={(e) => {
+              // Stop the card's own onClick (which navigates to the module
+              // overview) from also firing — this button has its own,
+              // more specific destination.
+              e.stopPropagation();
+              navigate(`/typing/competition/${module.id}/${competeMode}`);
+            }}
+          >
+            <Zap size={13} strokeWidth={2.5} className="compete-spark-icon" />
+            Compete
+          </button>
+        )}
       </div>
     </div>
   );
@@ -187,6 +218,64 @@ export default function TypingModuleGrid({ modules, loading, onSelect }) {
           .typing-module-grid {
             grid-template-columns: 1fr !important;
           }
+        }
+
+        /* ── Compete button — minimal card surface, thin electric border
+           that continuously travels around it rather than a solid color
+           block. Cyan → amber, both already in the palette, so it reads
+           as "electric" without introducing a new hue. ──────────────── */
+        @property --spark-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+
+        .compete-spark-btn {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 13px;
+          border-radius: 9px;
+          border: none;
+          background: var(--bg-card);
+          color: var(--text-primary);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          isolation: isolate;
+          transition: transform 0.16s ease;
+        }
+        .compete-spark-btn:hover { transform: translateY(-1px); }
+
+        .compete-spark-btn::before {
+          content: "";
+          position: absolute;
+          inset: -1px;
+          z-index: -1;
+          border-radius: inherit;
+          padding: 1.4px;
+          background: conic-gradient(
+            from var(--spark-angle),
+            transparent 0%,
+            var(--vibrant-cyan) 10%,
+            transparent 24%,
+            transparent 76%,
+            var(--golden-amber) 90%,
+            transparent 100%
+          );
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          animation: compete-spark-spin 2.6s linear infinite;
+        }
+        .compete-spark-btn:hover::before { filter: brightness(1.4); }
+
+        .compete-spark-icon { color: var(--vibrant-cyan); flex-shrink: 0; }
+
+        @keyframes compete-spark-spin {
+          to { --spark-angle: 360deg; }
         }
       `}</style>
     </>

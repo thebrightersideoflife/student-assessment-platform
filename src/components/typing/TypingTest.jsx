@@ -14,6 +14,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import TypingDisplay from "./TypingDisplay";
+import { shuffleArray } from "../../utils/typingExtractor";
+import { buildSnapshot, exceedsErrorCap } from "../../utils/typingScoring";
 
 const IDLE_TIMEOUT_MS = 5000;
 
@@ -137,18 +139,14 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
       // smoothness — a different computation from MonkeyType's real
       // cumulative average, which is why that line ended up looking flat
       // instead of gently trending like the real thing.)
-      const cumulativeWpm = elapsedRef.current > 0
-        ? Math.round((correctCharsRef.current / 5) / (elapsedRef.current / 60))
-        : 0;
-      const burstWpm = Math.round((secondWindowRef.current / 5) * 60);
+      const snap = buildSnapshot({
+        elapsedSeconds:      elapsedRef.current,
+        correctChars:        correctCharsRef.current,
+        incorrectChars:      incorrectCharsRef.current,
+        windowCorrectChars:  secondWindowRef.current,
+      });
       secondWindowRef.current = 0;
 
-      const snap = {
-        second: elapsedRef.current,
-        wpm:    cumulativeWpm,
-        burst:  burstWpm,
-        errors: incorrectCharsRef.current,
-      };
       setSnapshots((prev) => {
         const next = [...prev, snap];
         snapshotsRef.current = next;
@@ -211,23 +209,13 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
     }
 
     // ── Error cap — block further input when too many consecutive errors ────
-    // Count how many trailing characters in `value` are wrong. If the streak
-    // has hit MAX_ERRORS the user must backspace before they can type more.
     // This matches MonkeyType / Keybr behaviour and prevents mindlessly
     // hammering through an entire wrong word without backspacing.
-    const MAX_ERRORS = 10;
-    if (value.length > prev.length) {
-      let errorStreak = 0;
-      for (let i = 0; i < value.length && i < target.length; i++) {
-        if (value[i] !== target[i]) errorStreak++;
-        else errorStreak = 0; // reset on any correct character
-      }
-      if (errorStreak >= MAX_ERRORS) {
-        // Reject the keystroke — restore previous value without scoring
-        typedRef.current = prev;
-        setTyped(prev);
-        return;
-      }
+    if (value.length > prev.length && exceedsErrorCap(value, target)) {
+      // Reject the keystroke — restore previous value without scoring
+      typedRef.current = prev;
+      setTyped(prev);
+      return;
     }
 
     // ── Count new character accuracy ──────────────────────────────────────
@@ -263,8 +251,9 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
           // Re-shuffle the pool before wrapping so the next cycle is a
           // fresh order — prevents the same sequence repeating endlessly
           // within a single session.
-          const shuffled = [...passagesRef.current].sort(() => Math.random() - 0.5);
-          passagesRef.current = shuffled;
+          // (Previously `.sort(() => Math.random() - 0.5)` — that's a biased
+          // shuffle, not a uniform one. shuffleArray is a real Fisher-Yates.)
+          passagesRef.current = shuffleArray(passagesRef.current);
           passageIdxRef.current = 0;
         } else {
           passageIdxRef.current = passageIdxRef.current + 1;

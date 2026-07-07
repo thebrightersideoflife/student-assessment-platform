@@ -7,6 +7,8 @@
 // content first. Incognito sessions have no localStorage, so we silently
 // fall back to a plain shuffle — no errors, no warnings.
 
+import { shuffleArray } from "./typingExtractor";
+
 export const RECENCY_CAP = 40; // remember up to this many recent passage IDs per module
 
 function recencyKey(moduleId) {
@@ -42,12 +44,10 @@ export function saveRecentIds(moduleId, ids) {
  *    new order (those are what will actually be shown in short sessions).
  */
 export function shuffleWithRecency(passages, moduleId) {
-  // Step 1 — Fisher-Yates
-  const arr = [...passages];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
+  // Step 1 — Fisher-Yates (canonical implementation lives in typingExtractor.js —
+  // don't re-implement it here, that's how this file and TypingTest.jsx ended
+  // up with three different shuffle algorithms, one of them biased)
+  const arr = shuffleArray(passages);
 
   // Step 2 — partition
   const recentSet = new Set(loadRecentIds(moduleId));

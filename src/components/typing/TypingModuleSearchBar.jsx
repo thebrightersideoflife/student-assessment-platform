@@ -1,4 +1,4 @@
-export default function TypingModuleSearchBar({ value, onChange, totalModules, visibleModules, accentColor }) {
+export default function TypingModuleSearchBar({ value = "", onChange, totalModules, visibleModules, accentColor, accentRgb }) {
   return (
     <div style={{ marginBottom: "24px" }}>
       <div
@@ -9,7 +9,7 @@ export default function TypingModuleSearchBar({ value, onChange, totalModules, v
           padding: "16px 18px",
           borderRadius: "20px",
           background: "linear-gradient(135deg, rgba(var(--bg-card-rgb), 0.94), rgba(var(--bg-secondary-rgb), 0.82))",
-          border: `1px solid rgba(${accentColor === "var(--royal-blue)" ? "42,92,167" : "244,169,0"}, 0.2)`,
+          border: `1px solid rgba(${accentRgb}, 0.2)`,
           boxShadow: "0 16px 40px rgba(0,0,0,0.08)",
           backdropFilter: "blur(14px) saturate(150%)",
           WebkitBackdropFilter: "blur(14px) saturate(150%)",
@@ -24,7 +24,7 @@ export default function TypingModuleSearchBar({ value, onChange, totalModules, v
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
-            background: `rgba(${accentColor === "var(--royal-blue)" ? "42,92,167" : "244,169,0"}, 0.12)`,
+            background: `rgba(${accentRgb}, 0.12)`,
             color: accentColor,
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
           }}

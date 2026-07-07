@@ -16,10 +16,9 @@
 // sections: goal WPM, goal time (default 15 min), difficulty, duration.
 // Each action button opens the modal pre-focused on the relevant tab.
 
-import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { ThemeContext } from "../context/ThemeContext";
-import { STEP, useTypingPracticeFlow } from "../components/hooks/useTypingPracticeFlow";
+import { STEP, useTypingPracticeFlow } from "../hooks/useTypingPracticeFlow";
+import { useTypingAccent } from "../hooks/useTypingAccent";
 import Breadcrumb from "../components/Breadcrumb";
 import { DurationSelect, TestTypeSelect, UnitModeSelect } from "../components/typing/TypingSetup";
 import TypingPracticeHero from "../components/typing/TypingPracticeHero";
@@ -30,16 +29,14 @@ import UnitTypingTest from "../components/typing/UnitTypingTest";
 import TypingResults from "../components/typing/TypingResults";
 
 export default function TypingPracticePage() {
-  const { theme } = useContext(ThemeContext);
   const navigate  = useNavigate();
-
-  const accentRgb   = theme === "light" ? "42,92,167"   : "244,169,0";
-  const accentColor = theme === "light" ? "var(--royal-blue)" : "var(--golden-amber)";
+  const { accentColor, accentRgb } = useTypingAccent();
 
   const flow = useTypingPracticeFlow();
   const {
     step, selectedModule, selectedDuration, selectedMode,
-    passages, loadingModule, result, resultIsUnit,
+    passages, loadingModule, result, resultIsUnit, nextTestIsUnit,
+    saveRejectedReason,
     moduleQuery, setModuleQuery, hasMadeFirstAttempt, unitIndexRef,
     dailyGoalWpmByMode, dailyGoalTime, dailyGoalWpm,
     settingsModal, setSettingsModal,
@@ -73,6 +70,7 @@ export default function TypingPracticePage() {
           availableModules={availableModules}
           filteredModules={filteredModules}
           accentColor={accentColor}
+          accentRgb={accentRgb}
           hasMadeFirstAttempt={hasMadeFirstAttempt}
           onViewProgressReport={() => navigate("/typing/report")}
           onSelectModule={handleModuleSelect}
@@ -204,6 +202,7 @@ export default function TypingPracticePage() {
           ]} />
           <TypingResults
             result={result}
+            saveRejectedReason={saveRejectedReason}
             moduleId={selectedModule.id}
             moduleName={selectedModule.name}
             durationLabel={resultIsUnit ? "Unit test" : selectedDuration.label}
@@ -222,7 +221,7 @@ export default function TypingPracticePage() {
             })}
             onGoToModule={() => navigate(`/module/${selectedModule.id}`)}
             onRetry={resultIsUnit ? handleUnitRetry : handleRetry}
-            onNextTest={resultIsUnit ? handleUnitNextTest : handleNextTest}
+            onNextTest={nextTestIsUnit ? handleUnitNextTest : handleNextTest}
             // Always passed — TypingResults now always shows the "Unit Test"
             // button (timed or unit-mode results). handleStartUnitTest
             // resets to the first unit in the current pool either way.

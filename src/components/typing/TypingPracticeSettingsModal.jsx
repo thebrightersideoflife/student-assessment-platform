@@ -1,6 +1,7 @@
-import { useContext, useEffect, useState } from "react";
-import { ThemeContext } from "../../context/ThemeContext";
+import { useEffect, useState } from "react";
+import { useTypingAccent } from "../../hooks/useTypingAccent";
 import { TYPING_MODES } from "../../utils/typingExtractor";
+import { validateDuration, formatDurationLabel } from "../../utils/typingDuration";
 
 const DURATION_OPTIONS = [
   { label: "30 sec", seconds: 30 },
@@ -17,9 +18,7 @@ export default function TypingPracticeSettingsModal({
   onSave,
   onClose,
 }) {
-  const { theme } = useContext(ThemeContext);
-  const accentRgb = theme === "light" ? "42,92,167" : "244,169,0";
-  const accentColor = theme === "light" ? "var(--royal-blue)" : "var(--golden-amber)";
+  const { accentColor, accentRgb } = useTypingAccent();
 
   const [tab, setTab] = useState(initialTab);
   const [mode, setMode] = useState(selectedMode || "beginner");
@@ -41,29 +40,20 @@ export default function TypingPracticeSettingsModal({
 
     let finalSeconds = durationSeconds;
     if (customSecs.trim()) {
-      const cv = parseInt(customSecs, 10);
-      if (isNaN(cv) || cv < 10) {
-        setCustomError("Minimum is 10 seconds.");
+      const result = validateDuration(customSecs);
+      if (!result.valid) {
+        setCustomError(result.error);
         setTab("duration");
         return;
       }
-      if (cv > 3600) {
-        setCustomError("Maximum is 3600 seconds.");
-        setTab("duration");
-        return;
-      }
-      finalSeconds = cv;
+      finalSeconds = result.seconds;
     }
-
-    const minutes = Math.floor(finalSeconds / 60);
-    const secs = finalSeconds % 60;
-    const durationLabel = minutes > 0 ? (secs > 0 ? `${minutes}m ${secs}s` : `${minutes} min`) : `${finalSeconds}s`;
 
     onSave({
       goalWpm: !isNaN(wpm) && wpm >= 10 ? wpm : null,
       goalTime: !isNaN(time) && time >= 1 ? time : 15,
       mode,
-      duration: { label: durationLabel, seconds: finalSeconds, mode },
+      duration: { label: formatDurationLabel(finalSeconds), seconds: finalSeconds, mode },
     });
   };
 

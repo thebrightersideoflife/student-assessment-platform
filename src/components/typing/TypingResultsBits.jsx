@@ -219,6 +219,85 @@ export function RaiseGoalPrompt({ goalWpm, wpm, onAccept, onDismiss }) {
   );
 }
 
+// ── Settings badge row ──────────────────────────────────────────────────────
+// Consolidated "what am I currently practising with" strip — difficulty,
+// duration/test type, and daily WPM goal — shown once on the results
+// header instead of scattered across the screen. Deliberately icon-only,
+// no text labels (Difficulty/Mode/Goal), so it stays short enough to sit
+// on the same line as "Test complete" without ever wrapping it onto a
+// second line. Mirrors the exact sizing of the existing inline
+// "WPM goal reached!" badge (11px icon, 12px text, 3px/10px padding,
+// 999px pill, 1px border in the badge's own color) so it reads as part of
+// the same visual family rather than a bolted-on new component.
+function badgeIconWrap(children) {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      {children}
+    </svg>
+  );
+}
+
+const SETTINGS_BADGE_ICONS = {
+  mode: badgeIconWrap(<>
+    <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+    <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+    <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+    <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" />
+    <line x1="17" y1="16" x2="23" y2="16" />
+  </>),
+  duration: badgeIconWrap(<>
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+  </>),
+  goal: badgeIconWrap(<>
+    <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
+  </>),
+};
+
+function SettingsBadge({ icon, children }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      fontSize: "13px", fontWeight: 700, letterSpacing: "0.01em",
+      color: "var(--text-secondary)", whiteSpace: "nowrap",
+    }}>
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+export function SettingsBadgeRow({ mode, durationLabel, goalWpm }) {
+  if (!mode && !durationLabel && !goalWpm) return null;
+  const sep = <span style={{ color: "var(--border-color)", margin: "0 2px" }}>·</span>;
+  const items = [];
+  if (mode) {
+    items.push(
+      <SettingsBadge key="mode" icon={SETTINGS_BADGE_ICONS.mode}>
+        {mode.charAt(0).toUpperCase() + mode.slice(1)}
+      </SettingsBadge>
+    );
+  }
+  if (durationLabel) {
+    items.push(
+      <SettingsBadge key="duration" icon={SETTINGS_BADGE_ICONS.duration}>
+        {durationLabel}
+      </SettingsBadge>
+    );
+  }
+  if (goalWpm) {
+    items.push(
+      <SettingsBadge key="goal" icon={SETTINGS_BADGE_ICONS.goal}>
+        {goalWpm}wpm
+      </SettingsBadge>
+    );
+  }
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "nowrap" }}>
+      {items.map((item, i) => (i === 0 ? item : <span key={`wrap-${i}`} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>{sep}{item}</span>))}
+    </div>
+  );
+}
+
 // ── Trend icon ────────────────────────────────────────────────────────────────
 
 export function TrendIcon({ trend }) {

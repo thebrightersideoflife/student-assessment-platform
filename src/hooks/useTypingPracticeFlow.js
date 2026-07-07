@@ -15,13 +15,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { modules } from "../../data/modules";
-import { weeks } from "../../data/weeks";
-import { questions } from "../../data/questions/index.js";
-import { extractPassages, applyMode, shuffleArray } from "../../utils/typingExtractor";
-import { loadSettings, saveSettings, saveSessionDetail, computeSessionStats, recordGoalChange } from "../../utils/typingStorage";
-import { shuffleWithRecency } from "../../utils/typingRecency";
-import { getTypingReadyModules } from "../../utils/typingContent";
+import { modules } from "../data/modules";
+import { weeks } from "../data/weeks";
+import { questions } from "../data/questions/index.js";
+import { extractPassages, applyMode, shuffleArray } from "../utils/typingExtractor";
+import { loadSettings, saveSettings, saveSessionDetail, computeSessionStats, recordGoalChange, loadSessions } from "../utils/typingStorage";
+import { shuffleWithRecency } from "../utils/typingRecency";
+import { getTypingReadyModules } from "../utils/typingContent";
 
 // ── Steps ──────────────────────────────────────────────────────────────────
 // First-timer flow:   MODULE → TEST_TYPE → (DURATION → TYPING) | (UNIT_SETUP → UNIT_TYPING) → RESULTS
@@ -63,13 +63,28 @@ export function useTypingPracticeFlow() {
   const [passages,         setPassages]         = useState([]);
   const [loadingModule,    setLoadingModule]    = useState(false);
   const [result,           setResult]           = useState(restore?.result ?? null);
+  // Set when the just-finished session was rejected by typingStorage's
+  // validity guard (too short / too little typed / implausible wpm) — the
+  // results screen renders this as a warning banner so the rejection is
+  // visible instead of a console.warn nobody sees. Cleared on every retry/
+  // next-test transition so a stale warning never lingers onto a fresh
+  // attempt.
+  const [saveRejectedReason, setSaveRejectedReason] = useState(null);
   // Whether the `result` currently on screen came from the untimed Unit
   // Typing flow rather than a timed test — controls which labels/actions
   // TypingResults shows (see isUnitMode prop) and which retry/next handlers
   // onRetry/onNextTest should call.
   const [resultIsUnit,     setResultIsUnit]     = useState(restore?.isUnitMode ?? false);
   const [moduleQuery,      setModuleQuery]      = useState("");
-  const [hasMadeFirstAttempt, setHasMadeFirstAttempt] = useState(false);
+  // Seeded from actual stored history, not just `false` — a returning user
+  // who already has session data from a previous visit should see the
+  // Progress Report button enabled immediately, not only after making
+  // another attempt in THIS page load. Previously this always started
+  // false and was only ever flipped by onFirstAttempt firing live during a
+  // session, which is what made the button appear permanently "stuck"
+  // disabled for anyone who already had history but hadn't yet typed
+  // anything new since opening the page.
+  const [hasMadeFirstAttempt, setHasMadeFirstAttempt] = useState(() => loadSessions().length > 0);
   const autoSelectedModuleRef = useRef(null);
 
   // Index of the passage currently being typed in Unit Typing mode — the
@@ -122,7 +137,7 @@ export function useTypingPracticeFlow() {
     if (!restore) return;
     (async () => {
       try {
-        const { questions } = await import("../../data/questions/index.js");
+        const { questions } = await import("../data/questions/index.js");
         const allQuestions  = Object.values(questions[restore.selectedModule.id] || {}).flat();
         const pool          = extractPassages(allQuestions);
         const raw = pool.length > 0 ? pool : [{
@@ -141,7 +156,7 @@ export function useTypingPracticeFlow() {
   const handleModuleSelect = async (mod) => {
     setLoadingModule(true);
     try {
-      const { questions } = await import("../../data/questions/index.js");
+      const { questions } = await import("../data/questions/index.js");
       const allQuestions  = Object.values(questions[mod.id] || {}).flat();
       const pool          = extractPassages(allQuestions);
 
@@ -197,14 +212,47 @@ export function useTypingPracticeFlow() {
     }
   };
 
-  // Unit Typing's difficulty-only gate. Doesn't touch selectedDuration, so
-  // a first-timer who picks Unit Typing is still treated as a first-timer
-  // for the timed flow next time they pick a module — there's no default
-  // duration to skip straight to yet.
+  // Default fallback duration seeded the first time someone picks Unit
+  // Typing without ever having set up a timed test — see handleUnitModeSelect.
+  const DEFAULT_UNIT_FALLBACK_DURATION = { label: "30s", seconds: 30 };
+  const DEFAULT_UNIT_FALLBACK_GOAL_WPM = 35;
+
+  // Unit Typing's difficulty-only gate.
+  //
+  // Historically this never touched selectedDuration, so a first-timer who
+  // picked Unit Typing was still treated as a first-timer for the timed flow
+  // next time they picked a module — nextTestIsUnit would then be stuck on
+  // `true` forever (see the comment above nextTestIsUnit), since there was
+  // no saved duration to fall back to.
+  //
+  // Fix: the first time someone reaches this gate with no duration ever
+  // saved, pre-seed selectedDuration (30s) and their WPM goal (35) for the
+  // chosen difficulty, used as the fallback "timed setup" — exactly as if
+  // they'd gone through DurationSelect and picked the 30s preset. That way
+  // nextTestIsUnit correctly flips to `false` right after their very first
+  // unit test, and the results screen's "Next" button knows to hand them a
+  // timed test without any manual trip through Settings.
   const handleUnitModeSelect = (mode) => {
     setSelectedMode(mode);
     applyAndSet(rawPassagesRef.current, mode);
-    saveSettings({ mode });
+
+    const settingsPatch = { mode };
+
+    if (!selectedDuration) {
+      const fallbackDuration = { ...DEFAULT_UNIT_FALLBACK_DURATION, mode };
+      setSelectedDuration(fallbackDuration);
+      settingsPatch.duration = fallbackDuration;
+
+      // Only seed the goal if the user has never set one themselves.
+      if (!_saved.goalSet && (dailyGoalWpmByMode?.[mode] == null)) {
+        setDailyGoalWpmByMode((prev) => ({ ...prev, [mode]: DEFAULT_UNIT_FALLBACK_GOAL_WPM }));
+        recordGoalChange(mode, DEFAULT_UNIT_FALLBACK_GOAL_WPM);
+        settingsPatch.goalWpm = { [mode]: DEFAULT_UNIT_FALLBACK_GOAL_WPM };
+        settingsPatch.goalSet = true;
+      }
+    }
+
+    saveSettings(settingsPatch);
     unitIndexRef.current = 0;
     setStep(STEP.UNIT_TYPING);
   };
@@ -213,7 +261,7 @@ export function useTypingPracticeFlow() {
 
   const handleFinish = (res) => {
     const stats = computeSessionStats(res);
-    saveSessionDetail({
+    const saveResult = saveSessionDetail({
       ts:             Date.now(),
       date:           new Date().toISOString().slice(0, 10),
       wpm:            stats.wpm,
@@ -233,9 +281,11 @@ export function useTypingPracticeFlow() {
 
     setResult(res);
     setResultIsUnit(false);
+    setSaveRejectedReason(saveResult.saved ? null : saveResult.reason);
     setStep(STEP.RESULTS);
-    // On first-ever results visit, prompt the user to set their WPM goal
-    if (!hasAutoOpenedGoalRef.current && !_saved.goalSet) {
+    // On first-ever results visit, prompt the user to set their WPM goal —
+    // only for a session that actually counted.
+    if (saveResult.saved && !hasAutoOpenedGoalRef.current && !_saved.goalSet) {
       hasAutoOpenedGoalRef.current = true;
       setSettingsModal("goal");
     }
@@ -247,7 +297,7 @@ export function useTypingPracticeFlow() {
   // report/results screens can tell them apart later if needed.
   const handleUnitFinish = (res) => {
     const stats = computeSessionStats(res);
-    saveSessionDetail({
+    const saveResult = saveSessionDetail({
       ts:             Date.now(),
       date:           new Date().toISOString().slice(0, 10),
       wpm:            stats.wpm,
@@ -267,8 +317,9 @@ export function useTypingPracticeFlow() {
 
     setResult(res);
     setResultIsUnit(true);
+    setSaveRejectedReason(saveResult.saved ? null : saveResult.reason);
     setStep(STEP.RESULTS);
-    if (!hasAutoOpenedGoalRef.current && !_saved.goalSet) {
+    if (saveResult.saved && !hasAutoOpenedGoalRef.current && !_saved.goalSet) {
       hasAutoOpenedGoalRef.current = true;
       setSettingsModal("goal");
     }
@@ -277,6 +328,7 @@ export function useTypingPracticeFlow() {
   // Repeat: restore the exact same passage array — no shuffle, no re-transform.
   const handleRetry = () => {
     setResult(null);
+    setSaveRejectedReason(null);
     setPassages(lastPassagesRef.current);   // ← restore snapshot directly
     setStep(STEP.TYPING);
   };
@@ -284,6 +336,7 @@ export function useTypingPracticeFlow() {
   // Next test: re-shuffle pool respecting recency, keep same settings, go straight to typing
   const handleNextTest = () => {
     setResult(null);
+    setSaveRejectedReason(null);
     rawPassagesRef.current = shuffleWithRecency(rawPassagesRef.current, selectedModule.id);
     applyAndSet(rawPassagesRef.current, selectedMode);
     setStep(STEP.TYPING);
@@ -292,6 +345,7 @@ export function useTypingPracticeFlow() {
   // Unit-mode repeat: retype the exact same unit.
   const handleUnitRetry = () => {
     setResult(null);
+    setSaveRejectedReason(null);
     setStep(STEP.UNIT_TYPING);
   };
 
@@ -299,6 +353,7 @@ export function useTypingPracticeFlow() {
   // reshuffling with recency) once the end is reached.
   const handleUnitNextTest = () => {
     setResult(null);
+    setSaveRejectedReason(null);
     const nextIndex = unitIndexRef.current + 1;
     if (nextIndex >= passages.length) {
       rawPassagesRef.current = shuffleWithRecency(rawPassagesRef.current, selectedModule.id);
@@ -313,16 +368,28 @@ export function useTypingPracticeFlow() {
   // Jump into Unit Typing from a timed results screen (the "Unit Test"
   // button) — reuses the module/pool/difficulty already loaded, no need to
   // go back through module select or the test-type gate.
+  //
+  // Previously this hardcoded unitIndexRef.current = 0, so every click
+  // landed back on the exact same first passage in the pool instead of a
+  // new one — clicking "Unit Test" repeatedly (e.g. from several different
+  // timed results screens in a row) never actually varied the unit shown.
+  // Fixed to advance exactly like handleUnitNextTest does: move to the next
+  // passage in the pool, reshuffling with recency and wrapping back to 0
+  // once the pool is exhausted — so a fresh click always presents a
+  // different unit than the last one shown, the same guarantee Next test
+  // already gives inside a unit-typing session.
   const handleStartUnitTest = () => {
     setResult(null);
-    unitIndexRef.current = 0;
+    setSaveRejectedReason(null);
+    const nextIndex = unitIndexRef.current + 1;
+    if (nextIndex >= passages.length) {
+      rawPassagesRef.current = shuffleWithRecency(rawPassagesRef.current, selectedModule.id);
+      applyAndSet(rawPassagesRef.current, selectedMode);
+      unitIndexRef.current = 0;
+    } else {
+      unitIndexRef.current = nextIndex;
+    }
     setStep(STEP.UNIT_TYPING);
-  };
-
-  const handleChangeDuration = () => {
-    setResult(null);
-    setSelectedDuration(null);
-    setStep(STEP.DURATION);
   };
 
   const handleChangeModule = () => {
@@ -410,11 +477,32 @@ export function useTypingPracticeFlow() {
     return haystack.includes(query);
   });
 
+  // ── What should the "Next" button on the results screen do? ────────────────
+  // NOT the same question as "was the just-finished test a unit test"
+  // (resultIsUnit) — those two used to be conflated, which meant clicking
+  // the ad-hoc "Unit Test" button on a timed results screen permanently
+  // "stuck" the Next button in unit mode with no way back to timed without
+  // fully backing out to the module/test-type gates again.
+  //
+  // The fix relies on an already-existing signal: `selectedDuration` is
+  // `null` until the user has *ever* picked a timed duration, and the
+  // ad-hoc "Unit Test" button (handleStartUnitTest) never touches it.
+  //   - Native Unit Typing flow (first-timer deliberately chose Unit Typing,
+  //     never set up a duration) → selectedDuration stays null → nothing to
+  //     fall back to → Next correctly keeps doing unit tests.
+  //   - Ad-hoc Unit Test (button pressed from an established timed results
+  //     screen) → selectedDuration was already set before the detour and is
+  //     untouched by it → Next correctly resumes the timed flow.
+  // "Repeat" is intentionally NOT changed by this — repeating should always
+  // redo the exact thing that was just done, unit or timed.
+  const nextTestIsUnit = resultIsUnit && !selectedDuration;
+
   return {
     // step + core selection state
     step, setStep,
     selectedModule, selectedDuration, selectedMode, selectedTestType,
-    passages, loadingModule, result, resultIsUnit,
+    passages, loadingModule, result, resultIsUnit, nextTestIsUnit,
+    saveRejectedReason,
     moduleQuery, setModuleQuery,
     hasMadeFirstAttempt,
     unitIndexRef,
@@ -438,7 +526,6 @@ export function useTypingPracticeFlow() {
     handleUnitRetry,
     handleUnitNextTest,
     handleStartUnitTest,
-    handleChangeDuration,
     handleChangeModule,
     handleSettingsSave,
     handleRaiseGoal,

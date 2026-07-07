@@ -57,25 +57,3 @@ export default function TypingPracticeHero({ accentColor, accentRgb }) {
     </section>
   );
 }
-
-function KeyboardPillIcon({ size = 13 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="2" y="6" width="20" height="12" rx="2" />
-      <line x1="6" y1="10" x2="6" y2="10" strokeWidth="2.5" />
-      <line x1="10" y1="10" x2="10" y2="10" strokeWidth="2.5" />
-      <line x1="14" y1="10" x2="14" y2="10" strokeWidth="2.5" />
-      <line x1="18" y1="10" x2="18" y2="10" strokeWidth="2.5" />
-      <line x1="8" y1="16" x2="16" y2="16" strokeWidth="2" />
-    </svg>
-  );
-}

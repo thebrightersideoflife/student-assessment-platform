@@ -113,8 +113,17 @@ function extractAnswer(correctAnswers, blanks) {
 
 const MIN_PART_LENGTH = 15;
 
-function isTypeable(str) {
-  if (!str || str.length < MIN_PART_LENGTH) return false;
+// minLength defaults to MIN_PART_LENGTH (used for question/explanation
+// parts), but callers checking a short answer (MC option text, open-ended
+// one-word answers) can pass a lower floor — see MIN_ANSWER_LENGTH below.
+// Previously this always checked against the hardcoded MIN_PART_LENGTH
+// regardless of what the caller passed, which meant any multiple-choice or
+// open-ended answer shorter than 15 characters (e.g. "Deployability",
+// "Documentation", "Middleware") was silently dropped from the passage —
+// the caller's own length check passed, but isTypeable() re-vetoed it
+// anyway using the wrong threshold.
+function isTypeable(str, minLength = MIN_PART_LENGTH) {
+  if (!str || str.length < minLength) return false;
   const alpha = (str.match(/[a-zA-Z0-9]/g) || []).length;
   return alpha / str.length >= 0.55;
 }
@@ -221,7 +230,7 @@ function buildPassage(question) {
 
   const parts = [];
   parts.push({ role: "question", text: questionText, blankHighlights });
-  if (!isFillInTheBlank && answerText && answerText.length >= MIN_ANSWER_LENGTH && isTypeable(answerText)) {
+  if (!isFillInTheBlank && answerText && isTypeable(answerText, MIN_ANSWER_LENGTH)) {
     parts.push({ role: "answer", text: answerText });
   }
   if (expText && isTypeable(expText)) parts.push({ role: "explanation", text: expText });
@@ -375,3 +384,30 @@ export const TYPING_MODES = [
     detail:      "The complete extracted text: sentence case, hyphens, colons, quotes, parentheses — everything. Closest to real exam writing.",
   },
 ];
+// ─── Public: joined-passage building ──────────────────────────────────────
+// Extracted from UnitTypingTest.jsx, where this was a local, unexported
+// buildTarget() function — CompetitionTypingTest needs the identical joining
+// logic (parts joined by "\n", boundaries recorded per part) for its own
+// single-passage race format, so this moved here rather than being copied
+// a second time. UnitTypingTest.jsx should now import this instead of
+// defining its own copy.
+/**
+ * buildJoinedTarget(passage) → { target: string, boundaries: Boundary[] }
+ * Boundary = { role, start, end, blankHighlights }
+ */
+export function buildJoinedTarget(passage) {
+  let cursor = 0;
+  const boundaries = [];
+  const pieces = [];
+  passage.parts.forEach((part, i) => {
+    const start = cursor;
+    pieces.push(part.text);
+    cursor += part.text.length;
+    boundaries.push({ role: part.role, start, end: cursor, blankHighlights: part.blankHighlights || [] });
+    if (i < passage.parts.length - 1) {
+      pieces.push("\n");
+      cursor += 1;
+    }
+  });
+  return { target: pieces.join(""), boundaries };
+}

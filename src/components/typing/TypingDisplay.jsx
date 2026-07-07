@@ -22,12 +22,7 @@
 //   3. Compute the CSS translateY offset that scrolls all completed lines off
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
-
-const ROLE_META = {
-  question:    { label: "Question",    color: "var(--vibrant-cyan)"  },
-  answer:      { label: "Answer",      color: "var(--lush-lime)"     },
-  explanation: { label: "Explanation", color: "var(--golden-amber)"  },
-};
+import { ROLE_META } from "../../constants/typingRoles";
 
 const VISIBLE_LINES  = 5; // lines shown in the viewport at once
 const SCROLL_TRIGGER = 3; // caret must reach this line index before scrolling starts (0-based)

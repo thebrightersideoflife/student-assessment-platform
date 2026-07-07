@@ -39,12 +39,7 @@
 // characters naturally reverses the shift as the caret's offset drops.
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-
-const ROLE_META = {
-  question:    { label: "Question",    color: "var(--vibrant-cyan)"  },
-  answer:      { label: "Answer",      color: "var(--lush-lime)"     },
-  explanation: { label: "Explanation", color: "var(--golden-amber)"  },
-};
+import { ROLE_META } from "../../constants/typingRoles";
 
 const VIEWPORT_HEIGHT = 420; // px shown at once when content overflows
 const SCROLL_FRACTION = 0.5; // keep the caret at/above this fraction of the viewport
