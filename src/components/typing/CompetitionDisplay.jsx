@@ -17,23 +17,17 @@
 // which is what makes the "flip" instant and glitch-free.
 
 import { useLayoutEffect, useEffect, useRef, useState } from "react";
+import { toComparable } from "../../utils/typingCompare";
 
 const PAGE_LINES = 2;
 
 export default function CompetitionDisplay({ target, typed, blankHighlights = [] }) {
-  // buildJoinedTarget stitches parts together with a literal "\n", which
-  // default CSS white-space handling collapses visually into an ordinary
-  // space — so a player correctly typing a space at that boundary was
-  // being compared against "\n" here and rendered red forever, even
-  // though CompetitionTypingTest's own scoring (patched separately) had
-  // already learned to accept it. This display never knew about that fix
-  // because it does its own independent char-by-char comparison for
-  // coloring. Same 1-for-1 swap used there: same length, same indices,
-  // used only for the correct/wrong comparison below — never for anything
-  // involving actual line-break/page-flip layout, which still needs the
-  // real "\n" to measure correctly (see the layout effect below, which
-  // still measures off the raw `target`/`chars`).
-  const compareChars = target.replace(/\n/g, " ").split("");
+  // See utils/typingCompare.js — target's "\n" boundary renders visually as
+  // a plain space (default CSS white-space collapsing), so the
+  // correct/incorrect coloring below has to compare against that, not the
+  // literal separator. `chars` (below) stays the real target — still needed
+  // for line-break/page-flip measurement, which must see the real "\n".
+  const compareChars = toComparable(target).split("");
   const chars = target.split("");
 
   const probeRef        = useRef(null);

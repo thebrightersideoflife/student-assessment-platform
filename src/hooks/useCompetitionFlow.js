@@ -16,6 +16,7 @@ import {
   computeSessionStats,
   saveCompetitionSessionDetail,
   getCompetitionUnlockState,
+  getAttemptsSinceBestFaced,
   saveSettings,
   loadGhostCandidateSessions,
 } from "../utils/typingStorage";
@@ -50,8 +51,22 @@ export function useCompetitionFlow() {
   const [priorBest,       setPriorBest]       = useState(null);
   const [unlockState,     setUnlockState]     = useState(null);
   const [ghosts,          setGhosts]          = useState(null);
+  // Non-null while the "Your Best Self Has Challenged You" notice is
+  // blocking the flow — set by handleStartRace/handleRaceAgain whenever
+  // this race's roster includes Best, cleared by handleAcceptChallenge.
+  // Passage + ghosts are already fully built by the time this is set; the
+  // notice is purely a gate in front of a race screen that's already
+  // ready, not something that triggers additional loading.
+  const [pendingChallenge, setPendingChallenge] = useState(null); // { isFirstAttempt } | null
 
   const rawPassagesRef = useRef([]);
+  // Remembers whether THIS race's roster included Best, from the moment
+  // it's decided (handleStartRace/handleRaceAgain) through to when the
+  // result is saved (handleFinish) — so the saved CompetitionSessionDetail
+  // can be stamped with facedBest accurately. A ref rather than state:
+  // nothing needs to re-render off this value changing, it just needs to
+  // still be readable later in the same flow.
+  const bestIncludedRef = useRef(false);
 
   // ── Resolve module/passages/unlock state from the route params ─────────
   // Runs on mount and whenever the URL's moduleId/mode actually change
@@ -98,30 +113,61 @@ export function useCompetitionFlow() {
   // typingExtractor.js, which is shared with Timed/Unit modes — the cap only
   // applies to what Competition is willing to select from its own pool.
   const COMPETITION_MAX_TARGET_LENGTH = 600; // characters, measured post-applyMode
+  const COMPETITION_MIN_TARGET_LENGTH = 250; // characters, measured post-applyMode — a too-short passage is over almost before a ghost race gets going
 
   // Picks the next passage from the pool (fresh each race — recency-aware,
   // same convention as Timed/Unit) and applies the current difficulty.
-  // Filters to passages that stay under COMPETITION_MAX_TARGET_LENGTH once
-  // transformed for this mode — measured after applyMode, not on raw
-  // extracted text, since beginner/intermediate stripping can shrink a
-  // passage noticeably relative to normal mode on the same question. Falls
-  // back to the full (unfiltered) pool if nothing in it happens to qualify,
-  // so a sparse question bank never leaves Competition with no passage at
-  // all — better to occasionally serve a long one than to break the mode.
+  // Filters to passages that land within [COMPETITION_MIN_TARGET_LENGTH,
+  // COMPETITION_MAX_TARGET_LENGTH] once transformed for this mode —
+  // measured after applyMode, not on raw extracted text, since
+  // beginner/intermediate stripping can shrink a passage noticeably
+  // relative to normal mode on the same question. Falls back to the full
+  // (unfiltered) pool if nothing in it happens to qualify, so a sparse
+  // question bank never leaves Competition with no passage at all — better
+  // to occasionally serve one outside the ideal range than to break the
+  // mode.
   const pickPassage = (m) => {
     const pool = shuffleWithRecency(rawPassagesRef.current, selectedModule.id);
     rawPassagesRef.current = pool;
     const transformed = applyMode(pool, m);
-    const shortEnough = transformed.filter(
-      (p) => buildJoinedTarget(p).target.length <= COMPETITION_MAX_TARGET_LENGTH
-    );
-    const candidates = shortEnough.length > 0 ? shortEnough : transformed;
+    const inRange = transformed.filter((p) => {
+      const len = buildJoinedTarget(p).target.length;
+      return len >= COMPETITION_MIN_TARGET_LENGTH && len <= COMPETITION_MAX_TARGET_LENGTH;
+    });
+    const candidates = inRange.length > 0 ? inRange : transformed;
     const next = candidates[0];
     setPassage(next);
     return next;
   };
 
-  const refreshGhosts = (modId, m, todayTargetLength = null) => {
+  // ── Best-appearance roster policy ─────────────────────────────────────
+  // Best is a bonus 4th racer rather than always-on: the default field is
+  // you + Average + Last Recorded (3). Best joins either at random (kept
+  // rare — BEST_RANDOM_CHANCE), guaranteed by the 15th attempt since it
+  // last raced so it's never gone for good, OR whenever the player
+  // explicitly requests it via handleChallengeBest below (bidirectional —
+  // the system can challenge the player, and the player can challenge
+  // back). Also unconditional on this pair's genuine first-ever
+  // Competition attempt (getAttemptsSinceBestFaced returns null exactly in
+  // that case).
+  //
+  // This decision deliberately lives here, NOT in typingRace.js —
+  // selectGhosts() there is a pure ghost-building function with no concept
+  // of roster policy (see that file's own header comment), and stays that
+  // way; "should Best race this time" is Competition-flow-level product
+  // logic, so it's applied one layer up, by simply omitting `best` from
+  // what gets built into runners/data below.
+  const BEST_INTERVAL      = 15;   // Best is guaranteed by the 15th attempt since it last raced
+  const BEST_RANDOM_CHANCE = 0.08; // otherwise, a small per-attempt chance — kept low since the guaranteed window is now wide
+
+  const decideRoster = (moduleId, m) => {
+    const sinceBest = getAttemptsSinceBestFaced(moduleId, m);
+    if (sinceBest === null) return { includeBest: true, isFirstAttempt: true };
+    const dueForBest = sinceBest >= BEST_INTERVAL - 1; // this IS the 15th attempt without Best
+    return { includeBest: dueForBest || Math.random() < BEST_RANDOM_CHANCE, isFirstAttempt: false };
+  };
+
+  const refreshGhosts = (modId, m, todayTargetLength = null, includeBest = true) => {
     const state = getCompetitionUnlockState(modId, m);
     setUnlockState(state);
 
@@ -133,24 +179,47 @@ export function useCompetitionFlow() {
     const selected = selectGhosts({ moduleId: modId, mode: m });
     if (!selected) { setGhosts(null); return; }
 
+    // selectGhosts() always returns all three regardless of includeBest —
+    // roster filtering happens here, not there (see comment above).
+    const roster = includeBest
+      ? selected
+      : { average: selected.average, lastRecorded: selected.lastRecorded };
+
     const seed = Date.now();
-    setGhosts({
-      data: selected,
-      runners: {
-        best:         createGhostRunner(selected.best,         { jitterSeed: seed,     todayTargetLength }),
-        average:      createGhostRunner(selected.average,      { jitterSeed: seed + 1, todayTargetLength }),
-        lastRecorded: createGhostRunner(selected.lastRecorded, { jitterSeed: seed + 2, todayTargetLength }),
-      },
-    });
+    const runners = {
+      average:      createGhostRunner(roster.average,      { jitterSeed: seed + 1, todayTargetLength }),
+      lastRecorded: createGhostRunner(roster.lastRecorded,  { jitterSeed: seed + 2, todayTargetLength }),
+    };
+    if (roster.best) {
+      runners.best = createGhostRunner(roster.best, { jitterSeed: seed, todayTargetLength });
+    }
+
+    setGhosts({ data: roster, runners });
   };
 
   // Fired by the hero's CTA (STEP.INTRO → STEP.RACE) — picks today's
-  // passage and builds ghosts scaled to it, same as the old handleModeSelect
-  // did right after difficulty was picked.
+  // passage, decides whether Best is in this race's roster, and builds
+  // ghosts accordingly. If Best is in, the race screen isn't shown yet —
+  // passage/ghosts are already fully prepared, just held behind the
+  // challenge notice until handleAcceptChallenge fires.
   const handleStartRace = () => {
     const next = pickPassage(selectedMode);
     const todayTargetLength = buildJoinedTarget(next).target.length;
-    refreshGhosts(selectedModule.id, selectedMode, todayTargetLength);
+    const { includeBest, isFirstAttempt } = decideRoster(selectedModule.id, selectedMode);
+    bestIncludedRef.current = includeBest;
+    refreshGhosts(selectedModule.id, selectedMode, todayTargetLength, includeBest);
+
+    if (includeBest) {
+      setPendingChallenge({ isFirstAttempt });
+    } else {
+      setStep(STEP.RACE);
+    }
+  };
+
+  // Accepts the "Your Best Self Has Challenged You" notice — the race
+  // screen underneath is already fully prepared, this just reveals it.
+  const handleAcceptChallenge = () => {
+    setPendingChallenge(null);
     setStep(STEP.RACE);
   };
 
@@ -173,6 +242,10 @@ export function useCompetitionFlow() {
       snapshots: raceResult.snapshots,
       targetLength: raceResult.targetLength,
       paceCurve: raceResult.paceCurve,
+      // Drives getAttemptsSinceBestFaced() on future races — see
+      // typingStorage.js for why this lives on the record itself rather
+      // than a separate counter store.
+      facedBest: bestIncludedRef.current,
     };
 
     // Snapshot ghosts from history BEFORE saving this attempt — unchanged
@@ -198,15 +271,21 @@ export function useCompetitionFlow() {
         moduleId: selectedModule.id, mode: selectedMode,
       });
       if (selected) {
+        // Same roster this race actually used (bestIncludedRef, set in
+        // handleStartRace/handleRaceAgain) — a race that didn't include
+        // Best shouldn't suddenly show them on the results screen.
+        const roster = bestIncludedRef.current
+          ? selected
+          : { average: selected.average, lastRecorded: selected.lastRecorded };
         const seed = Date.now();
-        ghostsForResults = {
-          data: selected,
-          runners: {
-            best:         createGhostRunner(selected.best,         { jitterSeed: seed,     todayTargetLength: raceResult.targetLength }),
-            average:      createGhostRunner(selected.average,      { jitterSeed: seed + 1, todayTargetLength: raceResult.targetLength }),
-            lastRecorded: createGhostRunner(selected.lastRecorded, { jitterSeed: seed + 2, todayTargetLength: raceResult.targetLength }),
-          },
+        const runners = {
+          average:      createGhostRunner(roster.average,      { jitterSeed: seed + 1, todayTargetLength: raceResult.targetLength }),
+          lastRecorded: createGhostRunner(roster.lastRecorded,  { jitterSeed: seed + 2, todayTargetLength: raceResult.targetLength }),
         };
+        if (roster.best) {
+          runners.best = createGhostRunner(roster.best, { jitterSeed: seed, todayTargetLength: raceResult.targetLength });
+        }
+        ghostsForResults = { data: roster, runners };
       }
     }
 
@@ -225,7 +304,46 @@ export function useCompetitionFlow() {
     setPriorBest(null);
     const next = pickPassage(selectedMode);
     const todayTargetLength = buildJoinedTarget(next).target.length;
-    refreshGhosts(selectedModule.id, selectedMode, todayTargetLength);
+    const { includeBest, isFirstAttempt } = decideRoster(selectedModule.id, selectedMode);
+    bestIncludedRef.current = includeBest;
+    refreshGhosts(selectedModule.id, selectedMode, todayTargetLength, includeBest);
+
+    if (includeBest) {
+      setPendingChallenge({ isFirstAttempt });
+    } else {
+      setStep(STEP.RACE);
+    }
+  };
+
+  // Player-initiated counterpart to decideRoster — bidirectional per
+  // product decision: the system challenges the player on its own cadence
+  // above, but the player can also challenge Best back at any time from
+  // the results screen ("Challenge Your Best Self"). Forces includeBest
+  // rather than computing it. Unlike the system-initiated challenge
+  // (handleStartRace/handleRaceAgain), this one skips the "Your Best Self
+  // Has Challenged You" notice entirely — the player already explicitly
+  // asked for this, so gating it behind a confirmation screen would just
+  // be a redundant extra click, not a real decision point. Goes straight
+  // to STEP.RACE once passage/ghosts are ready. It still counts toward
+  // resetting the "since Best last faced" cadence normally (handleFinish
+  // stamps facedBest from bestIncludedRef.current the same way regardless
+  // of how this race's roster was decided).
+  //
+  // No-ops if Best isn't actually available yet (Competition not unlocked
+  // for this pair) — callers should gate the button on unlockState.unlocked
+  // too, this is just a defensive second check, same convention
+  // selectGhosts itself already follows.
+  const handleChallengeBest = () => {
+    const state = getCompetitionUnlockState(selectedModule.id, selectedMode);
+    if (!state.unlocked) return;
+
+    setResult(null);
+    setSaveRejectedReason(null);
+    setPriorBest(null);
+    const next = pickPassage(selectedMode);
+    const todayTargetLength = buildJoinedTarget(next).target.length;
+    bestIncludedRef.current = true;
+    refreshGhosts(selectedModule.id, selectedMode, todayTargetLength, true);
     setStep(STEP.RACE);
   };
 
@@ -236,10 +354,23 @@ export function useCompetitionFlow() {
     navigate("/typing");
   };
 
+  // "Back to module" (Competition results screen) — unlike handleChangeModule
+  // above, this stays anchored to the SAME module the race just happened in,
+  // and drops the user straight into a timed test for it rather than back to
+  // module-select. Passes forceTimed via location.state so
+  // useTypingPracticeFlow skips the first-timer TEST_TYPE gate even if this
+  // person has never run a timed test before (see that hook's
+  // handleModuleSelect for the fallback-duration seeding this triggers).
+  const handleBackToModule = () => {
+    navigate(`/typing?module=${selectedModule.id}`, { state: { forceTimed: true } });
+  };
+
   return {
     step, setStep,
     selectedModule, selectedMode, passage, loadingModule, result,
     unlockState, ghosts, saveRejectedReason, priorBest,
-    handleStartRace, handleFinish, handleRaceAgain, handleChangeModule,
+    pendingChallenge,
+    handleStartRace, handleAcceptChallenge, handleFinish, handleRaceAgain, handleChallengeBest, handleChangeModule,
+    handleBackToModule,
   };
 }

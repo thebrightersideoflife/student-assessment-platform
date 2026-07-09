@@ -15,7 +15,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { loadSessions, loadSettings, loadGoalHistory, TYPING_MODE_IDS } from "../utils/typingStorage";
+import { loadSessions, loadSettings, loadGoalHistory, TYPING_MODE_IDS, clearSessionsForMode, clearCompetitionSessionsForMode, getCombinedModeSessions } from "../utils/typingStorage";
 import TypingProgressReport from "../components/typing/TypingProgressReport";
 import "../assets/styles/typingReport.css";
 
@@ -63,13 +63,18 @@ export default function TypingReportPage() {
     return () => { mounted = false; };
   }, []);
 
-  // Sessions belonging to the active difficulty tab only — everything below
-  // the tab bar (charts, struggling characters, best/avg stats) is scoped to
-  // this single mode, since beginner/intermediate/normal measure different
-  // skills and blending them back together would be as misleading as the
-  // old single global record was.
+  // Sessions belonging to the active difficulty tab only — merged from
+  // BOTH typing:sessions:v1 (Timed/Unit) and typing:competitionSessions:v1
+  // (Competition), same merge TypingResults.jsx uses for its Best/Avg
+  // display. A fast Competition lap is just as real a data point as a
+  // Timed run, so the charts below (WPM/accuracy over time, session
+  // scores, daily practice time, struggling characters) should reflect
+  // both — depends on `sessions` (Timed/Unit state) purely so
+  // handleClearHistory's reload forces this to recompute; the actual
+  // Competition data is re-read fresh from localStorage each time
+  // regardless, so a mode-scoped clear correctly drops it from here too.
   const modeSessions = useMemo(
-    () => sessions.filter((s) => s.mode === activeMode),
+    () => getCombinedModeSessions(activeMode),
     [sessions, activeMode]
   );
 
@@ -78,16 +83,17 @@ export default function TypingReportPage() {
     [goalHistory, activeMode]
   );
 
+  // Same merge, per mode, for the sidebar's best/avg/session-count chips.
   const modeSummaries = useMemo(() => {
     return TYPING_MODE_IDS.map((modeId) => {
-      const filtered = sessions.filter((s) => s.mode === modeId);
-      const bestWpm = filtered.length > 0 ? Math.max(...filtered.map((s) => s.wpm)) : 0;
-      const avgAccuracy = filtered.length > 0
-        ? Math.round(filtered.reduce((sum, s) => sum + s.accuracy, 0) / filtered.length)
+      const combined = getCombinedModeSessions(modeId);
+      const bestWpm = combined.length > 0 ? Math.max(...combined.map((s) => s.wpm)) : 0;
+      const avgAccuracy = combined.length > 0
+        ? Math.round(combined.reduce((sum, s) => sum + s.accuracy, 0) / combined.length)
         : 0;
       return {
         mode: modeId,
-        sessions: filtered.length,
+        sessions: combined.length,
         bestWpm,
         avgAccuracy,
       };
@@ -107,6 +113,31 @@ export default function TypingReportPage() {
   // typingReport.css) hides it for actual printing/PDF export.
 
   const handlePrint = () => window.print();
+
+  // Clears BOTH plain practice sessions AND Competition history for
+  // activeMode only — other difficulties are untouched. This intentionally
+  // resets Competition's unlock progress for this difficulty too (per
+  // product decision): getCompetitionUnlockState derives "unlocked" purely
+  // from attempt counts, so once the underlying attempts are gone,
+  // Competition naturally re-locks until the user repopulates 3 fresh
+  // attempts at this difficulty — there's no separate flag to reset.
+  //
+  // Re-runs loadSessions() afterward rather than filtering local state by
+  // hand, so this stays in sync with whatever loadSessions' own
+  // integrity/validation filtering decides is actually left — same source
+  // of truth the initial load used.
+  const handleClearHistory = () => {
+    const modeLabel = MODE_LABELS[activeMode] || activeMode;
+    const confirmed = window.confirm(
+      `Clear all ${modeLabel} history? This removes every ${modeLabel} practice session and Competition attempt. ` +
+      `Competition will re-lock for ${modeLabel} until you complete 3 new attempts. This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    clearSessionsForMode(activeMode);
+    clearCompetitionSessionsForMode(activeMode);
+    setSessions(loadSessions());
+  };
 
   // Explicit navigate (not navigate(-1)) so the restoration payload is
   // guaranteed to land on /typing's location.state. A plain history pop
@@ -179,6 +210,7 @@ export default function TypingReportPage() {
               goalWpm={settings?.goalWpm?.[activeMode] ?? null}
               goalTime={settings?.goalTime ?? null}
               goalHistory={modeGoalHistory}
+              onClearHistory={handleClearHistory}
             />
           )}
         </main>

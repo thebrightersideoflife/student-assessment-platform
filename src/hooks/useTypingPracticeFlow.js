@@ -153,7 +153,16 @@ export function useTypingPracticeFlow() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleModuleSelect = async (mod) => {
+  // `opts.forceTimed` — used by the "Back to module" link on Competition's
+  // results screen (see CompetitionResults/useCompetitionFlow), which wants
+  // to land the user directly on a timed test for that module rather than
+  // routing them back through the first-timer TEST_TYPE gate. Mirrors the
+  // same "seed a default duration if none exists yet" fallback
+  // handleUnitModeSelect already uses for the reverse case, so someone who's
+  // never touched timed mode still gets a sensible duration instead of
+  // landing on STEP.TYPING with selectedDuration still null.
+  const handleModuleSelect = async (mod, opts = {}) => {
+    const { forceTimed = false } = opts;
     setLoadingModule(true);
     try {
       const { questions } = await import("../data/questions/index.js");
@@ -167,7 +176,15 @@ export function useTypingPracticeFlow() {
 
       rawPassagesRef.current = shuffleWithRecency(raw, mod.id);
       setSelectedModule(mod);
-      if (selectedDuration && selectedMode) {
+
+      const goStraightToTyping = (selectedDuration && selectedMode) || forceTimed;
+
+      if (goStraightToTyping) {
+        const durationToUse = selectedDuration || DEFAULT_UNIT_FALLBACK_DURATION;
+        if (!selectedDuration) {
+          setSelectedDuration(durationToUse);
+          saveSettings({ duration: durationToUse, mode: selectedMode });
+        }
         applyAndSet(rawPassagesRef.current, selectedMode);
         setStep(STEP.TYPING);
       } else {
@@ -181,7 +198,15 @@ export function useTypingPracticeFlow() {
         parts: [{ role: "question", text: "Could not load questions for this module." }],
       }];
       setSelectedModule(mod);
-      if (selectedDuration && selectedMode) {
+
+      const goStraightToTyping = (selectedDuration && selectedMode) || forceTimed;
+
+      if (goStraightToTyping) {
+        const durationToUse = selectedDuration || DEFAULT_UNIT_FALLBACK_DURATION;
+        if (!selectedDuration) {
+          setSelectedDuration(durationToUse);
+          saveSettings({ duration: durationToUse, mode: selectedMode });
+        }
         applyAndSet(rawPassagesRef.current, selectedMode);
         setStep(STEP.TYPING);
       } else {
@@ -465,7 +490,7 @@ export function useTypingPracticeFlow() {
     if (!requestedModule) return;
 
     autoSelectedModuleRef.current = moduleParam;
-    handleModuleSelect(requestedModule);
+    handleModuleSelect(requestedModule, { forceTimed: !!location.state?.forceTimed });
   }, [location.search, modules]);
 
   const availableModules = getTypingReadyModules(modules, weeks, questions);

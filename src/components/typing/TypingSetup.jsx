@@ -216,7 +216,7 @@ export const TEST_TYPES = [
     id:          "unit",
     label:       "Unit Typing",
     description: "No timer — go at your own pace",
-    detail:      "Type the question, answer, and explanation together as one flowing passage — press Enter to move from one to the next. There's no countdown; you finish when you finish.",
+    detail:      "Type the question, answer, and explanation together as one flowing passage — press Enter to move from one to the next. There's no countdown; when you finish, you finish when you finish.",
   },
   {
     id:          "timed",

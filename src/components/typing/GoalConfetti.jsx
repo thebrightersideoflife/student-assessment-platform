@@ -281,13 +281,16 @@ export default function GoalConfetti({ mode, theme, accentColor = null }) {
 
   return (
     <>
-      {/* Full-viewport canvas — pointer-events:none so it never blocks clicks */}
+      {/* Full-viewport canvas — pointer-events:none so it never blocks clicks.
+          z-index deliberately above any celebratory card/modal (highest
+          currently in use is BestDefeatedNotice at 20000) so confetti always
+          animates in front of the card it's celebrating, not behind it. */}
       <canvas
         ref={canvasRef}
         style={{
           position:      "fixed",
           inset:         0,
-          zIndex:        9999,
+          zIndex:        21000,
           pointerEvents: "none",
         }}
       />
@@ -307,7 +310,7 @@ export default function GoalConfetti({ mode, theme, accentColor = null }) {
             top:        `${c.topPct}%`,
             left:       `${c.leftPct}%`,
             transform:  "translateX(-50%)",
-            zIndex:     10000,
+            zIndex:     21001,
             pointerEvents: "none",
             color: accentColor || "var(--golden-amber)",
             opacity: c.dim ? 0.85 : 1,

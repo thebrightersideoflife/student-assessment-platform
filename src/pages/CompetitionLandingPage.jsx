@@ -7,14 +7,16 @@ import CompetitionIntroHero from "../components/typing/CompetitionIntroHero";
 import CompetitionTypingTest from "../components/typing/CompetitionTypingTest";
 import CompetitionRaceTrackLive from "../components/typing/CompetitionRaceTrackLive";
 import CompetitionResults from "../components/typing/CompetitionResults";
+import BestChallengeNotice from "../components/typing/BestChallengeNotice";
 
 export default function CompetitionLandingPage() {
   const { accentColor } = useTypingAccent();
   const flow = useCompetitionFlow();
   const {
     step, selectedModule, selectedMode, passage, loadingModule, result,
-    unlockState, ghosts, saveRejectedReason, priorBest,
-    handleStartRace, handleFinish, handleRaceAgain, handleChangeModule,
+    unlockState, ghosts, saveRejectedReason, priorBest, pendingChallenge,
+    handleStartRace, handleAcceptChallenge, handleFinish, handleRaceAgain, handleChallengeBest, handleChangeModule,
+    handleBackToModule,
   } = flow;
 
   const onProgressRef = useRef(null);
@@ -73,8 +75,25 @@ export default function CompetitionLandingPage() {
           ghosts={ghosts}
           saveRejectedReason={saveRejectedReason}
           priorBest={priorBest}
+          unlockState={unlockState}
           onRaceAgain={handleRaceAgain}
+          onChallengeBest={handleChallengeBest}
           onChangeModule={handleChangeModule}
+          onBackToModule={handleBackToModule}
+        />
+      )}
+
+      {/* Best-challenge notice — rendered on top of whatever STEP is
+          currently showing (still STEP.INTRO underneath at this point;
+          see handleStartRace/handleRaceAgain in useCompetitionFlow.js).
+          Passage + ghosts are already fully prepared by the time this
+          appears; accepting just flips the step to reveal the race screen
+          sitting ready underneath. No dismiss path by design — see the
+          component itself. */}
+      {pendingChallenge && (
+        <BestChallengeNotice
+          onAccept={handleAcceptChallenge}
+          isFirstAttempt={pendingChallenge.isFirstAttempt}
         />
       )}
     </div>

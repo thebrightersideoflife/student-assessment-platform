@@ -39,6 +39,77 @@ function assertMode(mode) {
   }
 }
 
+// ── Integrity guard (NOT real security) ────────────────────────────────
+// Everything in this file lives in localStorage — fully readable and
+// editable by anyone using the app on their own machine, via devtools'
+// "Edit value" or by pasting in someone else's exported JSON. There is no
+// way to keep a real secret in a client-only bundle: any "signing key"
+// embedded here ships in the JS that anyone can read, so a motivated
+// person can always recompute a valid checksum by hand once they've seen
+// the source. This is NOT cryptographic protection and must never be
+// treated as one.
+//
+// What it DOES do: stop the far more common case — a casual edit of one
+// field's value in devtools, or a naive copy-paste of a friend's raw JSON
+// — from silently "just working" the next time the app reads this data.
+// That's a real deterrent even though it's not a real guarantee.
+//
+// If a genuine anti-cheat requirement ever shows up (e.g. a public
+// leaderboard), the only durable fix is moving session validation to a
+// server the client can't edit — this is a stopgap for a still-fully-
+// client-side app, not a substitute for that.
+const INTEGRITY_SALT = "tr-typing-integrity-v1"; // bump this if the schema changes meaningfully — invalidates all previously-stored guarded data, which is fine, it just falls back to empty
+
+function checksum(str) {
+  // djb2 — fast, dependency-free, good distribution for tamper
+  // *detection*. Not collision-resistant; not a cryptographic hash; not
+  // trying to be one. See the block comment above.
+  let hash = 5381;
+  const salted = INTEGRITY_SALT + str;
+  for (let i = 0; i < salted.length; i++) {
+    hash = ((hash << 5) + hash + salted.charCodeAt(i)) | 0;
+  }
+  return hash.toString(36);
+}
+
+/**
+ * writeGuarded(key, payload) — JSON-stringifies payload, wraps it with a
+ * checksum, and writes the envelope to localStorage.
+ */
+function writeGuarded(key, payload) {
+  const json = JSON.stringify(payload);
+  localStorage.setItem(key, JSON.stringify({ payload: json, sum: checksum(json) }));
+}
+
+/**
+ * readGuarded(key) → parsed payload | null
+ *
+ * Verifies the checksum before trusting the payload. A legacy bare
+ * array/object (written before this guard existed) is accepted once,
+ * un-checked — there's real user history in there worth keeping, and it's
+ * the ONLY shape allowed to skip verification. Anything shaped like a
+ * guarded envelope but with a mismatched checksum is treated as
+ * tampered/corrupted and dropped (logged, not thrown) rather than trusted.
+ */
+function readGuarded(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const outer = JSON.parse(raw);
+
+    if (Array.isArray(outer) || (outer && typeof outer === "object" && !("sum" in outer))) {
+      return outer; // legacy pre-guard shape — accepted once, unverified
+    }
+    if (!outer || typeof outer.payload !== "string" || checksum(outer.payload) !== outer.sum) {
+      console.warn(`[typingStorage] "${key}" failed its integrity check — treating as tampered or corrupted and ignoring it.`);
+      return null;
+    }
+    return JSON.parse(outer.payload);
+  } catch {
+    return null;
+  }
+}
+
 // ── Shared session-stat formulas ────────────────────────────────────────────
 //
 // computeSessionStats(res) is the single source of truth for every derived
@@ -332,6 +403,7 @@ function capSessionsPerMode(sessions) {
 const MIN_VALID_DURATION_SECONDS = 10;
 const MIN_VALID_CHARS_TYPED = 30;
 const MAX_PLAUSIBLE_WPM = 250;
+const CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes — generous for real clock drift, not for backdating/gaming streaks
 
 function validateSessionDetail(detail) {
   const totalChars = (detail.correctChars || 0) + (detail.incorrectChars || 0);
@@ -349,6 +421,12 @@ function validateSessionDetail(detail) {
   // what's realistic here doesn't help anyone cheat the floor.
   if (detail.wpm > MAX_PLAUSIBLE_WPM) {
     return `A speed of ${detail.wpm} wpm isn't currently considered plausible (max ${MAX_PLAUSIBLE_WPM}), so this attempt wasn't saved.`;
+  }
+  // A timestamp meaningfully in the future can only come from a manually
+  // edited/injected record (or a wildly wrong system clock) — either way,
+  // trusting it would let streaks/history be backdated or padded.
+  if (detail.ts && detail.ts > Date.now() + CLOCK_SKEW_TOLERANCE_MS) {
+    return "This attempt's timestamp isn't valid, so it wasn't saved.";
   }
   return null; // valid
 }
@@ -374,7 +452,7 @@ export function saveSessionDetail(detail) {
   try {
     const existing = loadSessions();
     const updated  = capSessionsPerMode([...existing, detail]);
-    localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
+    writeGuarded(SESSIONS_KEY, updated);
 
     sessionCount = incrementSessionCount();
     checkGoalReached(detail.mode, detail.wpm, sessionCount);
@@ -388,16 +466,19 @@ export function saveSessionDetail(detail) {
 /**
  * loadSessions() → SessionDetail[]
  * Returns all stored session details, oldest-first. Never throws.
+ *
+ * Two layers of trust before a stored record reaches the app: the
+ * checksum envelope (readGuarded — catches tampering with the raw
+ * localStorage value) and a re-run of validateSessionDetail on every
+ * entry (catches anything that ended up in the array without ever going
+ * through saveSessionDetail — e.g. a directly-injected record that
+ * happens to be wrapped in a valid-looking envelope). Both are "raise the
+ * bar", not "airtight" — see the integrity-guard comment above.
  */
 export function loadSessions() {
-  try {
-    const raw = localStorage.getItem(SESSIONS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const parsed = readGuarded(SESSIONS_KEY);
+  if (!Array.isArray(parsed)) return [];
+  return parsed.filter((s) => s && typeof s === "object" && !validateSessionDetail(s));
 }
 
 /**
@@ -405,6 +486,21 @@ export function loadSessions() {
  */
 export function clearSessions() {
   localStorage.removeItem(SESSIONS_KEY);
+}
+
+/**
+ * clearSessionsForMode(mode) — removes only this difficulty's practice
+ * sessions from the log, leaving other modes' history untouched. Used by
+ * the progress report's "clear history for this difficulty" action —
+ * intentionally scoped, since beginner/intermediate/normal are meaningfully
+ * different skills and a user asking to reset one shouldn't lose the
+ * others. Rewrites through writeGuarded (not removeItem) so the remaining
+ * modes' entries stay covered by the integrity checksum.
+ */
+export function clearSessionsForMode(mode) {
+  assertMode(mode);
+  const remaining = loadSessions().filter((s) => s.mode !== mode);
+  writeGuarded(SESSIONS_KEY, remaining);
 }
 
 /**
@@ -688,16 +784,14 @@ function capCompetitionSessions(sessions) {
 /**
  * loadCompetitionSessions() → CompetitionSessionDetail[]
  * All groups, oldest-first. Never throws.
+ * Same two-layer trust model as loadSessions() — see that function's
+ * comment for why both the checksum envelope AND a re-run of
+ * validateSessionDetail matter here.
  */
 export function loadCompetitionSessions() {
-  try {
-    const raw = localStorage.getItem(COMPETITION_SESSIONS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const parsed = readGuarded(COMPETITION_SESSIONS_KEY);
+  if (!Array.isArray(parsed)) return [];
+  return parsed.filter((s) => s && typeof s === "object" && !validateSessionDetail(s));
 }
 /**
  * loadCompetitionSessionsFor(moduleId, mode) → CompetitionSessionDetail[]
@@ -725,7 +819,7 @@ export function saveCompetitionSessionDetail(detail) {
   try {
     const existing = loadCompetitionSessions();
     const updated  = capCompetitionSessions([...existing, detail]);
-    localStorage.setItem(COMPETITION_SESSIONS_KEY, JSON.stringify(updated));
+    writeGuarded(COMPETITION_SESSIONS_KEY, updated);
   } catch (err) {
     console.warn("[typingStorage] Failed to save competition session detail:", err);
     return { saved: false, reason: "Couldn't save this attempt due to a storage error." };
@@ -754,6 +848,43 @@ export function getCompetitionUnlockState(moduleId, mode) {
     attemptsRecorded,
     attemptsNeeded: Math.max(0, COMPETITION_UNLOCK_THRESHOLD - attemptsRecorded),
   };
+}
+
+/**
+ * getAttemptsSinceBestFaced(moduleId, mode) → number | null
+ *
+ * Walks this (moduleId, mode) pair's Competition history, newest-first,
+ * counting how many consecutive most-recent attempts did NOT race against
+ * "Best" (facedBest !== true) — stopping at the first attempt that DID, or
+ * at the end of history. Returns null specifically when there's no
+ * Competition history at all yet for this pair — callers treat that as the
+ * "first-ever attempt" case and handle it separately (Best is always
+ * included on a genuine first attempt, unconditionally — see
+ * useCompetitionFlow.js's decideRoster).
+ *
+ * `facedBest` is stored directly on each CompetitionSessionDetail rather
+ * than in a separate counter store, on purpose — this file already
+ * documents (see the header comment) that a prior design with multiple
+ * drifting stores was deliberately collapsed into one log with everything
+ * else derived on read; this follows that same pattern rather than adding
+ * a new store. A record saved before `facedBest` existed is treated as
+ * `false` if missing — the safe direction, since it only makes Best come
+ * due slightly sooner, never later.
+ */
+export function getAttemptsSinceBestFaced(moduleId, mode) {
+  assertMode(mode);
+  const history = loadCompetitionSessionsFor(moduleId, mode)
+    .slice()
+    .sort((a, b) => b.ts - a.ts); // newest-first
+
+  if (history.length === 0) return null;
+
+  let count = 0;
+  for (const s of history) {
+    if (s.facedBest) break;
+    count += 1;
+  }
+  return count;
 }
 /**
  * loadGhostCandidateSessions(moduleId, mode) → CompetitionSessionDetail[]
@@ -796,8 +927,142 @@ function buildSyntheticPaceCurve(durationSeconds) {
   return curve;
 }
 /**
+ * getTodayPracticeSeconds() → number
+ *
+ * Total typing time recorded today, summed across BOTH session logs —
+ * typing:sessions:v1 (Timed/Unit) AND typing:competitionSessions:v1
+ * (Competition). Competition previously wasn't counted here at all: it's a
+ * genuinely separate log (see the header comment above the Competition
+ * section — a deliberate split so Competition's different rhythm doesn't
+ * corrupt Timed/Unit's deriveStats trend/best math), but a minute spent
+ * racing is still a minute of practice, and the *daily time goal* is about
+ * total time spent, not which mode it was spent in. So this is the one
+ * place that intentionally reads across both logs, rather than adding a
+ * third store or duplicating a running total — same "derive on read"
+ * philosophy as everything else in this file (see §6.8-equivalent
+ * reasoning at the top).
+ *
+ * Deliberately NOT filtered by mode/moduleId, matching the existing
+ * (pre-Competition) behavior of summing every session logged today
+ * regardless of difficulty — the daily time goal has always been "total
+ * minutes typed today", not a per-difficulty count.
+ */
+export function getTodayPracticeSeconds() {
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const normalSeconds = loadSessions()
+    .filter((s) => s.date === todayISO)
+    .reduce((sum, s) => sum + (s.duration ?? 0), 0);
+  const competitionSeconds = loadCompetitionSessions()
+    .filter((s) => s.date === todayISO)
+    .reduce((sum, s) => sum + (s.duration ?? 0), 0);
+  return normalSeconds + competitionSeconds;
+}
+
+const GOAL_MILESTONES_KEY = "typing:goalMilestones:v1";
+
+function loadGoalMilestones() {
+  try {
+    const raw = localStorage.getItem(GOAL_MILESTONES_KEY);
+    if (!raw) return {};
+    const data = JSON.parse(raw);
+    const todayISO = new Date().toISOString().slice(0, 10);
+    return data.date === todayISO ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveGoalMilestones(data) {
+  try {
+    const todayISO = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(GOAL_MILESTONES_KEY, JSON.stringify({ ...data, date: todayISO }));
+  } catch {
+    // non-critical, fine to no-op
+  }
+}
+
+/**
+ * checkTimeMilestone(totalMinutes, goalMinutes) → level | null
+ *
+ * Time goal celebrates every time the day's total crosses a NEW multiple
+ * of the goal — not just the first crossing. Practice 60/60/60 min goal
+ * and hit 190 total minutes today, and this fires at 60 (level 1), 120
+ * (level 2), and 180 (level 3) — each one a genuinely new milestone, so
+ * being "on a roll" keeps getting celebrated instead of going quiet after
+ * the first hit.
+ */
+export function checkTimeMilestone(totalMinutes, goalMinutes) {
+  if (!goalMinutes || goalMinutes <= 0) return null;
+  const data = loadGoalMilestones();
+  const currentLevel = Math.floor(totalMinutes / goalMinutes);
+  const lastLevel = data.timeLevel ?? 0;
+  if (currentLevel > lastLevel && currentLevel >= 1) {
+    saveGoalMilestones({ ...data, timeLevel: currentLevel });
+    return currentLevel;
+  }
+  return null;
+}
+
+/**
+ * checkWpmMilestone(wpm, goalWpm) → boolean
+ *
+ * WPM celebrates every time a session both clears the goal AND sets a new
+ * personal best FOR TODAY — so a string of increasingly fast sessions each
+ * gets its own moment, rather than only the first time the goal is met.
+ */
+export function checkWpmMilestone(wpm, goalWpm) {
+  if (!goalWpm || wpm < goalWpm) return false;
+  const data = loadGoalMilestones();
+  const lastBest = data.wpmBest ?? 0;
+  if (wpm > lastBest) {
+    saveGoalMilestones({ ...data, wpmBest: wpm });
+    return true;
+  }
+  return false;
+}
+
+/**
+ * getCombinedModeSessions(mode) → SessionDetail[]
+ *
+ * Merges typing:sessions:v1 and typing:competitionSessions:v1, filtered to
+ * one difficulty mode, sorted oldest→newest by `ts`. Both logs already
+ * store wpm/accuracy/etc. directly on each entry (see the schema docs),
+ * so no recomputation is needed — just concatenate and re-sort, since
+ * interleaving two independently-appended logs won't already be
+ * chronological. Kept separate from deriveStats' modeSessions param name
+ * (still expects a plain oldest-first array) — this is only about what
+ * feeds it, not about deriveStats itself needing to know two logs exist.
+ *
+ * The two logs stay physically separate everywhere else (unlock math,
+ * trend charts specific to one mode, etc.) — this merge exists only for
+ * "best/average WPM & accuracy across all practice" style displays, where
+ * a fast lap in Competition is just as real a data point as a Timed run.
+ */
+export function getCombinedModeSessions(mode) {
+  const normal = loadSessions().filter((s) => s.mode === mode);
+  const competition = loadCompetitionSessions().filter((s) => s.mode === mode);
+  return [...normal, ...competition].sort((a, b) => a.ts - b.ts);
+}
+
+/**
  * clearCompetitionSessions() — wipes the entire competition log (all modules/modes).
  */
 export function clearCompetitionSessions() {
   localStorage.removeItem(COMPETITION_SESSIONS_KEY);
+}
+
+/**
+ * clearCompetitionSessionsForMode(mode) — removes Competition history for
+ * this difficulty across ALL modules, leaving other modes' Competition
+ * data untouched. Paired with clearSessionsForMode() for the progress
+ * report's "clear history for this difficulty" action, so a full reset of
+ * one difficulty also resets Competition's unlock progress for it — there's
+ * no separate "unlocked" flag to clear, getCompetitionUnlockState derives
+ * unlock status from attempt counts, so removing the underlying attempts
+ * naturally re-locks Competition until the user repopulates 3 fresh ones.
+ */
+export function clearCompetitionSessionsForMode(mode) {
+  assertMode(mode);
+  const remaining = loadCompetitionSessions().filter((s) => s.mode !== mode);
+  writeGuarded(COMPETITION_SESSIONS_KEY, remaining);
 }

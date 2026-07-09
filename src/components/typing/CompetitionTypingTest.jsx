@@ -19,23 +19,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import CompetitionDisplay from "./CompetitionDisplay";
 import { buildJoinedTarget } from "../../utils/typingExtractor";
 import { buildSnapshot, exceedsErrorCap } from "../../utils/typingScoring";
+import { toComparable } from "../../utils/typingCompare";
 
 export default function CompetitionTypingTest({ passage, onFinish, onFirstAttempt, onProgress, onGiveUp }) {
   const { target, boundaries } = buildJoinedTarget(passage);
   const blankHighlights = boundaries.flatMap((b) => b.blankHighlights || []);
 
-  // buildJoinedTarget stitches parts together with a literal "\n" — but
-  // CompetitionDisplay renders that boundary with default CSS white-space
-  // handling, which visually collapses it into an ordinary space. The
-  // player is shown a space there and naturally types a spacebar, so every
-  // character-by-character comparison (both the correct/incorrect tally
-  // below and exceedsErrorCap's shared error-streak scan) needs to compare
-  // against what's actually displayed, not the literal separator. This is
-  // a 1-for-1 character swap — same length, same indices — so it never
-  // touches target.length, boundaries, or anything display-related; it
-  // exists purely for comparison purposes and is scoped to this file only,
-  // so Unit/Timed typing (which also uses buildJoinedTarget) is unaffected.
-  const compareTarget = target.replace(/\n/g, " ");
+  // See utils/typingCompare.js — display renders the "\n" boundary as a
+  // plain space, so comparisons (error tally + exceedsErrorCap below) need
+  // to check against that, not the literal separator.
+  const compareTarget = toComparable(target);
 
   const [typed,   setTyped]   = useState("");
   const [started, setStarted] = useState(false);
@@ -46,6 +39,7 @@ export default function CompetitionTypingTest({ passage, onFinish, onFirstAttemp
   const charErrorsRef     = useRef({});
   const typedRef          = useRef("");
   const elapsedRef        = useRef(0);
+  const lastTickWallTimeRef = useRef(null); // performance.now() at the last processed tick — used to catch up if the interval gets throttled
   const secondWindowRef   = useRef(0);
   const snapshotsRef      = useRef([]);
   const paceCurveRef      = useRef([]); // [{ second, pctComplete }] — this run's own journey
@@ -55,10 +49,25 @@ export default function CompetitionTypingTest({ passage, onFinish, onFirstAttemp
   useEffect(() => { inputRef.current?.focus({ preventScroll: true }); }, []);
 
   // ── Stopwatch — same shape as UnitTypingTest's, plus pctComplete tracking ─
+  // Uses wall-clock deltas (performance.now()) rather than assuming each
+  // tick represents exactly 1 real second. Browsers throttle/suspend
+  // setInterval on backgrounded tabs, so a naive `elapsedRef.current += 1`
+  // per tick silently falls behind real time the longer a tab stays
+  // backgrounded — which then skews WPM (elapsed is the denominator) and,
+  // here specifically, desyncs the live ghost comparison in
+  // CompetitionRaceTrackLive, since ghosts are evaluated at this same
+  // elapsedSeconds value. Catching up by the real elapsed delta each tick
+  // keeps this correct regardless of how late a tick actually fires.
   useEffect(() => {
     if (!started) return;
+    lastTickWallTimeRef.current = performance.now();
+
     timerRef.current = setInterval(() => {
-      elapsedRef.current += 1;
+      const now = performance.now();
+      const deltaSeconds = Math.max(1, Math.round((now - lastTickWallTimeRef.current) / 1000));
+      lastTickWallTimeRef.current += deltaSeconds * 1000; // advance by whole seconds consumed, keeping any sub-second remainder for the next tick
+
+      elapsedRef.current += deltaSeconds;
       setElapsedSeconds(elapsedRef.current);
 
       const snap = buildSnapshot({
@@ -174,6 +183,10 @@ export default function CompetitionTypingTest({ passage, onFinish, onFirstAttemp
         onPaste={(e) => e.preventDefault()}
         rows={1}
         aria-label="Type here"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
         style={{ position: "absolute", left: "-9999px", top: 0, opacity: 0, pointerEvents: "none", resize: "none" }}
       />
 

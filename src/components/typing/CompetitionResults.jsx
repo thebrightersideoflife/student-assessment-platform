@@ -2,8 +2,7 @@
 // Results screen for Competition mode. "You" arrive already finished (that's
 // why we're here); ghosts keep animating toward the finish line live via
 // useGhostRaceSimulation, and a finish-order list grows underneath the
-// track as each one crosses — this list is the direct answer to "gives the
-// order of finished participants... pops up live as players finish."
+// track as each one crosses.
 
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import CompetitionRaceTrack, { RACER_META, RANK_OPACITY, rankRacers } from "./CompetitionRaceTrack";
@@ -11,22 +10,23 @@ import { computeSessionStats } from "../../utils/typingStorage";
 import { useGhostRaceSimulation } from "../../hooks/useGhostRaceSimulation";
 import { ThemeContext } from "../../context/ThemeContext";
 import GoalConfetti from "./GoalConfetti";
+import BestDefeatedNotice from "./BestDefeatedNotice";
 
 const TABLE_HEADERS = ["Position", "Username", "WPM", "Keystrokes", "Accuracy", "Time"];
 const EMPTY_RUNNERS = {};
+// Same artwork used in BestChallengeNotice / BestDefeatedNotice — reused
+// here as Best's "profile pic" on the Challenge Your Best Self button so
+// the same face represents Best everywhere it shows up in Competition mode.
+const BEST_IMAGE_SRC = "/images/Best_Player-Typing_Competition.png";
 
-// Small inline indicator like "(↑+4wpm)" / "(↓-58wpm)" / "(↑+2%)" — only
-// rendered when there's an actual, nonzero change to report. Up = green
-// (an improvement, whether that's wpm or accuracy), down = red — same
-// "good/bad" color convention already used elsewhere (accColor in
-// TypingResults, tpr-good/tpr-bad in the report).
+// Small inline indicator like "(↑+4wpm)" — only rendered when nonzero.
 function DeltaBadge({ delta, suffix }) {
   if (delta == null) return null;
   const rounded = Math.round(delta);
   if (rounded === 0) return null;
   const isUp  = rounded > 0;
   const arrow = isUp ? "↑" : "↓";
-  const sign  = isUp ? "+" : ""; // the minus sign is already part of a negative number
+  const sign  = isUp ? "+" : "";
   return (
     <span style={{
       marginLeft: "6px", fontSize: "11px", fontWeight: 700,
@@ -37,22 +37,14 @@ function DeltaBadge({ delta, suffix }) {
   );
 }
 
-export default function CompetitionResults({ result, ghosts, saveRejectedReason = null, priorBest = null, onRaceAgain, onChangeModule }) {
+export default function CompetitionResults({ result, ghosts, saveRejectedReason = null, priorBest = null, unlockState = null, onRaceAgain, onChallengeBest, onChangeModule, onBackToModule }) {
   const { theme } = useContext(ThemeContext);
   const yourStats = useMemo(() => computeSessionStats(result), [result]);
   const yourKeystrokes = (result.correctChars || 0) + (result.incorrectChars || 0);
 
-  // Deltas vs. this (module, mode) pair's prior personal best — shown as
-  // inline badges in the You row regardless of whether a celebration
-  // fires (see below); purely informational.
   const wpmDelta      = priorBest ? yourStats.wpm - priorBest.wpm : null;
   const accuracyDelta = priorBest ? yourStats.accuracy - priorBest.accuracy : null;
 
-  // ── Save-rejected toast ─────────────────────────────────────────────────
-  // Pop-up rather than a persistent banner, matching TypingResults' — the
-  // warning is noticed in the moment without permanently occupying the
-  // results layout. Re-triggers if saveRejectedReason itself changes (a
-  // fresh race, rejected again, right after a prior toast faded).
   const [showSaveToast, setShowSaveToast] = useState(false);
   useEffect(() => {
     if (!saveRejectedReason) { setShowSaveToast(false); return; }
@@ -61,12 +53,8 @@ export default function CompetitionResults({ result, ghosts, saveRejectedReason 
     return () => clearTimeout(t);
   }, [saveRejectedReason]);
 
-  // Stable reference: without this, `ghosts?.runners ?? {}` produces a new
-  // object every render, which (since useGhostRaceSimulation depends on
-  // this value by reference) tears down and restarts the rAF loop on every
-  // single frame it itself produces — the loop never survives long enough
-  // to reach a ghost's finish, which is what was producing the permanent
-  // "racing…" state even though the dots visually sat near the finish line.
+  // Stable reference — avoids tearing down/restarting useGhostRaceSimulation's
+  // rAF loop on every render.
   const ghostRunners = useMemo(() => ghosts?.runners ?? EMPTY_RUNNERS, [ghosts]);
   const { ghostStates, allFinished } = useGhostRaceSimulation(ghostRunners, result.elapsedSeconds);
 
@@ -82,44 +70,44 @@ export default function CompetitionResults({ result, ghosts, saveRejectedReason 
         ...g,
         wpm: data?.wpm,
         accuracy: data?.accuracy,
-        // Use the runner's rescaled projection, not the raw historical
-        // count off `data` — `data.keystrokes` is tied to the ghost's own
-        // historical passage length and isn't comparable to today's race.
         keystrokes: runner?.projectedKeystrokes ?? data?.keystrokes,
       };
     }),
   ];
 
-  // Every racer, ordered by the same rule the track uses for its rank-fade
-  // (finished by finish time, still-racing by current position) — so the
-  // table shows the whole field the whole time, reordering live as ghosts
-  // gain or lose ground, not just growing once each one finishes.
   const orderedRacers = rankRacers(racers);
 
-  // ── Position-based celebration ──────────────────────────────────────────
-  // "You" arrives at Results already finished, and rankRacers always ranks
-  // a finished racer above any still-racing one regardless of that racer's
-  // current pct — so your position relative to every ghost is fully
-  // decided the instant this component first renders. It cannot later
-  // improve OR worsen as the still-racing ghosts keep animating toward
-  // their own finish (a ghost finishing later than you simply can't
-  // out-rank you — see rankRacers). That's what makes it safe to trigger
-  // immediately, without waiting for allFinished.
-  //
-  // 1st place → "gold" tier: the fullest celebration (most confetti + the
-  // PartyPopper icon), via GoalConfetti's mode="wpm".
-  // 2nd place → "silver" tier: a step down (moderate confetti + a smaller
-  // Medal icon), via GoalConfetti's dedicated mode="silver" — deliberately
-  // NOT mode="time": that mode has no icon fallback, so under
-  // prefers-reduced-motion it renders nothing at all, which is exactly why
-  // 2nd place wasn't showing any celebration before this fix.
-  // 3rd/4th → no celebration.
-  const yourRank = orderedRacers.findIndex((r) => r.id === "you");
-  const celebrationTier = yourRank === 0 ? "gold" : yourRank === 1 ? "silver" : null;
+  // ── Best-defeated check ──────────────────────────────────────────────────
+  // Same "decided once, at mount" invariant the rank-based celebration
+  // below already relies on: rankRacers ranks a finished racer above any
+  // still-racing one, so if Best is in this race and you outrank it in
+  // orderedRacers, that's final the instant this renders — Best cannot
+  // later "catch up" as its own animation continues toward its own,
+  // already-fixed finish time.
+  const bestInRace = racers.find((r) => r.id === "best");
+  const yourIndex = orderedRacers.findIndex((r) => r.id === "you");
+  const bestIndex = bestInRace ? orderedRacers.findIndex((r) => r.id === "best") : -1;
+  const defeatedBest = bestInRace != null && bestIndex !== -1 && yourIndex < bestIndex;
 
-  // Ref-guarded so it fires exactly once per mount (component fully
-  // unmounts/remounts on Race Again via the parent's step transitions, so
-  // no manual reset is needed here).
+  const bestData   = ghosts?.data?.best;
+  const bestRunner = ghostRunners.best;
+
+  const [showDefeatedNotice, setShowDefeatedNotice] = useState(false);
+  const defeatedFiredRef = useRef(false);
+  useEffect(() => {
+    if (defeatedBest && !defeatedFiredRef.current) {
+      defeatedFiredRef.current = true;
+      setShowDefeatedNotice(true);
+    }
+  }, [defeatedBest]);
+
+  // ── Position-based celebration (gold/silver confetti) ───────────────────
+  // Suppressed when defeatedBest is true — beating Best already gets the
+  // bigger, more specific BestDefeatedNotice above, so both firing at once
+  // would just be visual clutter.
+  const yourRank = yourIndex;
+  const celebrationTier = defeatedBest ? null : yourRank === 0 ? "gold" : yourRank === 1 ? "silver" : null;
+
   const celebratedTierRef = useRef(null);
   const [activeCelebration, setActiveCelebration] = useState(null);
   useEffect(() => {
@@ -131,6 +119,17 @@ export default function CompetitionResults({ result, ghosts, saveRejectedReason 
 
   return (
     <div>
+      {showDefeatedNotice && (
+        <BestDefeatedNotice
+          yourWpm={yourStats.wpm}
+          yourAccuracy={yourStats.accuracy}
+          yourTime={result.elapsedSeconds}
+          bestWpm={bestData?.wpm}
+          bestAccuracy={bestData?.accuracy}
+          bestTime={bestRunner?.totalSeconds}
+          onDismiss={() => setShowDefeatedNotice(false)}
+        />
+      )}
       {activeCelebration === "gold" && <GoalConfetti mode="wpm" theme={theme} accentColor={RACER_META.you.color} />}
       {activeCelebration === "silver" && <GoalConfetti mode="silver" theme={theme} accentColor={RACER_META.you.color} />}
       {showSaveToast && saveRejectedReason && (
@@ -155,9 +154,46 @@ export default function CompetitionResults({ result, ghosts, saveRejectedReason 
       <CompetitionRaceTrack racers={racers} mode="results" />
 
       <div style={{ marginTop: "24px" }}>
-        <h3 style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: "10px" }}>
-          Standings
-        </h3>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: "12px", marginBottom: "10px", flexWrap: "wrap",
+        }}>
+          <h3 style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", margin: 0 }}>
+            Standings
+          </h3>
+
+          {unlockState?.unlocked && onChallengeBest && (
+            <button
+              className="button"
+              onClick={onChallengeBest}
+              style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                padding: "6px 12px 6px 6px",
+                fontSize: "12.5px", fontWeight: 700,
+                borderRadius: "999px",
+                background: "color-mix(in srgb, var(--lush-lime) 12%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--lush-lime) 45%, transparent)",
+                color: "var(--lush-lime)",
+              }}
+            >
+              <span style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: "22px", height: "22px", borderRadius: "50%",
+                overflow: "hidden", flexShrink: 0,
+                background: RACER_META.best.color,
+                boxShadow: `0 0 0 1px color-mix(in srgb, var(--lush-lime) 55%, transparent)`,
+              }}>
+                <img
+                  src={BEST_IMAGE_SRC}
+                  alt=""
+                  aria-hidden="true"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </span>
+              Challenge Your Best Self
+            </button>
+          )}
+        </div>
 
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
           <thead>
@@ -229,17 +265,18 @@ export default function CompetitionResults({ result, ghosts, saveRejectedReason 
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "28px" }}>
+      <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "28px", flexWrap: "wrap" }}>
         <button className="button" onClick={onRaceAgain}>Race again</button>
+        {onBackToModule && (
+          <button className="button" onClick={onBackToModule} style={{ opacity: 0.9 }}>
+            Back to module
+          </button>
+        )}
         <button className="button" onClick={onChangeModule} style={{ opacity: 0.75 }}>Change module</button>
       </div>
 
       <style>{`
-        /* Save-rejected toast — slides/fades in, holds, then fades out over
-           the full 5s lifetime the component keeps it mounted for. */
-        .cr-save-toast {
-          animation: cr-toast-fade 5s ease forwards;
-        }
+        .cr-save-toast { animation: cr-toast-fade 5s ease forwards; }
         @keyframes cr-toast-fade {
           0%   { opacity: 0; transform: translateY(8px); }
           8%   { opacity: 1; transform: translateY(0); }

@@ -53,6 +53,7 @@ export default function UnitTypingTest({ passage, onFinish, onFirstAttempt, onGi
   const charErrorsRef     = useRef({});
   const typedRef          = useRef("");
   const elapsedRef        = useRef(0);
+  const lastTickWallTimeRef = useRef(null); // performance.now() at the last processed tick — used to catch up if the interval gets throttled
   const secondWindowRef   = useRef(0);
   const snapshotsRef      = useRef([]);
   const timerRef          = useRef(null);
@@ -61,10 +62,22 @@ export default function UnitTypingTest({ passage, onFinish, onFirstAttempt, onGi
   useEffect(() => { inputRef.current?.focus({ preventScroll: true }); }, []);
 
   // ── Stopwatch — counts up, no countdown, starts on first keystroke ───────
+  // Uses wall-clock deltas (performance.now()) rather than assuming each
+  // tick represents exactly 1 real second — see CompetitionTypingTest's
+  // matching comment. Untimed here, so a throttled tab doesn't affect
+  // finishing (there's no countdown to run out), but elapsedSeconds still
+  // feeds directly into this session's own WPM, so it still needs to track
+  // real time rather than silently falling behind after a backgrounded tab.
   useEffect(() => {
     if (!started) return;
+    lastTickWallTimeRef.current = performance.now();
+
     timerRef.current = setInterval(() => {
-      elapsedRef.current += 1;
+      const now = performance.now();
+      const deltaSeconds = Math.max(1, Math.round((now - lastTickWallTimeRef.current) / 1000));
+      lastTickWallTimeRef.current += deltaSeconds * 1000;
+
+      elapsedRef.current += deltaSeconds;
       setElapsedSeconds(elapsedRef.current);
 
       const snap = buildSnapshot({
@@ -192,6 +205,10 @@ export default function UnitTypingTest({ passage, onFinish, onFirstAttempt, onGi
         onPaste={(e) => e.preventDefault()}
         rows={1}
         aria-label="Type here"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
         style={{
           position:      "absolute",
           left:          "-9999px",

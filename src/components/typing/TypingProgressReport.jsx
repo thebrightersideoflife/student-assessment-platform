@@ -244,7 +244,7 @@ const MODE_LABELS = { beginner: "Beginner", intermediate: "Intermediate", normal
 // page filters before this component ever sees them), so every stat below
 // — best WPM, average WPM, average accuracy — reflects that one mode only.
 
-function Cover({ sessions, mode }) {
+function Cover({ sessions, mode, onClearHistory }) {
   const totalSessions = sessions.length;
   const bestWpm = sessions.length > 0 ? Math.max(...sessions.map((s) => s.wpm)) : 0;
   const avgWpm = sessions.length > 0
@@ -259,7 +259,37 @@ function Cover({ sessions, mode }) {
   return (
     <div className="tpr-cover">
       <div>
-        <h1>Typing Progress Report — {MODE_LABELS[mode] || mode}</h1>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "14px", flexWrap: "wrap" }}>
+          <h1 style={{ margin: 0 }}>Typing Progress Report — {MODE_LABELS[mode] || mode}</h1>
+          {/* Clear history — scoped to this one difficulty only. The
+              actual clearing + reload logic lives in the parent page
+              (TypingReportPage), including the confirmation prompt; this
+              component only renders the trigger and stays a pure
+              presentation piece, per the file header comment. Only shown
+              when there's history to clear (hidden once already empty). */}
+          {onClearHistory && (
+            <button
+              onClick={onClearHistory}
+              className="no-print"
+              style={{
+                background: "none",
+                border: "1px solid rgba(var(--poppy-red-rgb, 220, 53, 69), 0.4)",
+                color: "var(--poppy-red)",
+                borderRadius: "6px",
+                padding: "4px 10px",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+                opacity: 0.85,
+                transition: "opacity 0.15s ease, background 0.15s ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.background = "rgba(220, 53, 69, 0.08)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.background = "none"; }}
+            >
+              Clear history for {MODE_LABELS[mode] || mode}
+            </button>
+          )}
+        </div>
         <div className="tpr-generated">Generated {generated} · last {totalSessions} {totalSessions === 1 ? "session" : "sessions"}</div>
       </div>
       <div className="tpr-cover-stats">
@@ -286,7 +316,7 @@ function Cover({ sessions, mode }) {
 
 // ── Main export ───────────────────────────────────────────────────────────
 
-export default function TypingProgressReport({ sessions, goalWpm, goalTime, mode }) {
+export default function TypingProgressReport({ sessions, goalWpm, goalTime, mode, onClearHistory }) {
   const modeLabel = MODE_LABELS[mode] || mode;
 
   if (sessions.length === 0) {
@@ -294,13 +324,36 @@ export default function TypingProgressReport({ sessions, goalWpm, goalTime, mode
       <div className="tpr-empty">
         <h2>No {modeLabel} sessions yet</h2>
         <p>Complete a typing test in {modeLabel} mode to see your progress here.</p>
+        {/* Still offered even with zero practice sessions — Competition
+            history for this difficulty can outlive the practice sessions
+            it was built from (e.g. after a partial/manual clear), so
+            "start completely afresh" needs to stay reachable here too. */}
+        {onClearHistory && (
+          <button
+            onClick={onClearHistory}
+            className="no-print"
+            style={{
+              marginTop: "14px",
+              background: "none",
+              border: "1px solid rgba(var(--poppy-red-rgb, 220, 53, 69), 0.4)",
+              color: "var(--poppy-red)",
+              borderRadius: "6px",
+              padding: "5px 12px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Clear history for {modeLabel}
+          </button>
+        )}
       </div>
     );
   }
 
   return (
     <div>
-      <Cover sessions={sessions} mode={mode} />
+      <Cover sessions={sessions} mode={mode} onClearHistory={onClearHistory} />
 
       {sessions.length < 4 && (
         <p className="tpr-section-note" style={{ marginBottom: "20px" }}>

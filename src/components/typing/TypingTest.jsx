@@ -43,6 +43,7 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
   const passagesCompRef   = useRef(0);
   const elapsedRef        = useRef(0);
   const secondWindowRef   = useRef(0);
+  const lastTickWallTimeRef = useRef(null); // performance.now() at the last processed tick — used to catch up if the interval gets throttled
 
   // Refs for values needed inside timer / handleChange closures
   const passagesRef   = useRef(passages);
@@ -82,6 +83,12 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
   const triggerResume = useCallback(() => {
     isPausedRef.current = false;
     setIsPaused(false);
+    // Don't let the frozen pause duration get swept into the next tick's
+    // delta — the catch-up timer below measures elapsed wall-clock time
+    // since the last tick, so without this reset, resuming after a pause
+    // would look identical to a throttled/backgrounded tick and award a
+    // pile of "caught up" seconds for time that was legitimately paused.
+    lastTickWallTimeRef.current = performance.now();
     inputRef.current?.focus();
   }, []);
 
@@ -115,14 +122,31 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
   // ── Main countdown timer ──────────────────────────────────────────────────
   // The interval keeps running — it just skips the tick when paused.
   // This avoids the drift that comes from clearing/restarting the interval.
+  //
+  // On top of that, ticks themselves are now caught up against wall-clock
+  // time (performance.now()) rather than each tick blindly counting as
+  // exactly 1 second. Browsers throttle/suspend setInterval on backgrounded
+  // tabs, so a naive `elapsedRef.current += 1` per tick can silently fall
+  // behind real time the longer a tab stays backgrounded, which skews WPM
+  // (elapsed time is the denominator) and can leave secondsLeft reading
+  // several seconds later than the countdown should really show. The pause
+  // feature already existed for legitimate idle gaps — that's still handled
+  // separately (triggerResume resets lastTickWallTimeRef so paused time
+  // never gets counted as elapsed); this only fixes ticks the browser
+  // itself delayed while actively running.
   useEffect(() => {
     if (!started) return;
+    lastTickWallTimeRef.current = performance.now();
 
     timerRef.current = setInterval(() => {
       // Skip this tick entirely when idle-paused
       if (isPausedRef.current) return;
 
-      elapsedRef.current += 1;
+      const now = performance.now();
+      const deltaSeconds = Math.max(1, Math.round((now - lastTickWallTimeRef.current) / 1000));
+      lastTickWallTimeRef.current += deltaSeconds * 1000; // advance by whole seconds consumed, keeping any sub-second remainder for the next tick
+
+      elapsedRef.current += deltaSeconds;
 
       // Two distinct WPM values per second, matching MonkeyType's actual
       // model (confirmed against their own docs/source):
@@ -154,11 +178,12 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
       });
 
       setSecondsLeft((prev) => {
-        if (prev <= 1) {
+        const next = prev - deltaSeconds;
+        if (next <= 0) {
           setTimeout(() => fireFinish(duration.seconds), 0);
           return 0;
         }
-        return prev - 1;
+        return next;
       });
     }, 1000);
 
@@ -411,6 +436,10 @@ export default function TypingTest({ passages, duration, onFinish, onFirstAttemp
         onPaste={(e) => e.preventDefault()}
         rows={1}
         aria-label="Type here"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
         style={{
           position:      "absolute",
           left:          "-9999px",
