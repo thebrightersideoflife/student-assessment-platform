@@ -30,4 +30,16 @@ export const modules = [
     description: "Learn about secure software development practices and cybersecurity principles."
   },
 
+  {
+    id: "ITPMA",
+    name: "IT Project Management",
+    description: "Learn project planning, scheduling, risk management, and delivery of IT projects."
+  },
+
+  {
+    id: "ITCOA",
+    name: "Web Server Management",
+    description: "Learn to configure, secure, and maintain web servers and hosting environments."
+  },
+
 ];

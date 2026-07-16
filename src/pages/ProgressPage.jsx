@@ -2,15 +2,27 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { modules } from "../data/modules";
+import { weeks } from "../data/weeks";
+import { questions } from "../data/questions/index.js";
 import StreakCard from "../components/StreakCard";
 import ProgressReport from "../components/ProgressReport";
 import AssessmentStorage from "../utils/assessmentStorage";
 import { getActiveWeeks, getCurrentStreak, getLongestStreak } from "../utils/streakHelpers";
 import { buildCompletionMap, countCompletedWeeks } from "../utils/revisionHelpers";
+import { getTypingReadyModules } from "../utils/typingContent";
 import "../assets/styles/progress.css";
 
 const MODULE_SELECTION_KEY  = "progress_tracked_modules";
 const PREFERRED_NAME_KEY    = "progress_preferred_name";
+
+// Same check TypingPracticePage's module list uses (see
+// useTypingPracticeFlow's availableModules) — a module only gets the
+// "Typing Practice" shortcut below if it actually has typeable weeks/
+// questions behind it. Computed once at module load since modules/weeks/
+// questions are all static imports, not per-render state.
+const TYPING_READY_MODULE_IDS = new Set(
+  getTypingReadyModules(modules, weeks, questions).map((m) => m.id)
+);
 
 function loadTrackedModules() {
   try {
@@ -818,6 +830,15 @@ export default function ProgressPage() {
                     </div>
                     <div className="module-stats">
                       <span className="completed-badge">{completedCount}/{totalWeeks} completed</span>
+                      {TYPING_READY_MODULE_IDS.has(module.id) && (
+                        <button
+                          className="button"
+                          onClick={() => navigate(`/typing?module=${module.id}`)}
+                          title={`Practice typing with ${module.name} content`}
+                        >
+                          ⌨ Typing Practice
+                        </button>
+                      )}
                       <button className="button" onClick={() => navigate(`/module/${module.id}`)}>View Module →</button>
                     </div>
                   </div>

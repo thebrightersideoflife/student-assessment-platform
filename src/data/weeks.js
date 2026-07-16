@@ -407,4 +407,31 @@ export const weeks = {
     },
   ],
 
+  ITPMA: [
+    { id: "1", 
+      name: "Week 1", 
+      block: 3,
+      moduleAudio: {
+        audioUrl: "/audio/itpma-week1-intro.mp3",
+        audioDescription: "An introduction to the IT Project Management module, covering key concepts and expectations for Week 1." 
+      },
+      duration: 150,
+    }
+    // add weeks as you build them
+  ],
+
+  ITCOA: [
+    { id: "1", 
+      name: 
+      "Week 1", 
+      block: 3,
+      moduleAudio: {
+        audioUrl: "/audio/itcoa-week1-intro.mp3",
+        audioDescription: "An introduction to the Web Server Management module, covering key concepts and expectations for Week 1."  
+      },
+      duration: 120,
+    },
+    // add weeks as you build them
+  ],
+
 };

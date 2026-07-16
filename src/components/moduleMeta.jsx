@@ -61,12 +61,36 @@ export const EngineeringShieldIcon = () => (
   </svg>
 );
 
+export const ProjectManagementIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    {/* Gantt-style bars */}
+    <line x1="3" y1="6" x2="12" y2="6"/>
+    <line x1="3" y1="12" x2="17" y2="12"/>
+    <line x1="3" y1="18" x2="9" y2="18"/>
+    {/* Checkmark marker on last bar */}
+    <circle cx="20" cy="18" r="1.5"/>
+  </svg>
+);
+
+export const ServerIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="6" rx="1.5"/>
+    <rect x="3" y="14" width="18" height="6" rx="1.5"/>
+    <circle cx="7" cy="7" r="0.8" fill="currentColor" stroke="none"/>
+    <circle cx="7" cy="17" r="0.8" fill="currentColor" stroke="none"/>
+  </svg>
+);
+
 export const MODULE_META = {
   ITNSA: { icon: <ShieldIcon />,   accent: "var(--vibrant-cyan)",  accentRgb: "0,191,255",  label: "Network Security" },
   ITDSA: { icon: <DatabaseIcon />, accent: "var(--golden-amber)",  accentRgb: "244,169,0",  label: "Database Systems" },
   ITJVA: { icon: <CodeIcon />,     accent: "var(--lush-lime)",     accentRgb: "118,209,61", label: "Java Programming" },
   ITSEA: { icon: <CheckCircleIcon />, accent: "var(--poppy-red)", accentRgb: "255,64,64", label: "Software Process, Architecture & QA" },
   ITSSA: { icon: <EngineeringShieldIcon />, accent: "var(--vibrant-cyan)",  accentRgb: "0,191,255",  label: "Software and Security Engineering" },
+  ITPMA: { icon: <ProjectManagementIcon />, accent: "var(--golden-amber)", accentRgb: "244,169,0", label: "IT Project Management" },
+  ITCOA: { icon: <ServerIcon />,   accent: "var(--lush-lime)",     accentRgb: "118,209,61", label: "Web Server Management" },
 };
 
 export const DEFAULT_META = { icon: <CodeIcon />, accent: "var(--accent-primary)", accentRgb: "42,92,167", label: "" };
