@@ -26,8 +26,9 @@ import { getTypingReadyModules } from "../utils/typingContent";
 // ── Steps ──────────────────────────────────────────────────────────────────
 // First-timer flow:   MODULE → TEST_TYPE → (DURATION → TYPING) | (UNIT_SETUP → UNIT_TYPING) → RESULTS
 // Returning-user flow (duration/mode already saved): MODULE → TYPING → RESULTS,
-// with a "Unit Test" button on the timed results screen jumping straight to
-// UNIT_TYPING for the same module/difficulty (see handleStartUnitTest).
+// with a "Unit Test" / "Timed Mode" toggle button on the results screen
+// jumping between the two for the same module/difficulty (see
+// handleStartUnitTest / handleStartTimedTest).
 export const STEP = {
   MODULE:      "module",
   TEST_TYPE:   "testType",
@@ -59,6 +60,15 @@ export function useTypingPracticeFlow() {
   const [selectedModule,   setSelectedModule]   = useState(restore?.selectedModule ?? null);
   const [selectedDuration, setSelectedDuration] = useState(restore?.selectedDuration ?? _saved.duration);
   const [selectedMode,     setSelectedMode]     = useState(restore?.selectedMode ?? _saved.mode ?? "beginner");
+  // ── selectedTestType ────────────────────────────────────────────────────
+  // The single source of truth for "what should the Next button (and the
+  // results-screen toggle) do right now" — "timed" | "unit". Set at the
+  // first-timer TEST_TYPE gate (handleTestTypeSelect), and again by either
+  // side of the results-screen toggle (handleStartUnitTest /
+  // handleStartTimedTest). Deliberately independent of resultIsUnit (which
+  // only ever describes the test that was JUST finished, and drives
+  // Repeat) — this is what drives Next, so switching modes via the toggle
+  // sticks across repeated "Next" clicks until the toggle is pressed again.
   const [selectedTestType, setSelectedTestType] = useState(restore?.isUnitMode ? "unit" : "timed");
   const [passages,         setPassages]         = useState([]);
   const [loadingModule,    setLoadingModule]    = useState(false);
@@ -72,8 +82,9 @@ export function useTypingPracticeFlow() {
   const [saveRejectedReason, setSaveRejectedReason] = useState(null);
   // Whether the `result` currently on screen came from the untimed Unit
   // Typing flow rather than a timed test — controls which labels/actions
-  // TypingResults shows (see isUnitMode prop) and which retry/next handlers
-  // onRetry/onNextTest should call.
+  // TypingResults shows (see isUnitMode prop) and which retry handler
+  // (onRetry) is used. Repeat always redoes exactly what was just done,
+  // unit or timed, regardless of the Next toggle above.
   const [resultIsUnit,     setResultIsUnit]     = useState(restore?.isUnitMode ?? false);
   const [moduleQuery,      setModuleQuery]      = useState("");
   // Seeded from actual stored history, not just `false` — a returning user
@@ -123,6 +134,12 @@ export function useTypingPracticeFlow() {
     lastPassagesRef.current = result;        // ← snapshot for repeat
     setPassages(result);
   };
+
+  // Default fallback duration seeded the first time someone picks Unit
+  // Typing without ever having set up a timed test, OR switches into Timed
+  // Mode via the results-screen toggle without ever having done so before.
+  const DEFAULT_UNIT_FALLBACK_DURATION = { label: "30s", seconds: 30 };
+  const DEFAULT_UNIT_FALLBACK_GOAL_WPM = 35;
 
   /* ── Handlers ─────────────────────────────────────────────── */
 
@@ -185,6 +202,7 @@ export function useTypingPracticeFlow() {
           setSelectedDuration(durationToUse);
           saveSettings({ duration: durationToUse, mode: selectedMode });
         }
+        setSelectedTestType("timed");
         applyAndSet(rawPassagesRef.current, selectedMode);
         setStep(STEP.TYPING);
       } else {
@@ -207,6 +225,7 @@ export function useTypingPracticeFlow() {
           setSelectedDuration(durationToUse);
           saveSettings({ duration: durationToUse, mode: selectedMode });
         }
+        setSelectedTestType("timed");
         applyAndSet(rawPassagesRef.current, selectedMode);
         setStep(STEP.TYPING);
       } else {
@@ -223,6 +242,7 @@ export function useTypingPracticeFlow() {
     setSelectedMode(mode);
     applyAndSet(rawPassagesRef.current, mode);
     setSelectedDuration(opt);
+    setSelectedTestType("timed");
     saveSettings({ duration: opt, mode });
     setStep(STEP.TYPING);
   };
@@ -237,26 +257,15 @@ export function useTypingPracticeFlow() {
     }
   };
 
-  // Default fallback duration seeded the first time someone picks Unit
-  // Typing without ever having set up a timed test — see handleUnitModeSelect.
-  const DEFAULT_UNIT_FALLBACK_DURATION = { label: "30s", seconds: 30 };
-  const DEFAULT_UNIT_FALLBACK_GOAL_WPM = 35;
-
   // Unit Typing's difficulty-only gate.
   //
   // Historically this never touched selectedDuration, so a first-timer who
   // picked Unit Typing was still treated as a first-timer for the timed flow
-  // next time they picked a module — nextTestIsUnit would then be stuck on
-  // `true` forever (see the comment above nextTestIsUnit), since there was
-  // no saved duration to fall back to.
-  //
-  // Fix: the first time someone reaches this gate with no duration ever
-  // saved, pre-seed selectedDuration (30s) and their WPM goal (35) for the
-  // chosen difficulty, used as the fallback "timed setup" — exactly as if
-  // they'd gone through DurationSelect and picked the 30s preset. That way
-  // nextTestIsUnit correctly flips to `false` right after their very first
-  // unit test, and the results screen's "Next" button knows to hand them a
-  // timed test without any manual trip through Settings.
+  // next time they picked a module. Fix: the first time someone reaches this
+  // gate with no duration ever saved, pre-seed selectedDuration (30s) and
+  // their WPM goal (35) for the chosen difficulty, used as the fallback
+  // "timed setup" — exactly as if they'd gone through DurationSelect and
+  // picked the 30s preset.
   const handleUnitModeSelect = (mode) => {
     setSelectedMode(mode);
     applyAndSet(rawPassagesRef.current, mode);
@@ -390,22 +399,25 @@ export function useTypingPracticeFlow() {
     setStep(STEP.UNIT_TYPING);
   };
 
-  // Jump into Unit Typing from a timed results screen (the "Unit Test"
-  // button) — reuses the module/pool/difficulty already loaded, no need to
-  // go back through module select or the test-type gate.
-  //
-  // Previously this hardcoded unitIndexRef.current = 0, so every click
-  // landed back on the exact same first passage in the pool instead of a
-  // new one — clicking "Unit Test" repeatedly (e.g. from several different
-  // timed results screens in a row) never actually varied the unit shown.
-  // Fixed to advance exactly like handleUnitNextTest does: move to the next
-  // passage in the pool, reshuffling with recency and wrapping back to 0
-  // once the pool is exhausted — so a fresh click always presents a
-  // different unit than the last one shown, the same guarantee Next test
-  // already gives inside a unit-typing session.
+  // ── Results-screen toggle: "Unit Test" ⇄ "Timed Mode" ────────────────────
+  // handleStartUnitTest jumps into Unit Typing from a Timed results screen;
+  // handleStartTimedTest is its mirror image, jumping back into Timed from
+  // a Unit results screen. Both set selectedTestType, which is what Next
+  // (nextTestIsUnit, below) actually reads — so once either one is
+  // pressed, Next keeps resuming that same test type on every subsequent
+  // click until this toggle button is pressed again. Repeat is untouched by
+  // either — it always redoes whatever test was just finished (resultIsUnit).
+
+  // Reuses the module/pool/difficulty already loaded — no need to go back
+  // through module select or the test-type gate. Advances to the next
+  // passage in the pool (reshuffling with recency and wrapping once
+  // exhausted) so a fresh press always shows a different unit than the
+  // last one shown, same guarantee "Next" already gives inside a running
+  // unit-typing session.
   const handleStartUnitTest = () => {
     setResult(null);
     setSaveRejectedReason(null);
+    setSelectedTestType("unit");
     const nextIndex = unitIndexRef.current + 1;
     if (nextIndex >= passages.length) {
       rawPassagesRef.current = shuffleWithRecency(rawPassagesRef.current, selectedModule.id);
@@ -417,12 +429,37 @@ export function useTypingPracticeFlow() {
     setStep(STEP.UNIT_TYPING);
   };
 
+  // Mirror of handleStartUnitTest for the reverse direction. Seeds a
+  // fallback duration (same DEFAULT_UNIT_FALLBACK_DURATION used elsewhere)
+  // if the user has never set one up — e.g. a first-timer who went straight
+  // into Unit Typing at the TEST_TYPE gate and is now trying Timed Mode for
+  // the first time via this toggle.
+  const handleStartTimedTest = () => {
+    setResult(null);
+    setSaveRejectedReason(null);
+    setSelectedTestType("timed");
+
+    const durationToUse = selectedDuration || DEFAULT_UNIT_FALLBACK_DURATION;
+    if (!selectedDuration) {
+      setSelectedDuration(durationToUse);
+      saveSettings({ duration: durationToUse, mode: selectedMode });
+    }
+
+    rawPassagesRef.current = shuffleWithRecency(rawPassagesRef.current, selectedModule.id);
+    applyAndSet(rawPassagesRef.current, selectedMode);
+    setStep(STEP.TYPING);
+  };
+
   const handleChangeModule = () => {
     rawPassagesRef.current  = [];
     lastPassagesRef.current = [];
     setSelectedModule(null);
     setPassages([]);
     setResult(null);
+    // Reset the toggle too — the returning-user shortcut in
+    // handleModuleSelect always lands on a timed test, so a stale "unit"
+    // value here would desync from what's actually about to render.
+    setSelectedTestType("timed");
     setStep(STEP.MODULE);
   };
 
@@ -503,24 +540,15 @@ export function useTypingPracticeFlow() {
   });
 
   // ── What should the "Next" button on the results screen do? ────────────────
-  // NOT the same question as "was the just-finished test a unit test"
-  // (resultIsUnit) — those two used to be conflated, which meant clicking
-  // the ad-hoc "Unit Test" button on a timed results screen permanently
-  // "stuck" the Next button in unit mode with no way back to timed without
-  // fully backing out to the module/test-type gates again.
-  //
-  // The fix relies on an already-existing signal: `selectedDuration` is
-  // `null` until the user has *ever* picked a timed duration, and the
-  // ad-hoc "Unit Test" button (handleStartUnitTest) never touches it.
-  //   - Native Unit Typing flow (first-timer deliberately chose Unit Typing,
-  //     never set up a duration) → selectedDuration stays null → nothing to
-  //     fall back to → Next correctly keeps doing unit tests.
-  //   - Ad-hoc Unit Test (button pressed from an established timed results
-  //     screen) → selectedDuration was already set before the detour and is
-  //     untouched by it → Next correctly resumes the timed flow.
-  // "Repeat" is intentionally NOT changed by this — repeating should always
-  // redo the exact thing that was just done, unit or timed.
-  const nextTestIsUnit = resultIsUnit && !selectedDuration;
+  // Simply reads selectedTestType — the explicit toggle state set by
+  // handleTestTypeSelect (first-timer gate) and handleStartUnitTest /
+  // handleStartTimedTest (results-screen toggle). Previously this was
+  // derived as `resultIsUnit && !selectedDuration`, which conflated "was the
+  // just-finished test a unit test" with "does the user even have a saved
+  // timed duration" — that meant pressing the ad-hoc "Unit Test" button on a
+  // timed results screen permanently stuck Next in unit mode with no way
+  // back except fully backing out to the module/test-type gates again.
+  const nextTestIsUnit = selectedTestType === "unit";
 
   return {
     // step + core selection state
@@ -551,6 +579,7 @@ export function useTypingPracticeFlow() {
     handleUnitRetry,
     handleUnitNextTest,
     handleStartUnitTest,
+    handleStartTimedTest,
     handleChangeModule,
     handleSettingsSave,
     handleRaiseGoal,

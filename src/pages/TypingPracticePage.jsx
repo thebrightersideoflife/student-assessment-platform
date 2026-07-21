@@ -5,7 +5,8 @@
 // First-timers (no saved duration yet) see the test-type gate right after
 // picking a module. Returning users with a saved duration skip straight to
 // a timed test as before; Unit Typing is then reachable via the "Unit Test"
-// button on the timed results screen (see handleStartUnitTest).
+// / "Timed Mode" toggle button on the results screen (see handleStartUnitTest
+// / handleStartTimedTest in useTypingPracticeFlow.js).
 //
 // All step/session/goal state and handlers live in useTypingPracticeFlow —
 // this file is just "call the hook, switch on step, render the right piece."
@@ -44,7 +45,7 @@ export default function TypingPracticePage() {
     handleModuleSelect, handleDurationSelect, handleTestTypeSelect,
     handleUnitModeSelect, handleFinish, handleUnitFinish,
     handleRetry, handleNextTest, handleUnitRetry, handleUnitNextTest,
-    handleStartUnitTest, handleChangeModule, handleSettingsSave, handleRaiseGoal,
+    handleStartUnitTest, handleStartTimedTest, handleChangeModule, handleSettingsSave, handleRaiseGoal,
   } = flow;
 
   /* ── Render ───────────────────────────────────────────────── */
@@ -210,6 +211,7 @@ export default function TypingPracticePage() {
             dailyGoalWpm={dailyGoalWpm}
             dailyGoalTime={dailyGoalTime}
             isUnitMode={resultIsUnit}
+            nextIsUnit={nextTestIsUnit}
             onOpenSettings={(tab) => setSettingsModal(tab)}
             onRaiseGoal={handleRaiseGoal}
             onTypingReport={() => navigate("/typing/report", {
@@ -222,10 +224,12 @@ export default function TypingPracticePage() {
             onGoToModule={() => navigate(`/module/${selectedModule.id}`)}
             onRetry={resultIsUnit ? handleUnitRetry : handleRetry}
             onNextTest={nextTestIsUnit ? handleUnitNextTest : handleNextTest}
-            // Always passed — TypingResults now always shows the "Unit Test"
-            // button (timed or unit-mode results). handleStartUnitTest
-            // resets to the first unit in the current pool either way.
+            // Toggle button — flips between the two. handleStartUnitTest
+            // resets to the next unit in the current pool; handleStartTimedTest
+            // resumes (or seeds, if never set up) a timed test. Which one
+            // renders/fires is driven by nextIsUnit above.
             onUnitTest={handleStartUnitTest}
+            onTimedTest={handleStartTimedTest}
             onChangeModule={handleChangeModule}
           />
         </div>

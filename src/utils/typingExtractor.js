@@ -277,8 +277,15 @@ export function extractPassages(questions) {
 //   intermediate: a-z A-Z 0-9 space . , ! ?  (adds safe punctuation, keeps case)
 //   normal:       everything from extraction (no transformation)
 //
-// Inter-word hyphens become a space before stripping in all non-normal modes
-// so "self-contained" becomes "self contained" rather than "selfcontained".
+// Stripped punctuation is replaced with a SPACE, not removed outright, then
+// collapsed — any character sitting directly between two words with no
+// surrounding whitespace (e.g. "cost/benefit", "term(explanation)",
+// "ratio(cost:benefit)") would otherwise fuse into one unbroken word once
+// that character disappears. Inter-word hyphens get this same treatment
+// pre-emptively, before the general strip, purely so "self-contained"
+// reads as "self contained" rather than "self  contained" (a hyphen
+// replaced twice would still collapse to one space either way, but doing
+// it explicitly here keeps the hyphen case easy to reason about on its own).
 
 const STRIP_ALL_PUNCTUATION   = /[^a-zA-Z0-9 ]/g;
 const STRIP_EXTRA_PUNCTUATION = /[^a-zA-Z0-9 .,!?]/g;
@@ -291,13 +298,16 @@ function transformText(text, mode) {
   let t = text.replace(INTER_WORD_HYPHEN, "$1 $2");
 
   if (mode === "beginner") {
-    // Strip everything except letters, digits, and space — no punctuation at all
-    t = t.replace(STRIP_ALL_PUNCTUATION, "");
+    // Strip everything except letters, digits, and space — no punctuation at
+    // all. Replaced with a space (not "") so two words separated only by a
+    // stripped character don't get glued together.
+    t = t.replace(STRIP_ALL_PUNCTUATION, " ");
     t = t.replace(/  +/g, " ").trim();
     t = t.toLowerCase();
   } else {
     // intermediate: strip everything except letters, digits, space, and . , ! ?
-    t = t.replace(STRIP_EXTRA_PUNCTUATION, "");
+    // Same space-not-empty replacement, same reasoning.
+    t = t.replace(STRIP_EXTRA_PUNCTUATION, " ");
     t = t.replace(/  +/g, " ").trim();
     // Sentence case preserved — no casing change
   }

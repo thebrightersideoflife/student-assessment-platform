@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Keyboard } from "lucide-react";
+import { Zap, Keyboard, Clock } from "lucide-react";
 import { ThemeContext } from "../../context/ThemeContext";
 import {
   deriveStats, computeSessionStats, loadSessions, getCompetitionUnlockState,
@@ -39,7 +39,7 @@ export default function TypingResults({
   onOpenSettings, onRaiseGoal,
   onTypingReport, onGoToModule,
   onRetry, onNextTest, onChangeModule,
-  isUnitMode = false, onUnitTest,
+  isUnitMode = false, nextIsUnit = false, onUnitTest, onTimedTest,
   saveRejectedReason = null,
 }) {
   const { theme } = useContext(ThemeContext);
@@ -230,20 +230,29 @@ export default function TypingResults({
             </Tip>
           </div>
 
-          {onUnitTest && (
+          {(onUnitTest || onTimedTest) && (
             <div style={{
               display: "grid",
               gridTemplateColumns: competitionUnlock?.unlocked ? "1fr 1fr" : "1fr",
               gap: "5px",
             }}>
-              <Tip text="Untimed practice — type one passage at your own pace">
+              {/* Toggle button — shows "Unit Test" while Next is set to
+                  resume timed tests, or "Timed Mode" while Next is set to
+                  resume unit tests. Clicking it both starts that type of
+                  test immediately AND flips what "Next" does on every
+                  subsequent results screen, until this button is pressed
+                  again (see selectedTestType / nextTestIsUnit in
+                  useTypingPracticeFlow.js). */}
+              <Tip text={nextIsUnit ? "Switch back to timed testing" : "Untimed practice — type one passage at your own pace"}>
                 <button
-                  onClick={onUnitTest}
-                  className="unit-test-btn"
+                  onClick={nextIsUnit ? onTimedTest : onUnitTest}
+                  className={nextIsUnit ? "timed-mode-btn" : "unit-test-btn"}
                   style={{ width: "100%" }}
                 >
-                  <Keyboard size={13} strokeWidth={2.25} className="unit-test-icon" />
-                  Unit Test
+                  {nextIsUnit
+                    ? <Clock size={13} strokeWidth={2.25} className="timed-mode-icon" />
+                    : <Keyboard size={13} strokeWidth={2.25} className="unit-test-icon" />}
+                  {nextIsUnit ? "Timed Mode" : "Unit Test"}
                 </button>
               </Tip>
 
@@ -359,6 +368,27 @@ export default function TypingResults({
           border-color: color-mix(in srgb, var(--cornflower-blue) 55%, transparent);
         }
         .unit-test-icon { color: var(--cornflower-blue); flex-shrink: 0; }
+
+        /* Timed Mode — same shape as unit-test-btn, tinted with
+           --accent-primary instead of --cornflower-blue so the two states
+           read as distinct at a glance, while staying theme-aware
+           (accent-primary already flips golden-amber/royal-blue per
+           colors.css, so this needs zero theme-branching logic here). */
+        .timed-mode-btn {
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          padding: 8px 10px; border-radius: 8px; cursor: pointer;
+          font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+          background: color-mix(in srgb, var(--accent-primary) 12%, var(--bg-card));
+          border: 1px solid color-mix(in srgb, var(--accent-primary) 38%, transparent);
+          color: var(--text-primary);
+          transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+        }
+        .timed-mode-btn:hover {
+          transform: translateY(-1px);
+          background: color-mix(in srgb, var(--accent-primary) 20%, var(--bg-card));
+          border-color: color-mix(in srgb, var(--accent-primary) 55%, transparent);
+        }
+        .timed-mode-icon { color: var(--accent-primary); flex-shrink: 0; }
 
         .tr-tip { position: relative; display: block; width: 100%; }
         .tr-tip::after {
