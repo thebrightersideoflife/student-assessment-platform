@@ -14,7 +14,7 @@ export default function AudioPlayer({ audioUrl, audioDescription, weekId }) {
   const audioRef    = useRef(null);
   const progressRef = useRef(null);
 
-  const [open,        setOpen]        = useState(false);
+  const [open,        setOpen]        = useState(true);
   const [playing,     setPlaying]     = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration,    setDuration]    = useState(0);
