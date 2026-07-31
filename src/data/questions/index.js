@@ -75,6 +75,7 @@ import ITSSA_W6 from "./ITSSA/week6.js";
 // ── ITPMA ──────────────────────────────────────────────────────────────────
 import ITPMA_W1 from "./ITPMA/week1.js";
 import ITPMA_W2 from "./ITPMA/week2.js";
+import ITPMA_W3 from "./ITPMA/week3.js";
 
 // ── ITCOA ──────────────────────────────────────────────────────────────────
 import ITCOA_W1 from "./ITCOA/week1.js";
@@ -138,6 +139,7 @@ const rawQuestions = {
   ITPMA: {
    "1": ITPMA_W1,
    "2": ITPMA_W2,
+   "3": ITPMA_W3,
   },
   ITCOA: {
    "1": ITCOA_W1,
