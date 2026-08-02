@@ -458,6 +458,15 @@ export const weeks = {
       },
       duration: 150,
     },
+    { id: "3", 
+      name: "Week 3", 
+      block: 3,
+      moduleAudio: {
+        audioUrl: "/audio/itcoa-week3-intro.mp3",
+        audioDescription: "An introduction to the Web Server Management module, covering key concepts and expectations for Week 3."  
+      },
+      duration: 180,
+    }
     // add weeks as you build them
   ],
 

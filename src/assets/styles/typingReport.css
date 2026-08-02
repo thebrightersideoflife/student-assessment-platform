@@ -155,6 +155,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
+  flex-wrap: wrap;
   padding-bottom: 20px;
   margin-bottom: 28px;
   border-bottom: 3px solid var(--tpr-accent);
@@ -165,6 +166,8 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0 0 6px;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .tpr-cover .tpr-generated {
@@ -357,7 +360,40 @@
     --border-color-rgb: 214, 224, 245;
   }
 
-  .tpr-page { max-width: 100%; margin: 0; }
+  .tpr-page-layout {
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tpr-sidebar {
+    display: none !important;
+  }
+
+  .tpr-page {
+    max-width: none;
+    margin: 0;
+    width: 100%;
+  }
+
+  .tpr-cover {
+    flex-wrap: nowrap;
+    align-items: center;
+    width: 100%;
+  }
+
+  .tpr-cover h1 {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .tpr-cover-stats {
+    flex-shrink: 1;
+    min-width: 0;
+  }
 
   .tpr-section { break-inside: avoid; margin-bottom: 22px; }
   .tpr-cover { break-after: avoid; }

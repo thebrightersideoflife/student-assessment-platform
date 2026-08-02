@@ -219,7 +219,7 @@ function StrugglingCharsChart({ sessions }) {
   const top = aggregateCharErrors(sessions).slice(0, 10);
   if (top.length === 0) return <NoChartData />;
 
-  const data = top.map((d) => ({ ...d, label: displayChar(d.char) })).reverse(); // reverse so #1 sits at top
+  const data = top.map((d) => ({ ...d, label: displayChar(d.char) })); // highest-error chars first
 
   return (
     <ResponsiveContainer width="100%" height={Math.max(160, top.length * 28)}>
@@ -361,6 +361,10 @@ export default function TypingProgressReport({ sessions, goalWpm, goalTime, mode
         </p>
       )}
 
+      <ChartCard title="Struggling characters" note={`Top 10, across ${modeLabel} sessions`}>
+        <StrugglingCharsChart sessions={sessions} />
+      </ChartCard>
+
       <ChartCard title="WPM over time" note={goalWpm ? `Goal: ${goalWpm} wpm` : null}>
         <WpmOverTimeChart sessions={sessions} goalWpm={goalWpm} />
       </ChartCard>
@@ -379,10 +383,6 @@ export default function TypingProgressReport({ sessions, goalWpm, goalTime, mode
 
       <ChartCard title="Consistency trend">
         <ConsistencyChart sessions={sessions} />
-      </ChartCard>
-
-      <ChartCard title="Struggling characters" note={`Top 10, across ${modeLabel} sessions`}>
-        <StrugglingCharsChart sessions={sessions} />
       </ChartCard>
 
       <div className="tpr-footer">
