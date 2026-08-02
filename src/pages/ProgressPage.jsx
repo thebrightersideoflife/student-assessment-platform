@@ -6,6 +6,7 @@ import { weeks } from "../data/weeks";
 import { questions } from "../data/questions/index.js";
 import StreakCard from "../components/StreakCard";
 import ProgressReport from "../components/ProgressReport";
+import WeaknessQuizPromoCard from "../components/WeaknessQuizPromoCard";
 import AssessmentStorage from "../utils/assessmentStorage";
 import { getActiveWeeks, getCurrentStreak, getLongestStreak } from "../utils/streakHelpers";
 import { buildCompletionMap, countCompletedWeeks } from "../utils/revisionHelpers";
@@ -497,6 +498,7 @@ export default function ProgressPage() {
   const [streakData, setStreakData] = useState({ streak: 0, longest: 0, isAtRisk: false, activeWeeks: [] });
   const [expandedAttempts, setExpandedAttempts] = useState({});
   const [completedWeekCount, setCompletedWeekCount] = useState(0);
+  const [weaknessNotice, setWeaknessNotice] = useState("");
 
   const firstVisit = trackedModuleIds === null;
 
@@ -506,6 +508,8 @@ export default function ProgressPage() {
     : allProgressData;
 
   // Stats scoped to tracked modules only
+  const hasEnoughHistory = completedWeekCount >= 1 || AssessmentStorage.getAllAttempts().length > 0;
+
   const overallStats = (() => {
     let totalCompleted = 0, totalAssessments = 0, totalScore = 0, scoreCount = 0;
     for (const { weeks, completedCount, totalWeeks } of progressData) {
@@ -744,6 +748,19 @@ export default function ProgressPage() {
             />
 
             {/* ── Revision Mode entry point ────────────────────── */}
+            <WeaknessQuizPromoCard
+              onClick={() => {
+                if (hasEnoughHistory) {
+                  setWeaknessNotice("");
+                  navigate("/weakness-quiz");
+                } else {
+                  setWeaknessNotice("Finish at least one assessment first so the quiz can build a meaningful weakness profile from your history.");
+                }
+              }}
+              notice={weaknessNotice}
+              ctaLabel={hasEnoughHistory ? "Open weakness quiz" : "Unlock weakness quiz"}
+            />
+
             {completedWeekCount >= 2 && (
               <div style={{
                 background: "rgba(var(--bg-card-rgb), 0.72)",

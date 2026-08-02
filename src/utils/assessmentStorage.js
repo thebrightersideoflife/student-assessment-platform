@@ -48,6 +48,13 @@ const PROGRESS_KEY_PREFIX = "assessment_progress_";
 const STORAGE_EVENT = "assessmentStorageUpdate";
 const APP_VERSION_KEY = "app_version";
 
+// Weakness quizzes are cross-module, multi-week sessions — they don't map to
+// a single moduleId/weekId pair, so they get their own key prefix and record
+// shape entirely separate from markCompleted()/getCompletionStatus(). This
+// keeps "completed a week" (used everywhere for per-week progress UI) from
+// ever being confused with "finished a weakness quiz".
+const WEAKNESS_QUIZ_KEY_PREFIX = "weakness_quiz_";
+
 // Bump this whenever grading logic changes in a way that could change a
 // stored score for the same answers (e.g. the open-ended re-grading fix this
 // version was introduced for). Independent of APP_VERSION — see file header.
@@ -416,6 +423,117 @@ class AssessmentStorage {
       }
     }
     return attempts;
+  }
+
+  // ─── Weakness quiz history (separate from normal completions) ───────────────
+
+  /**
+   * Persist the result of a completed weakness quiz. Independent of
+   * markCompleted() — no moduleId/weekId "week" is being marked complete,
+   * so this never touches per-week completion records or the progress
+   * dashboard's module breakdown.
+   *
+   * @param {object} result
+   * @param {string[]} result.moduleIds       — modules the quiz drew from
+   * @param {number}   result.questionCount    — number of gradable questions
+   * @param {number}   result.score
+   * @param {number}   result.totalQuestions
+   * @param {Array}    [result.questionResults] — per-question tag breakdown,
+   *        same shape as markCompleted's questionResults ({questionId, tags, correct})
+   *        so it can feed straight back into weakness aggregation.
+   * @param {object}   [result.tagBreakdown]    — snapshot of weak-tag stats
+   *        at the time this quiz was generated/scored (optional, for display).
+   * @returns {string|null} the generated quizId, or null on failure
+   */
+  static saveWeaknessQuizResult(result) {
+    try {
+      const {
+        moduleIds = [],
+        questionCount = 0,
+        score = 0,
+        totalQuestions = 0,
+        questionResults,
+        tagBreakdown,
+      } = result || {};
+
+      const quizId = `wq_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const record = {
+        quizId,
+        createdAt: new Date().toISOString(),
+        moduleIds,
+        questionCount,
+        score,
+        totalQuestions,
+        percentage: totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0,
+        ...(questionResults && questionResults.length > 0 ? { questionResults } : {}),
+        ...(tagBreakdown ? { tagBreakdown } : {}),
+      };
+
+      localStorage.setItem(`${WEAKNESS_QUIZ_KEY_PREFIX}${quizId}`, JSON.stringify(record));
+      // Reuses the same event bus so ProgressPage's existing subscription
+      // picks it up too, without needing a second listener wired up.
+      this.notifyChange(null, null, false);
+      return quizId;
+    } catch (error) {
+      console.error("Error saving weakness quiz result:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Get every stored weakness quiz result, newest first.
+   * @returns {Array}
+   */
+  static getWeaknessQuizHistory() {
+    const history = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(WEAKNESS_QUIZ_KEY_PREFIX)) {
+          const raw = JSON.parse(localStorage.getItem(key));
+          if (raw) history.push(raw);
+        }
+      }
+    } catch (error) {
+      console.error("Error getting weakness quiz history:", error);
+    }
+    return history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  /**
+   * Flat list of every questionResults entry across all weakness quiz
+   * history — same shape as the entries returned by getAllAttempts(), so
+   * both sources can feed the same tag-aggregation helper.
+   * @returns {Array<{questionId, tags, correct}>}
+   */
+  static getAllWeaknessQuestionResults() {
+    const results = [];
+    for (const record of this.getWeaknessQuizHistory()) {
+      if (Array.isArray(record.questionResults)) {
+        results.push(...record.questionResults);
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Clear all stored weakness quiz history (does not touch normal
+   * completion records).
+   */
+  static clearWeaknessQuizHistory() {
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(WEAKNESS_QUIZ_KEY_PREFIX)) keysToRemove.push(key);
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+      this.notifyChange(null, null, false);
+      return true;
+    } catch (error) {
+      console.error("Error clearing weakness quiz history:", error);
+      return false;
+    }
   }
 
   // ─── Bulk operations ─────────────────────────────────────────────────────────

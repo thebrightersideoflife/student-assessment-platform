@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { modules } from "../data/modules";
 import ModuleCard from "../components/ModuleCard";
 import Breadcrumb from "../components/Breadcrumb";
+import WeaknessQuizPromoCard from "../components/WeaknessQuizPromoCard";
+import AssessmentStorage from "../utils/assessmentStorage";
 
 function NoticeBoard() {
   const [open, setOpen] = useState(false);
