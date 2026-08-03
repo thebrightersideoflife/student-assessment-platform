@@ -11,8 +11,8 @@
 // one generic trophy card with a label swap, each `kind` gets its own
 // hero illustration, accent color, and default copy:
 //
-//   kind="wpm"   Lightning-bolt hero with animated speed-streaks behind
-//                it, cyan accent (var(--vibrant-cyan)) — visually "fast".
+//   kind="wpm"   Trophy hero with a celebratory glow and ring, cyan accent
+//                (var(--vibrant-cyan)) — visually "you won this milestone".
 //   kind="time"  Stopwatch hero with pulsing concentric rings (a finish-
 //                line/lap feel, matching the "Lap 2!" copy this already
 //                gets from TypingResults), amber accent
@@ -72,7 +72,7 @@ const KIND_CONFIG = {
   wpm: {
     accent: "var(--vibrant-cyan)",
     accentRgb: "0, 191, 255",
-    titleEmoji: "⚡",
+    titleEmoji: "🏆",
     defaultTitle: "Congratulations!",
     defaultSubtitle: "You're typing faster than ever today!",
     ringIcon: "bolt2",
@@ -89,25 +89,15 @@ const KIND_CONFIG = {
   },
 };
 
-// Lightning-bolt hero — a burst of angled speed-streaks racing past behind
-// a pulsing bolt, reading as velocity/energy rather than a static badge.
-function SpeedBurstHero() {
-  const streaks = [
-    { top: "18%", width: "46%", delay: "0s",    opacity: 0.9 },
-    { top: "34%", width: "62%", delay: "0.12s", opacity: 0.6 },
-    { top: "50%", width: "38%", delay: "0.05s", opacity: 1 },
-    { top: "66%", width: "58%", delay: "0.18s", opacity: 0.55 },
-    { top: "80%", width: "42%", delay: "0.08s", opacity: 0.75 },
-  ];
+// Trophy hero — a bright, celebratory burst framed as a win rather than
+// a speed streak, so WPM milestones feel like "you nailed it" rather than
+// "you were fast".
+function TrophyHero() {
   return (
     <div className="gam-hero gam-hero-wpm" aria-hidden="true">
-      <div className="gam-speedlines">
-        {streaks.map((s, i) => (
-          <span key={i} className="gam-speedline" style={{ top: s.top, width: s.width, animationDelay: s.delay, opacity: s.opacity }} />
-        ))}
-      </div>
-      <div className="gam-bolt-glow" />
-      <div className="gam-bolt-icon">⚡</div>
+      <div className="gam-trophy-glow" />
+      <div className="gam-trophy-icon">🏆</div>
+      <div className="gam-trophy-ring" />
     </div>
   );
 }
@@ -169,7 +159,7 @@ export default function GoalAchievementModal({
           </svg>
         </button>
 
-        {kind === "wpm" ? <SpeedBurstHero /> : <PulseRingHero />}
+        {kind === "wpm" ? <TrophyHero /> : <PulseRingHero />}
 
         <h2 className="gam-title">
           <span aria-hidden="true">{cfg.titleEmoji}</span> {resolvedLabel}
@@ -205,7 +195,7 @@ export default function GoalAchievementModal({
               </span>
             </div>
             <p className="gam-goal-message">{resolvedSubtitle}</p>
-            <p className="gam-encouragement">{encouragement} <span aria-hidden="true">{kind === "wpm" ? "⚡" : "🚀"}</span></p>
+            <p className="gam-encouragement">{encouragement} <span aria-hidden="true">{kind === "wpm" ? "🏆" : "🚀"}</span></p>
           </div>
         </div>
 
@@ -273,47 +263,39 @@ export default function GoalAchievementModal({
           margin-bottom: 4px; overflow: hidden;
         }
 
-        /* ── WPM: speed-burst hero ──────────────────────────────────────── */
-        .gam-speedlines {
+        /* ── WPM: trophy hero ─────────────────────────────────────────────── */
+        .gam-trophy-glow {
           position: absolute; inset: 0;
+          background: radial-gradient(circle, rgba(0, 191, 255, 0.30) 0%, transparent 72%);
+          filter: blur(14px);
+          animation: gam-trophy-glow-pulse 1.25s ease-in-out infinite;
         }
-        .gam-speedline {
-          position: absolute; left: -60%;
-          height: 3px; border-radius: 2px;
-          background: linear-gradient(90deg, transparent, var(--vibrant-cyan) 60%, transparent);
-          animation: gam-speedline-move 0.9s ease-in-out infinite;
-        }
-        @keyframes gam-speedline-move {
-          0%   { transform: translateX(0); opacity: 0; }
-          15%  { opacity: 1; }
-          85%  { opacity: 1; }
-          100% { transform: translateX(220%); opacity: 0; }
-        }
-        .gam-bolt-glow {
-          position: absolute;
-          width: 110px; height: 110px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(0, 191, 255, 0.35) 0%, transparent 70%);
-          animation: gam-bolt-glow-pulse 1.1s ease-in-out infinite;
-        }
-        @keyframes gam-bolt-glow-pulse {
-          0%, 100% { opacity: 0.7; transform: scale(0.92); }
+        @keyframes gam-trophy-glow-pulse {
+          0%, 100% { opacity: 0.8; transform: scale(0.96); }
           50%       { opacity: 1;   transform: scale(1.08); }
         }
-        .gam-bolt-icon {
+        .gam-trophy-icon {
           position: relative;
-          font-size: 52px; line-height: 1;
-          filter: drop-shadow(0 0 14px rgba(0, 191, 255, 0.6));
-          animation: gam-bolt-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) 0.05s both,
-                     gam-bolt-shake 2.4s ease-in-out 0.6s infinite;
+          font-size: 58px; line-height: 1;
+          filter: drop-shadow(0 0 14px rgba(0, 191, 255, 0.55));
+          animation: gam-trophy-bounce 1.8s ease-in-out 0.2s infinite;
         }
-        @keyframes gam-bolt-pop {
-          0%   { opacity: 0; transform: scale(0.3) rotate(-15deg); }
-          100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        @keyframes gam-trophy-bounce {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          20%       { transform: translateY(-6px) rotate(-4deg); }
+          40%       { transform: translateY(0) rotate(0deg); }
+          60%       { transform: translateY(-3px) rotate(4deg); }
+          80%       { transform: translateY(0) rotate(-2deg); }
         }
-        @keyframes gam-bolt-shake {
-          0%, 100% { transform: rotate(0deg); }
-          25%       { transform: rotate(-6deg); }
-          75%       { transform: rotate(6deg); }
+        .gam-trophy-ring {
+          position: absolute; inset: 12px;
+          border: 3px solid rgba(0, 191, 255, 0.45);
+          border-radius: 999px;
+          animation: gam-trophy-ring-spin 2.8s linear infinite;
+        }
+        @keyframes gam-trophy-ring-spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
         }
 
         /* ── Time: pulse-ring hero ──────────────────────────────────────── */
@@ -414,7 +396,7 @@ export default function GoalAchievementModal({
 
         @media (prefers-reduced-motion: reduce) {
           .gam-overlay, .gam-card, .gam-ring-fill, .gam-btn,
-          .gam-bolt-icon, .gam-bolt-glow, .gam-speedline,
+          .gam-trophy-icon, .gam-trophy-glow, .gam-trophy-ring,
           .gam-stopwatch-icon, .gam-pulse-ring { animation: none !important; }
         }
       `}</style>

@@ -28,6 +28,7 @@ import TypingModuleSelectStep from "../components/typing/TypingModuleSelectStep"
 import TypingTest from "../components/typing/TypingTest";
 import UnitTypingTest from "../components/typing/UnitTypingTest";
 import TypingResults from "../components/typing/TypingResults";
+import { getTodayPracticeSeconds } from "../utils/typingStorage";
 
 export default function TypingPracticePage() {
   const navigate  = useNavigate();

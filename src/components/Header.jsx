@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
+import NotificationBell from "./NotificationBell";
+import { loadSettings, getTodayPracticeSeconds } from "../utils/typingStorage";
 import "../assets/styles/header.css";
 import { buildSearchIndex, queryIndex } from "../utils/search";
 import { getTypingReadyModules } from "../utils/typingContent";
@@ -388,6 +390,15 @@ export default function Header() {
 
           {/* Theme Toggle */}
           <ThemeToggle />
+
+          {/* Notifications */}
+          <NotificationBell
+            notices={[]}
+            initialUnread={true}
+            typingGoalMinutes={loadSettings().goalTime || null}
+            todayMinutes={getTodayPracticeSeconds() / 60}
+            onPickRandomModule={() => navigate("/typing")}
+          />
 
           {/* Mobile hamburger */}
           <button

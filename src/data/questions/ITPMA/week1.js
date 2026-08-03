@@ -37,6 +37,7 @@ Unless otherwise stated, answer all questions with reference to the Ubuntu Digit
     id: 'ITPMA_W1_Q1',
     type: 'multiple-choice',
     sectionLabel: '1.1',
+    tags: ['project management'],
     text: 'Which characteristic most clearly distinguishes the patient registration implementation from the daily administrative work already performed by hospital staff?',
     options: [
       'It requires financial resources',
@@ -87,6 +88,7 @@ Unless otherwise stated, answer all questions with reference to the Ubuntu Digit
     id: 'ITPMA_W1_Q3',
     type: 'fill-in-the-blank',
     sectionLabel: '1.3',
+    tags: ['project management', 'requirements analysis'],
     text: 'The process of continually refining project plans and requirements as additional information becomes available is known as ___.',
     blanks: [
       {
@@ -122,6 +124,7 @@ Do not award marks for quality, stakeholders, or risk — these influence projec
     id: 'ITPMA_W1_Q5',
     type: 'multiple-choice',
     sectionLabel: '1.5',
+    tags: ['project management', 'requirements analysis'],
     text: 'Hospital administrators request several new reporting features after development has already begun. Which project attribute best explains why these requests may legitimately influence planning?',
     options: [
       'Temporary nature',
@@ -235,6 +238,7 @@ Award marks for any realistic IT project demonstrating uniqueness, temporary dur
     id: 'ITPMA_W1_Q9',
     type: 'multiple-choice',
     sectionLabel: '2.2',
+    tags: ['project management'],
     text: 'Which statement best reflects the modern understanding of project success?',
     options: [
       'A project is successful only if completed within budget',
@@ -252,6 +256,7 @@ Award marks for any realistic IT project demonstrating uniqueness, temporary dur
     id: 'ITPMA_W1_Q10',
     type: 'fill-in-the-blank',
     sectionLabel: '2.3',
+    tags: ['project management'],
     text: 'Individuals or organisations who are involved in, affected by, or capable of influencing a project are known as ___.',
     blanks: [
       {
@@ -316,6 +321,7 @@ Award marks for any legitimate stakeholder group demonstrating involvement or in
     id: 'ITPMA_W1_Q13',
     type: 'multiple-choice',
     sectionLabel: '2.6',
+    tags: ['project management', 'systems thinking'],
     text: 'Which Project Management Knowledge Area would primarily focus on ensuring that all components of the project work together as a coordinated whole?',
     options: [
       'Resource Management',
@@ -406,6 +412,7 @@ Award marks for any legitimate stakeholder group demonstrating involvement or in
     id: 'ITPMA_W1_Q16',
     type: 'multiple-choice',
     sectionLabel: '3.2',
+    tags: ['project management', 'systems thinking'],
     text: 'Which management approach is primarily responsible for selecting projects that best support organisational strategy?',
     options: [
       'Project Management',
@@ -423,6 +430,7 @@ Award marks for any legitimate stakeholder group demonstrating involvement or in
     id: 'ITPMA_W1_Q17',
     type: 'fill-in-the-blank',
     sectionLabel: '3.3',
+    tags: ['project management', 'systems thinking'],
     text: 'Managing related projects together in order to obtain benefits unavailable from managing them individually is known as ___.',
     blanks: [
       {
@@ -484,6 +492,7 @@ Award marks only where responsibilities clearly occur above individual project l
     id: 'ITPMA_W1_Q20',
     type: 'multiple-choice',
     sectionLabel: '3.6',
+    tags: ['project management', 'systems thinking'],
     text: 'Organisational Project Management primarily aims to:',
     options: [
       'Eliminate project managers',
@@ -501,6 +510,7 @@ Award marks only where responsibilities clearly occur above individual project l
     id: 'ITPMA_W1_Q21',
     type: 'open-ended',
     sectionLabel: '3.7',
+    tags: ['project management', 'systems thinking'],
     text: 'Name the management approach responsible for evaluating projects as organisational investments before they are approved.',
     correctAnswers: ['Portfolio Management'],
     points: 2,
@@ -553,6 +563,7 @@ At the same time, a vendor offers the project manager an expensive overseas conf
     id: 'ITPMA_W1_Q23',
     type: 'multiple-choice',
     sectionLabel: '4.2',
+    tags: ['project management'],
     text: 'Which leadership style is primarily focused on developing individuals through coaching and improving their long-term performance?',
     options: [
       'Commanding',
@@ -570,6 +581,7 @@ At the same time, a vendor offers the project manager an expensive overseas conf
     id: 'ITPMA_W1_Q24',
     type: 'fill-in-the-blank',
     sectionLabel: '4.3',
+    tags: ['project management'],
     text: 'The professional organisation responsible for administering the internationally recognised PMP® certification is the ___.',
     blanks: [
       {
@@ -628,6 +640,7 @@ At the same time, a vendor offers the project manager an expensive overseas conf
     id: 'ITPMA_W1_Q27',
     type: 'multiple-choice',
     sectionLabel: '4.6',
+    tags: ['project management'],
     text: 'Which leadership style would be **most appropriate** when the project requires team members to participate actively in reaching a shared decision?',
     options: [
       'Commanding',
@@ -645,6 +658,7 @@ At the same time, a vendor offers the project manager an expensive overseas conf
     id: 'ITPMA_W1_Q28',
     type: 'open-ended',
     sectionLabel: '4.7',
+    tags: ['project management'],
     text: 'Name the internationally recognised project management certification awarded by the Project Management Institute.',
     correctAnswers: ['Project Management Professional (PMP)', 'PMP', 'Project Management Professional'],
     points: 2,
