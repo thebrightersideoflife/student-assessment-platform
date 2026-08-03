@@ -14,12 +14,14 @@ function normaliseNotice(notice, index) {
     actionLabel: notice.actionLabel ?? null,
     actionHandler: notice.actionHandler ?? null,
     navigateTo: notice.navigateTo ?? null,
+    deleted: Boolean(notice.deleted),
     day: notice.day ?? null,
   };
 }
 
-function buildNoticeList(initialNotices = [], typingGoalMinutes = null, todayMinutes = null, currentDay = null) {
+function hydrateNotices(initialNotices = [], typingGoalMinutes = null, todayMinutes = null, currentDay = null) {
   const notices = Array.isArray(initialNotices) ? initialNotices.map(normaliseNotice) : [];
+  const dayKey = currentDay ?? new Date().toISOString().slice(0, 10);
 
   // Example custom notice you can add later:
   // const customNotice = {
@@ -31,49 +33,60 @@ function buildNoticeList(initialNotices = [], typingGoalMinutes = null, todayMin
   // };
   // notices.unshift(customNotice);
 
-  // System update reminder: if new assessments have been added to the platform,
-  // surface a general notice without tying it to a specific module or week.
   const systemUpdateId = "system-update-reminder";
-  const existingSystemUpdateIndex = notices.findIndex((notice) => notice.id === systemUpdateId);
-  const systemUpdateNotice = {
-    id: systemUpdateId,
-    title: "New assessments available",
-    message: "Fresh assessments have been added to the system — take a look when you’re ready.",
-    read: false,
-    actionLabel: "Go there",
-    actionHandler: null,
-    navigateTo: "/modules",
-    day: currentDay,
-  };
+  const typingReminderId = "typing-goal-reminder";
+  const nextNotices = [...notices];
 
-  if (existingSystemUpdateIndex >= 0) {
-    notices[existingSystemUpdateIndex] = { ...notices[existingSystemUpdateIndex], ...systemUpdateNotice, day: currentDay };
-  } else {
-    notices.unshift(systemUpdateNotice);
+  if (!nextNotices.some((notice) => notice.id === systemUpdateId)) {
+    nextNotices.unshift({
+      id: systemUpdateId,
+      title: "New assessments available",
+      message: "Fresh assessments have been added to the system — take a look when you’re ready.",
+      read: false,
+      actionLabel: "Go there",
+      actionHandler: null,
+      navigateTo: "/modules",
+      deleted: false,
+      day: dayKey,
+    });
   }
 
   if (typingGoalMinutes && typingGoalMinutes > 0 && todayMinutes != null && todayMinutes < typingGoalMinutes) {
-    const typingReminderId = "typing-goal-reminder";
-    const existingIndex = notices.findIndex((notice) => notice.id === typingReminderId);
-    const reminder = {
-      id: typingReminderId,
-      title: "Daily typing goal",
-      message: "You still have time left on today’s goal — a quick practice run would help.",
-      read: false,
-      actionLabel: "Practice now",
-      actionHandler: null,
-      navigateTo: "/typing",
-      day: currentDay,
-    };
-
-    if (existingIndex >= 0) {
-      notices[existingIndex] = { ...notices[existingIndex], ...reminder, day: currentDay };
-    } else {
-      notices.unshift(reminder);
+    if (!nextNotices.some((notice) => notice.id === typingReminderId)) {
+      nextNotices.unshift({
+        id: typingReminderId,
+        title: "Daily typing goal",
+        message: "You still have time left on today’s goal. Complete this to reach your target.",
+        read: false,
+        actionLabel: "Practice now",
+        actionHandler: null,
+        navigateTo: "/typing",
+        deleted: false,
+        day: dayKey,
+      });
     }
   }
 
-  return notices;
+  return nextNotices;
+}
+
+function getStoredNoticeState(storageKey, fallbackNotices, typingGoalMinutes, todayMinutes) {
+  const currentDay = new Date().toISOString().slice(0, 10);
+  if (typeof window === "undefined") return hydrateNotices(fallbackNotices, typingGoalMinutes, todayMinutes, currentDay);
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return hydrateNotices(parsed, typingGoalMinutes, todayMinutes, currentDay);
+      }
+    }
+  } catch {
+    // ignore storage errors and fall back to defaults
+  }
+
+  return hydrateNotices(fallbackNotices, typingGoalMinutes, todayMinutes, currentDay);
 }
 
 export default function NotificationBell({
@@ -88,27 +101,11 @@ export default function NotificationBell({
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext) ?? { theme: "light" };
   const isDarkTheme = theme === "dark";
-  const [notices, setNotices] = useState(() => {
-    if (typeof window === "undefined") {
-      return buildNoticeList(initialNotices, typingGoalMinutes, todayMinutes, null);
-    }
-
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          return buildNoticeList(parsed, typingGoalMinutes, todayMinutes, null);
-        }
-      }
-    } catch {
-      // ignore storage errors and fall back to defaults
-    }
-    return buildNoticeList(initialNotices, typingGoalMinutes, todayMinutes, null);
-  });
+  const [notices, setNotices] = useState(() => getStoredNoticeState(STORAGE_KEY, initialNotices, typingGoalMinutes, todayMinutes));
   const ref = useRef(null);
 
-  const hasUnread = useMemo(() => notices.some((notice) => !notice.read), [notices]);
+  const visibleNotices = useMemo(() => notices.filter((notice) => !notice.deleted), [notices]);
+  const hasUnread = useMemo(() => visibleNotices.some((notice) => !notice.read), [visibleNotices]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -142,8 +139,19 @@ export default function NotificationBell({
     if (typeof window === "undefined") return;
     const currentDay = new Date().toISOString().slice(0, 10);
     setNotices((prev) => {
-      const next = buildNoticeList(prev, typingGoalMinutes, todayMinutes, currentDay);
-      return next.filter((notice) => notice.id !== "typing-goal-reminder" || notice.day === currentDay);
+      const next = hydrateNotices(prev, typingGoalMinutes, todayMinutes, currentDay);
+      const typingReminderIndex = next.findIndex((notice) => notice.id === "typing-goal-reminder");
+      if (typingReminderIndex >= 0) {
+        const reminder = next[typingReminderIndex];
+        if (!reminder.deleted && reminder.day !== currentDay) {
+          next[typingReminderIndex] = {
+            ...reminder,
+            read: false,
+            day: currentDay,
+          };
+        }
+      }
+      return next;
     });
   }, [typingGoalMinutes, todayMinutes]);
 
@@ -162,8 +170,8 @@ export default function NotificationBell({
     setNotices((current) => current.map((notice) => ({ ...notice, read: true })));
   };
 
-  const handleDeleteNotice = (index) => {
-    setNotices((prev) => prev.filter((_, i) => i !== index));
+  const handleDeleteNotice = (noticeId) => {
+    setNotices((prev) => prev.map((notice) => (notice.id === noticeId ? { ...notice, deleted: true, read: true } : notice)));
   };
 
   return (
@@ -250,8 +258,8 @@ export default function NotificationBell({
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {notices.length > 0 ? (
-                notices.map((notice, index) => (
+              {visibleNotices.length > 0 ? (
+                visibleNotices.map((notice, index) => (
                   <div
                     key={`${notice.id}-${index}`}
                     className="notice-card"
@@ -304,7 +312,7 @@ export default function NotificationBell({
                     </div>
                     <button
                       className="action-button"
-                      onClick={() => handleDeleteNotice(index)}
+                      onClick={() => handleDeleteNotice(notice.id)}
                       style={{ padding: "4px", flexShrink: 0 }}
                       aria-label={`Delete ${notice.title}`}
                       title="Delete notification"
