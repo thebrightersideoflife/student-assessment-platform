@@ -1,0 +1,4 @@
+- [x] Update `TypingPracticeHero.jsx` layout to flexbox with image on left
+- [x] Add responsiveness for mobile stacking
+- [x] Verify image rendering and text alignment
+- [x] Create walkthrough
