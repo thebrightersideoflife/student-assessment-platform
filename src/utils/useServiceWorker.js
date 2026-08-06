@@ -39,11 +39,11 @@ export default function useServiceWorker() {
     });
 
     // vite-plugin-pwa fires a custom event after autoUpdate activates a
-    // new SW and the refreshed assets are ready. Reload the page immediately
-    // so the user gets the latest app shell instead of staying on the old UI.
+    // new SW and the refreshed assets are ready.
     const handleUpdate = () => {
       setDidUpdate(true);
-      window.location.reload();
+      // Optional: you could show a toast here instead of a hard reload
+      // console.log("New content available, will be active on next visit or refresh.");
     };
     window.addEventListener("swUpdated", handleUpdate);
     window.addEventListener("sw-updated", handleUpdate);

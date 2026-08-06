@@ -89,23 +89,28 @@ export default defineConfig({
          * globPatterns — controls what gets pre-cached at build time
          * (the "app shell" — everything the browser needs to load the SPA).
          *
-         * Included:  JS, CSS, HTML, JSON (question data files), SVG, WOFF2
-         * Excluded:  audio files — /public/audio/** — they're large and
-         *            students can do every question without them offline.
-         *            KaTeX fonts are included (small, needed for math rendering).
+         * Included:  JS, CSS, HTML, SVG, WOFF2
+         * Excluded:  audio files and large images — they're large and
+         *            can be cached at runtime instead of blocking install.
          */
         globPatterns: [
           "**/*.{js,css,html,svg,woff2}",
         ],
 
         /*
-         * globIgnores — belt-and-suspenders audio exclusion.
-         * Matches mp3, m4a, ogg, wav, opus wherever they sit under dist/.
+         * globIgnores — exclude large assets from precache to speed up installation.
          */
         globIgnores: [
           "**/audio/**",
-          "**/*.{mp3,m4a,ogg,wav,opus,flac}",
+          "**/images/**",
+          "**/*.{mp3,m4a,ogg,wav,opus,flac,png,jpg,jpeg,webp}",
         ],
+
+        /*
+         * navigateFallback — serve index.html for any navigation request.
+         * This ensures deep links (e.g. /module/X/week/Y) work offline.
+         */
+        navigateFallback: "index.html",
 
         /*
          * Runtime caching — handles requests the precache doesn't cover
@@ -114,15 +119,14 @@ export default defineConfig({
         runtimeCaching: [
           /*
            * Navigation fallback — serve the cached index.html for any
-           * page the student navigates to while offline. This is what
-           * makes client-side routing work without a network.
+           * page the student navigates to. StaleWhileRevalidate ensures
+           * the app shell loads instantly from cache while updating.
            */
           {
             urlPattern: ({ request }) => request.mode === "navigate",
-            handler: "NetworkFirst",
+            handler: "StaleWhileRevalidate",
             options: {
               cacheName: "navigation-cache",
-              networkTimeoutSeconds: 5,
               cacheableResponse: { statuses: [0, 200] },
             },
           },

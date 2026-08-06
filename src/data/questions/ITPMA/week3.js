@@ -53,9 +53,10 @@ The proposed project manager discovers that:
     tags: ['project management', 'process groups'],
     sectionLabel: '1.2',
     text: 'What process group formally defines and authorises a project?',
-    correctAnswers: ['Initiating'],
+    correctAnswers: ['Initiating', "Initiation process"],
     points: 2,
     validationOptions: {
+      allowPartialMatch: true,
       caseSensitive: false,
       tolerance: 0,
     },
