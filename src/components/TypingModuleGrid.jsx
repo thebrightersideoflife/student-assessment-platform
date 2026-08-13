@@ -4,6 +4,7 @@ import { Zap } from "lucide-react";
 import { MODULE_META, DEFAULT_META } from "./moduleMeta";
 import { weeks as weekRegistry } from "../data/weeks";
 import { TYPING_MODE_IDS, getCompetitionUnlockState } from "../utils/typingStorage";
+import ScrollReveal from "./ScrollReveal";
 
 /* ── Keyboard icon ──────────────────────────────────────────── */
 
@@ -189,13 +190,19 @@ export default function TypingModuleGrid({ modules, loading, onSelect }) {
             gap:                 "20px",
           }}
         >
-          {available.map(mod => (
-            <ModuleCard
+          {available.map((mod, index) => (
+            <ScrollReveal
               key={mod.id}
-              module={mod}
-              loading={loading}
-              onSelect={onSelect}
-            />
+              direction="bottom"
+              delay={index * 50}
+              duration={500}
+            >
+              <ModuleCard
+                module={mod}
+                loading={loading}
+                onSelect={onSelect}
+              />
+            </ScrollReveal>
           ))}
         </div>
       ) : (

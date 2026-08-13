@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import ScrollReveal from "../ScrollReveal";
 
-export default function TypingPracticeSection({ theme }) {
-  const accent = theme === "light" ? "var(--royal-blue)" : "var(--vibrant-cyan)";
+export default function FlashcardSection({ theme }) {
+  const accent = "var(--fc-purple)";
   const buttonGradient = theme === "light"
-    ? `linear-gradient(90deg, ${accent}, var(--vibrant-cyan))`
-    : `linear-gradient(90deg, rgb(36, 78, 141), rgba(64,179,255,1))`;
+    ? `linear-gradient(90deg, var(--fc-purple), var(--fc-pink))`
+    : `linear-gradient(90deg, #9333ea, #db2777)`;
 
   return (
     <section
@@ -18,15 +18,58 @@ export default function TypingPracticeSection({ theme }) {
       }}
     >
       <div className="home-split-grid">
+        {/* Left Side: Image - Following patterns from other sections */}
         <ScrollReveal direction="left">
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="home-image-orb home-image-orb--flashcards" />
+            <div className="home-image-frame home-image-frame--flashcards">
+              <img
+                src="/images/Flashcards.png"
+                alt="Flashcards experience preview"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.parentElement.style.background = `
+                    linear-gradient(135deg,
+                      rgba(var(--bg-card-rgb),0.95),
+                      rgba(168, 85, 247, 0.08)
+                    )
+                  `;
+                  const placeholder = document.createElement("div");
+                  placeholder.className = "home-image-placeholder";
+                  placeholder.innerHTML = `
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none"
+                      stroke="rgba(168, 85, 247, 0.45)" stroke-width="1.5"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="16" rx="2" />
+                      <path d="M7 8h10" />
+                      <path d="M7 12h10" />
+                      <path d="M7 16h6" />
+                    </svg>
+                    <span>Flashcards</span>
+                  `;
+                  e.target.parentElement.appendChild(placeholder);
+                }}
+              />
+              <div
+                className="home-image-shimmer"
+                style={{
+                  background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(168, 85, 247, 0.04) 100%)",
+                }}
+              />
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* Right Side: Content */}
+        <ScrollReveal direction="right" delay={200}>
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
-                background: theme === "light" ? "rgba(42,92,167,0.12)" : "rgba(0,191,255,0.12)",
-                border: theme === "light" ? "1px solid rgba(42,92,167,0.18)" : "1px solid rgba(0,191,255,0.18)",
+                background: "rgba(168, 85, 247, 0.12)",
+                border: "1px solid rgba(168, 85, 247, 0.18)",
                 borderRadius: "999px",
                 padding: "6px 16px",
                 width: "fit-content",
@@ -51,7 +94,7 @@ export default function TypingPracticeSection({ theme }) {
                   textTransform: "uppercase",
                 }}
               >
-                Typing Practice
+                Active Recall
               </span>
             </div>
 
@@ -59,23 +102,24 @@ export default function TypingPracticeSection({ theme }) {
               style={{
                 fontSize: "clamp(1.75rem, 3vw, 2.4rem)",
                 fontWeight: 800,
-                lineHeight: 1.1,
+                lineHeight: 1.25,
                 letterSpacing: "-0.03em",
                 margin: 0,
                 color: "var(--text-primary)",
               }}
             >
-              Build fluency with a
+              Master your course with
               <span
                 style={{
                   display: "block",
-                  background: "linear-gradient(90deg, var(--lush-lime), var(--vibrant-cyan))",
+                  background: "linear-gradient(90deg, #A855F7, #EC4899)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
+                  paddingBottom: "4px",
                 }}
               >
-                calmer, smarter revision loop
+                smart digital flashcards
               </span>
             </h2>
 
@@ -90,21 +134,21 @@ export default function TypingPracticeSection({ theme }) {
               }}
             >
               <p style={{ margin: 0 }}>
-                Search for the module you want, choose a duration, and type your way through the questions, model answers, and explanations — all in one focused session.
+                Flip through questions, test your knowledge, and reveal answers instantly. Our new flashcards feature is designed to help you build long-term memory through active recall.
               </p>
               <p style={{ margin: 0 }}>
-                It is a fast way to revise while building confidence, accuracy, and speed without leaving the course content behind.
+                Filter by module or question type to focus on exactly what you need to master next.
               </p>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
               {[
-                "Search modules instantly by name, topic, or code",
-                "Practice with your chosen difficulty and timing",
-                "Turn revision into a repeatable, low-friction habit",
+                "Personalized study sessions by module",
+                "Filter by Multiple Choice, Fill-in-Blank, or Open-ended",
+                "Beautiful, high-contrast landscape design",
               ].map((feature, idx) => (
                 <div key={idx} style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "15px", color: "var(--text-secondary)" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lush-lime)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   {feature}
@@ -113,65 +157,25 @@ export default function TypingPracticeSection({ theme }) {
             </div>
 
             <Link
-              to="/typing"
+              to="/flashcards"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
                 width: "fit-content",
-                padding: "12px 18px",
+                padding: "12px 24px",
                 borderRadius: "999px",
                 background: buttonGradient,
                 color: "white",
                 fontSize: "15px",
                 fontWeight: 700,
                 textDecoration: "none",
-                boxShadow: "0 14px 30px rgba(0,0,0,0.15)",
+                boxShadow: "0 14px 30px rgba(168, 85, 247, 0.25)",
                 marginTop: "4px",
               }}
             >
-              Start typing
+              Start studying
             </Link>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal direction="right" delay={200}>
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div className="home-image-orb home-image-orb--typing" />
-            <div className="home-image-frame home-image-frame--typing">
-              <img
-                src="/images/TypingPractice.png"
-                alt="Typing practice experience preview"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                  e.target.parentElement.style.background = `
-                    linear-gradient(135deg,
-                      rgba(var(--bg-card-rgb),0.95),
-                      rgba(42,92,167,0.08)
-                    )
-                  `;
-                  const placeholder = document.createElement("div");
-                  placeholder.className = "home-image-placeholder";
-                  placeholder.innerHTML = `
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none"
-                      stroke="rgba(42,92,167,0.45)" stroke-width="1.5"
-                      stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="2" y="6" width="20" height="12" rx="2" />
-                      <path d="M6 10h4" />
-                      <path d="M6 13h8" />
-                    </svg>
-                    <span>Typing Practice</span>
-                  `;
-                  e.target.parentElement.appendChild(placeholder);
-                }}
-              />
-              <div
-                className="home-image-shimmer"
-                style={{
-                  background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(42,92,167,0.04) 100%)",
-                }}
-              />
-            </div>
           </div>
         </ScrollReveal>
       </div>

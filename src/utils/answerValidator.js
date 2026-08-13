@@ -3,7 +3,7 @@
 /**
  * Answer Validator for IT Assessments
  * Supports: numeric values, text matching, case-insensitive comparison,
- * and basic symbolic/algebraic expressions
+ * concept-level matching, and basic symbolic/algebraic expressions
  */
 
 /* -------------------------
@@ -15,6 +15,18 @@ function basicTextNormalize(text) {
     .toLowerCase()
     .replace(/\s+/g, '') // Remove all whitespace
     .replace(/[,;.!?]/g, '') // Remove punctuation
+    .trim();
+}
+
+// Word-preserving normalization, used for concept/term matching where
+// individual words need to remain separated (unlike basicTextNormalize,
+// which strips all whitespace and is only appropriate for exact matching).
+function wordTextNormalize(text) {
+  if (!text) return '';
+  return String(text)
+    .toLowerCase()
+    .replace(/[,;.!?]/g, ' ') // Turn punctuation into spaces so words don't fuse
+    .replace(/\s+/g, ' ') // Collapse whitespace
     .trim();
 }
 
@@ -101,7 +113,33 @@ class AnswerValidator {
       }
     }
 
-    // Strategy 2: Numeric comparison
+    // Strategy 2: Accepted concept matching
+    // Each entry in acceptedConcepts is a group of terms; the student's
+    // answer is correct if it contains EVERY term in any one group.
+    // Unlike allowPartialMatch (a whole-string substring check) or
+    // tolerance (character-level edit distance), this matches at the word
+    // level and lets authors accept differently-worded sentences that
+    // express the same idea. Requiring multiple terms per group keeps
+    // matches tied to the actual concept rather than a single stray word.
+    if (opts.acceptedConcepts && Array.isArray(opts.acceptedConcepts)) {
+      const userNorm = wordTextNormalize(userAnswer);
+      for (const concept of opts.acceptedConcepts) {
+        if (!Array.isArray(concept) || concept.length === 0) continue;
+        const matchesAllTerms = concept.every(term =>
+          userNorm.includes(wordTextNormalize(term))
+        );
+        if (matchesAllTerms) {
+          return {
+            equivalent: true,
+            message: '✓ Correct (concept match)',
+            method: 'concept',
+            hints: []
+          };
+        }
+      }
+    }
+
+    // Strategy 3: Numeric comparison
     const userNumeric = extractNumericValue(userAnswer);
     if (userNumeric !== null) {
       for (const correct of correctArray) {
@@ -132,7 +170,7 @@ class AnswerValidator {
       };
     }
 
-    // Strategy 3: Partial match (for keywords)
+    // Strategy 4: Partial match (for keywords)
     if (opts.allowPartialMatch) {
       const userLower = userAnswer.toLowerCase();
       for (const correct of correctArray) {
@@ -148,7 +186,7 @@ class AnswerValidator {
       }
     }
 
-    // Strategy 4: Check if answer contains key terms
+    // Strategy 5: Check if answer contains key terms
     if (opts.requiredTerms && Array.isArray(opts.requiredTerms)) {
       const userLower = userAnswer.toLowerCase();
       const hasAllTerms = opts.requiredTerms.every(term => 

@@ -6,8 +6,10 @@ import HeroSection from "../components/home/HeroSection";
 import TypingPracticeSection from "../components/home/TypingPracticeSection";
 import PodcastSection from "../components/home/PodcastSection";
 import FeaturedModulesSection from "../components/home/FeaturedModulesSection";
+import FlashcardSection from "../components/home/FlashcardSection";
 import OfflineSection from "../components/home/OfflineSection";
 import CallToActionSection from "../components/home/CallToActionSection";
+import ScrollReveal from "../components/ScrollReveal";
 import "../assets/styles/home.css";
 
 // Helper: derive week count from canonical registry
@@ -31,62 +33,69 @@ export default function HomePage() {
       {/* ════════════════════════════════════════════════════
           VIDEO SECTION
           ════════════════════════════════════════════════════ */}
-      <section style={{
-        maxWidth: "1280px",
-        margin: "0 auto",
-        padding: "56px 40px 72px",
-        position: "relative", zIndex: 1,
-      }}>
-        <div className="video-grid">
-          {/* Video 1 — 16:9 responsive wrapper */}
-          <div style={{
-            position: "relative",
-            paddingTop: "56.25%",
-            width: "100%",
-            borderRadius: "16px",
-            overflow: "hidden",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
-          }}>
-            <iframe
-              src="https://www.youtube.com/embed/QW6y-F4Pr3Q"
-              title="Student Assessment Platform — Introduction"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              style={{
-                position: "absolute",
-                top: 0, left: 0,
-                width: "100%", height: "100%",
-                border: "none",
-              }}
-            />
-          </div>
+      <ScrollReveal direction="bottom">
+        <section style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "56px 40px 72px",
+          position: "relative", zIndex: 1,
+        }}>
+          <div className="video-grid">
+            {/* Video 1 — 16:9 responsive wrapper */}
+            <ScrollReveal direction="bottom" delay={100}>
+              <div style={{
+                position: "relative",
+                paddingTop: "56.25%",
+                width: "100%",
+                borderRadius: "16px",
+                overflow: "hidden",
+                boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+              }}>
+                <iframe
+                  src="https://www.youtube.com/embed/QW6y-F4Pr3Q"
+                  title="Student Assessment Platform — Introduction"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  style={{
+                    position: "absolute",
+                    top: 0, left: 0,
+                    width: "100%", height: "100%",
+                    border: "none",
+                  }}
+                />
+              </div>
+            </ScrollReveal>
 
-          {/* Video 2 — 16:9 responsive wrapper */}
-          <div style={{
-            position: "relative",
-            paddingTop: "56.25%",
-            width: "100%",
-            borderRadius: "16px",
-            overflow: "hidden",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
-          }}>
-            <iframe
-              src="https://www.youtube.com/embed/qo7SuzQMi8w"
-              title="Student Assessment Platform — Walkthrough"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              style={{
-                position: "absolute",
-                top: 0, left: 0,
-                width: "100%", height: "100%",
-                border: "none",
-              }}
-            />
+            {/* Video 2 — 16:9 responsive wrapper */}
+            <ScrollReveal direction="bottom" delay={250}>
+              <div style={{
+                position: "relative",
+                paddingTop: "56.25%",
+                width: "100%",
+                borderRadius: "16px",
+                overflow: "hidden",
+                boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+              }}>
+                <iframe
+                  src="https://www.youtube.com/embed/qo7SuzQMi8w"
+                  title="Student Assessment Platform — Walkthrough"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  style={{
+                    position: "absolute",
+                    top: 0, left: 0,
+                    width: "100%", height: "100%",
+                    border: "none",
+                  }}
+                />
+              </div>
+            </ScrollReveal>
           </div>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
 
       <FeaturedModulesSection modules={modules} totalWeeks={totalWeeks} />
+      <FlashcardSection theme={theme} />
       <OfflineSection theme={theme} />
       <CallToActionSection theme={theme} />
 

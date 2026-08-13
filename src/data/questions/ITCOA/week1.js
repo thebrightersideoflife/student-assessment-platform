@@ -287,24 +287,26 @@ Unless otherwise stated, all questions relate to Ubuntu Retail Group (URG).`,
 
   // ── 3.4 Short Factual ────────────────────────────────────
   {
-    id: 'ITCOA_W1_Q14',
-    type: 'open-ended',
-    sectionLabel: '3.4',
-    tags: ['system configuration', 'backup & recovery'],
-    text: 'Name one benefit of using a virtual laboratory before deploying updates to production servers.',
-    correctAnswers: [
-      'Allows testing of updates without affecting production servers',
-      'Reduces risk of downtime',
-      'Allows administrators to test software, updates and configurations without affecting production servers',
-    ],
-    points: 2,
-    validationOptions: {
-      caseSensitive: false,
-      tolerance: 20,
-      allowPartialMatch: true,
-    },
-    explanation: 'Testing in an isolated environment reduces operational risk by preventing failed updates or configuration errors from disrupting business services.',
+  id: 'ITCOA_W1_Q14',
+  type: 'open-ended',
+  sectionLabel: '3.4',
+  tags: ['system configuration', 'backup & recovery'],
+  text: 'Name one benefit of using a virtual laboratory before deploying updates to production servers.',
+  correctAnswers: [
+    'Allows testing of updates without affecting production servers',
+    'Reduces risk of downtime',
+    'Reduces risk of failed updates',
+    'Allows testing without affecting production',
+    'Enables testing before deployment',
+  ],
+  points: 2,
+  validationOptions: {
+    caseSensitive: false,
+    tolerance: 30,
+    allowPartialMatch: true,
   },
+  explanation: 'Testing in an isolated environment reduces operational risk by preventing failed updates or configuration errors from disrupting business services.',
+},
 
   // ── 3.5 Essay ────────────────────────────────────────────
   {

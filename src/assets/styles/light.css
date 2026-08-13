@@ -24,4 +24,13 @@
   --accent-secondary: var(--sunset-orange);
  
   --border-color: #D6E0F5;
+
+  /* Flashcard Accents (Light Mode - Deep/Contrasted) */
+  --fc-green:  #166534;
+  --fc-purple: #6B21A8;
+  --fc-blue:   #1E40AF;
+  --fc-cyan:   #155E75;
+  --fc-yellow: #854D0E;
+  --fc-pink:   #9D174D;
+  --fc-red:    #991B1B;
 }

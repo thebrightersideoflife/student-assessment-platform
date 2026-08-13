@@ -142,10 +142,10 @@ This design is better than manually distributing IP addresses because it reduces
     sectionLabel: '2.2',
     text: 'Name the DHCP mechanism used to ensure a device always receives the same IP address based on its MAC address.',
     correctAnswers: ['reservation', 'DHCP reservation'],
-    points: 2,
-    validationOptions: {
+    options: {
       caseSensitive: false,
-      tolerance: 0,
+      tolerance: 20,
+      allowPartialMatch: true
     },
     explanation: 'DHCP **reservations** assign a specific IP address to a client based on its MAC address or client identifier, keeping the address consistent for that device.',
   },

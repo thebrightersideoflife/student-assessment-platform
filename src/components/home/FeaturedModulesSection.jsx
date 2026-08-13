@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { GridIcon } from "../moduleMeta";
 import FeaturedModulesCarousel from "../FeaturedModulesCarousel";
+import ScrollReveal from "../ScrollReveal";
 
 /**
  * FeaturedModulesSection
@@ -18,52 +19,56 @@ export default function FeaturedModulesSection({ modules, totalWeeks }) {
     }}>
 
       {/* Section header */}
-      <div style={{
-        display: "flex", alignItems: "flex-end",
-        justifyContent: "space-between",
-        marginBottom: "32px",
-        gap: "16px",
-        flexWrap: "wrap",
-      }}>
-        <div>
-          <div style={{
-            fontSize: "13px", fontWeight: 700, letterSpacing: "0.18em",
-            textTransform: "uppercase", color: "var(--accent-primary)",
-            marginBottom: "8px",
-          }}>
-            Available now
+      <ScrollReveal direction="bottom">
+        <div style={{
+          display: "flex", alignItems: "flex-end",
+          justifyContent: "space-between",
+          marginBottom: "32px",
+          gap: "16px",
+          flexWrap: "wrap",
+        }}>
+          <div>
+            <div style={{
+              fontSize: "13px", fontWeight: 700, letterSpacing: "0.18em",
+              textTransform: "uppercase", color: "var(--accent-primary)",
+              marginBottom: "8px",
+            }}>
+              Available now
+            </div>
+            <h2 style={{
+              margin: 0, fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
+              fontWeight: 700, letterSpacing: "-0.02em",
+              color: "var(--text-primary)",
+            }}>
+              Featured Modules
+            </h2>
+            <p style={{
+              margin: "6px 0 0", fontSize: "17px",
+              color: "var(--text-secondary)",
+            }}>
+              Weekly practice assessments across {modules.length} IT discipline{modules.length !== 1 ? "s" : ""} ({totalWeeks} weeks total).
+            </p>
           </div>
-          <h2 style={{
-            margin: 0, fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
-            fontWeight: 700, letterSpacing: "-0.02em",
-            color: "var(--text-primary)",
-          }}>
-            Featured Modules
-          </h2>
-          <p style={{
-            margin: "6px 0 0", fontSize: "17px",
-            color: "var(--text-secondary)",
-          }}>
-            Weekly practice assessments across {modules.length} IT discipline{modules.length !== 1 ? "s" : ""} ({totalWeeks} weeks total).
-          </p>
-        </div>
 
-        <button
-          className="button"
-          onClick={() => navigate("/modules")}
-          style={{
-            display: "flex", alignItems: "center", gap: "8px",
-            padding: "11px 20px", fontSize: "14px", fontWeight: 600,
-            flexShrink: 0,
-          }}
-        >
-          <GridIcon />
-          See all modules
-        </button>
-      </div>
+          <button
+            className="button"
+            onClick={() => navigate("/modules")}
+            style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              padding: "11px 20px", fontSize: "14px", fontWeight: 600,
+              flexShrink: 0,
+            }}
+          >
+            <GridIcon />
+            See all modules
+          </button>
+        </div>
+      </ScrollReveal>
 
       {/* Animated Carousel */}
-      <FeaturedModulesCarousel modules={modules} />
+      <ScrollReveal direction="bottom" delay={200}>
+        <FeaturedModulesCarousel modules={modules} />
+      </ScrollReveal>
     </section>
   );
 }

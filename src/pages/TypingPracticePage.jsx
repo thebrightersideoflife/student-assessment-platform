@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { STEP, useTypingPracticeFlow } from "../hooks/useTypingPracticeFlow";
 import { useTypingAccent } from "../hooks/useTypingAccent";
 import Breadcrumb from "../components/Breadcrumb";
+import ScrollReveal from "../components/ScrollReveal";
 import { DurationSelect, TestTypeSelect, UnitModeSelect } from "../components/typing/TypingSetup";
 import TypingPracticeHero from "../components/typing/TypingPracticeHero";
 import TypingPracticeSettingsModal from "../components/typing/TypingPracticeSettingsModal";
@@ -84,16 +85,18 @@ export default function TypingPracticePage() {
           ════════════════════════════════════════════════════ */}
       {step === STEP.TEST_TYPE && selectedModule && (
         <div className="container">
-          <Breadcrumb items={[
-            { label: "Home", path: "/" },
-            { label: "Typing Practice", onClick: handleChangeModule },
-            { label: selectedModule.name },
-          ]} />
-          <TestTypeSelect
-            moduleName={selectedModule.name}
-            onSelect={handleTestTypeSelect}
-            onBack={handleChangeModule}
-          />
+          <ScrollReveal direction="bottom" duration={500}>
+            <Breadcrumb items={[
+              { label: "Home", path: "/" },
+              { label: "Typing Practice", onClick: handleChangeModule },
+              { label: selectedModule.name },
+            ]} />
+            <TestTypeSelect
+              moduleName={selectedModule.name}
+              onSelect={handleTestTypeSelect}
+              onBack={handleChangeModule}
+            />
+          </ScrollReveal>
         </div>
       )}
 
@@ -102,16 +105,18 @@ export default function TypingPracticePage() {
           ════════════════════════════════════════════════════ */}
       {step === STEP.DURATION && selectedModule && (
         <div className="container">
-          <Breadcrumb items={[
-            { label: "Home", path: "/" },
-            { label: "Typing Practice", onClick: handleChangeModule },
-            { label: selectedModule.name },
-          ]} />
-          <DurationSelect
-            moduleName={selectedModule.name}
-            onSelect={handleDurationSelect}
-            onBack={() => flow.setStep(STEP.TEST_TYPE)}
-          />
+          <ScrollReveal direction="bottom" duration={500}>
+            <Breadcrumb items={[
+              { label: "Home", path: "/" },
+              { label: "Typing Practice", onClick: handleChangeModule },
+              { label: selectedModule.name },
+            ]} />
+            <DurationSelect
+              moduleName={selectedModule.name}
+              onSelect={handleDurationSelect}
+              onBack={() => flow.setStep(STEP.TEST_TYPE)}
+            />
+          </ScrollReveal>
         </div>
       )}
 
@@ -120,16 +125,18 @@ export default function TypingPracticePage() {
           ════════════════════════════════════════════════════ */}
       {step === STEP.UNIT_SETUP && selectedModule && (
         <div className="container">
-          <Breadcrumb items={[
-            { label: "Home", path: "/" },
-            { label: "Typing Practice", onClick: handleChangeModule },
-            { label: selectedModule.name },
-          ]} />
-          <UnitModeSelect
-            moduleName={selectedModule.name}
-            onSelect={handleUnitModeSelect}
-            onBack={() => flow.setStep(STEP.TEST_TYPE)}
-          />
+          <ScrollReveal direction="bottom" duration={500}>
+            <Breadcrumb items={[
+              { label: "Home", path: "/" },
+              { label: "Typing Practice", onClick: handleChangeModule },
+              { label: selectedModule.name },
+            ]} />
+            <UnitModeSelect
+              moduleName={selectedModule.name}
+              onSelect={handleUnitModeSelect}
+              onBack={() => flow.setStep(STEP.TEST_TYPE)}
+            />
+          </ScrollReveal>
         </div>
       )}
 
@@ -197,12 +204,13 @@ export default function TypingPracticePage() {
           ════════════════════════════════════════════════════ */}
       {step === STEP.RESULTS && selectedModule && result && (resultIsUnit || selectedDuration) && (
         <div className="container">
-          <Breadcrumb items={[
-            { label: "Home", path: "/" },
-            { label: "Typing Practice", onClick: handleChangeModule },
-            { label: selectedModule.name },
-          ]} />
-          <TypingResults
+          <ScrollReveal direction="bottom" duration={500}>
+            <Breadcrumb items={[
+              { label: "Home", path: "/" },
+              { label: "Typing Practice", onClick: handleChangeModule },
+              { label: selectedModule.name },
+            ]} />
+            <TypingResults
             result={result}
             saveRejectedReason={saveRejectedReason}
             moduleId={selectedModule.id}
@@ -233,6 +241,7 @@ export default function TypingPracticePage() {
             onTimedTest={handleStartTimedTest}
             onChangeModule={handleChangeModule}
           />
+          </ScrollReveal>
         </div>
       )}
 

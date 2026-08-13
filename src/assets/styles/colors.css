@@ -10,6 +10,15 @@
   --cornflower-blue: #6495ED;
   --daisy-white: #F0F8FF;
 
+  /* Semantic palette for Flashcards/Badges */
+  --fc-green:  #22C55E;
+  --fc-purple: #A855F7;
+  --fc-blue:   #3B82F6;
+  --fc-cyan:   #06B6D4;
+  --fc-yellow: #EAB308;
+  --fc-pink:   #EC4899;
+  --fc-red:    #EF4444;
+
 }
 
 /* --lush-lime moved to light.css / dark.css, each with its own value.

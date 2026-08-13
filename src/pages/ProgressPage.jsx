@@ -11,6 +11,7 @@ import AssessmentStorage from "../utils/assessmentStorage";
 import { getActiveWeeks, getCurrentStreak, getLongestStreak } from "../utils/streakHelpers";
 import { buildCompletionMap, countCompletedWeeks } from "../utils/revisionHelpers";
 import { getTypingReadyModules } from "../utils/typingContent";
+import ScrollReveal from "../components/ScrollReveal";
 import "../assets/styles/progress.css";
 
 const MODULE_SELECTION_KEY  = "progress_tracked_modules";
@@ -654,61 +655,63 @@ export default function ProgressPage() {
       <div className="container">
 
         {/* ── Page header ─────────────────────────────────────────────── */}
-        <div
-          className="progress-header"
-          style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}
-        >
-          <div>
-            <h1>
-              {preferredName ? `👋 Hi ${preferredName}` : "My Progress"}
-            </h1>
-            <p className="progress-subtitle" style={{ margin: 0 }}>
-              {!firstVisit && trackedModuleIds
-                ? `Tracking ${trackedModuleIds.length} of ${modules.length} module${trackedModuleIds.length !== 1 ? "s" : ""}`
-                : "Track your learning journey across all modules"}
-            </p>
-          </div>
-
-          {/* Action buttons — visible only after first selection is saved */}
-          {!firstVisit && !showSelector && (
-            <div style={{ display: "flex", gap: "10px", flexShrink: 0, marginTop: "8px", flexWrap: "wrap" }}>
-              <button
-                onClick={handleExportPDF}
-                className="button solid"
-                style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Export as PDF
-              </button>
-              <button
-                onClick={() => setShowSelector(true)}
-                className="button"
-                style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                Edit modules
-              </button>
-              <button
-                onClick={() => setNameModalOpen(true)}
-                className="button"
-                style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                {preferredName ? "Edit name" : "Add name"}
-              </button>
+        <ScrollReveal direction="bottom" duration={600}>
+          <div
+            className="progress-header"
+            style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}
+          >
+            <div>
+              <h1>
+                {preferredName ? `👋 Hi ${preferredName}` : "My Progress"}
+              </h1>
+              <p className="progress-subtitle" style={{ margin: 0 }}>
+                {!firstVisit && trackedModuleIds
+                  ? `Tracking ${trackedModuleIds.length} of ${modules.length} module${trackedModuleIds.length !== 1 ? "s" : ""}`
+                  : "Track your learning journey across all modules"}
+              </p>
             </div>
-          )}
-        </div>
+
+            {/* Action buttons — visible only after first selection is saved */}
+            {!firstVisit && !showSelector && (
+              <div style={{ display: "flex", gap: "10px", flexShrink: 0, marginTop: "8px", flexWrap: "wrap" }}>
+                <button
+                  onClick={handleExportPDF}
+                  className="button solid"
+                  style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Export as PDF
+                </button>
+                <button
+                  onClick={() => setShowSelector(true)}
+                  className="button"
+                  style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Edit modules
+                </button>
+                <button
+                  onClick={() => setNameModalOpen(true)}
+                  className="button"
+                  style={{ padding: "10px 18px", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  {preferredName ? "Edit name" : "Add name"}
+                </button>
+              </div>
+            )}
+          </div>
+        </ScrollReveal>
 
         {/* Name modal — portalled to document.body */}
         {nameModalOpen && (
@@ -740,106 +743,121 @@ export default function ProgressPage() {
         {/* ── Dashboard — gated until first selection is saved ─────────── */}
         {!firstVisit && (
           <>
-            <StreakCard
-              streak={streakData.streak}
-              longest={streakData.longest}
-              isAtRisk={streakData.isAtRisk}
-              activeWeeks={streakData.activeWeeks}
-            />
+            <ScrollReveal direction="bottom" delay={200}>
+              <StreakCard
+                streak={streakData.streak}
+                longest={streakData.longest}
+                isAtRisk={streakData.isAtRisk}
+                activeWeeks={streakData.activeWeeks}
+              />
+            </ScrollReveal>
 
             {/* ── Revision Mode entry point ────────────────────── */}
-            <WeaknessQuizPromoCard
-              onClick={() => {
-                if (hasEnoughHistory) {
-                  setWeaknessNotice("");
-                  navigate("/weakness-quiz");
-                } else {
-                  setWeaknessNotice("Finish at least one assessment first so the quiz can build a meaningful weakness profile from your history.");
-                }
-              }}
-              notice={weaknessNotice}
-              ctaLabel={hasEnoughHistory ? "Open weakness quiz" : "Unlock weakness quiz"}
-            />
+            <ScrollReveal direction="bottom" delay={350}>
+              <WeaknessQuizPromoCard
+                onClick={() => {
+                  if (hasEnoughHistory) {
+                    setWeaknessNotice("");
+                    navigate("/weakness-quiz");
+                  } else {
+                    setWeaknessNotice("Finish at least one assessment first so the quiz can build a meaningful weakness profile from your history.");
+                  }
+                }}
+                notice={weaknessNotice}
+                ctaLabel={hasEnoughHistory ? "Open weakness quiz" : "Unlock weakness quiz"}
+              />
+            </ScrollReveal>
 
             {completedWeekCount >= 2 && (
-              <div style={{
-                background: "rgba(var(--bg-card-rgb), 0.72)",
-                backdropFilter: "blur(12px) saturate(160%)",
-                WebkitBackdropFilter: "blur(12px) saturate(160%)",
-                border: "1px solid rgba(var(--border-color-rgb), 0.45)",
-                borderRadius: "14px",
-                padding: "20px 24px",
-                marginBottom: "32px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "20px",
-                flexWrap: "wrap",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <span style={{ fontSize: "32px", lineHeight: 1 }}>🔀</span>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "3px" }}>
-                      Cross-week Revision
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                      Mix questions from your {completedWeekCount} completed week{completedWeekCount !== 1 ? "s" : ""} into a single shuffled session.
+              <ScrollReveal direction="bottom" delay={500}>
+                <div style={{
+                  background: "rgba(var(--bg-card-rgb), 0.72)",
+                  backdropFilter: "blur(12px) saturate(160%)",
+                  WebkitBackdropFilter: "blur(12px) saturate(160%)",
+                  border: "1px solid rgba(var(--border-color-rgb), 0.45)",
+                  borderRadius: "14px",
+                  padding: "20px 24px",
+                  marginBottom: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "20px",
+                  flexWrap: "wrap",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <span style={{ fontSize: "32px", lineHeight: 1 }}>🔀</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "3px" }}>
+                        Cross-week Revision
+                      </div>
+                      <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                        Mix questions from your {completedWeekCount} completed week{completedWeekCount !== 1 ? "s" : ""} into a single shuffled session.
+                      </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => navigate("/revision")}
+                    className="button solid"
+                    style={{ padding: "11px 22px", fontSize: "14px", fontWeight: 600, flexShrink: 0, display: "flex", alignItems: "center", gap: "8px" }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="16 3 21 3 21 8"/>
+                      <line x1="4" y1="20" x2="21" y2="3"/>
+                      <polyline points="21 16 21 21 16 21"/>
+                      <line x1="15" y1="15" x2="21" y2="21"/>
+                      <line x1="4" y1="4" x2="9" y2="9"/>
+                    </svg>
+                    Start revision
+                  </button>
                 </div>
-                <button
-                  onClick={() => navigate("/revision")}
-                  className="button solid"
-                  style={{ padding: "11px 22px", fontSize: "14px", fontWeight: 600, flexShrink: 0, display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="16 3 21 3 21 8"/>
-                    <line x1="4" y1="20" x2="21" y2="3"/>
-                    <polyline points="21 16 21 21 16 21"/>
-                    <line x1="15" y1="15" x2="21" y2="21"/>
-                    <line x1="4" y1="4" x2="9" y2="9"/>
-                  </svg>
-                  Start revision
-                </button>
-              </div>
+              </ScrollReveal>
             )}
 
             <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon">📊</div>
-                <div className="stat-content">
-                  <div className="stat-value">{overallStats.totalCompleted}/{overallStats.totalAssessments}</div>
-                  <div className="stat-label">Assessments Completed</div>
+              <ScrollReveal direction="bottom" delay={600} distance="30px">
+                <div className="stat-card">
+                  <div className="stat-icon">📊</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{overallStats.totalCompleted}/{overallStats.totalAssessments}</div>
+                    <div className="stat-label">Assessments Completed</div>
+                  </div>
                 </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">🎯</div>
-                <div className="stat-content">
-                  <div className="stat-value">{overallStats.completionRate}%</div>
-                  <div className="stat-label">Completion Rate</div>
+              </ScrollReveal>
+              <ScrollReveal direction="bottom" delay={700} distance="30px">
+                <div className="stat-card">
+                  <div className="stat-icon">🎯</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{overallStats.completionRate}%</div>
+                    <div className="stat-label">Completion Rate</div>
+                  </div>
                 </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">⭐</div>
-                <div className="stat-content">
-                  <div className="stat-value">{overallStats.averageScore}%</div>
-                  <div className="stat-label">Average Score</div>
+              </ScrollReveal>
+              <ScrollReveal direction="bottom" delay={800} distance="30px">
+                <div className="stat-card">
+                  <div className="stat-icon">⭐</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{overallStats.averageScore}%</div>
+                    <div className="stat-label">Average Score</div>
+                  </div>
                 </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">📚</div>
-                <div className="stat-content">
-                  <div className="stat-value">{trackedModuleIds?.length ?? modules.length}</div>
-                  <div className="stat-label">Modules Tracked</div>
+              </ScrollReveal>
+              <ScrollReveal direction="bottom" delay={900} distance="30px">
+                <div className="stat-card">
+                  <div className="stat-icon">📚</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{trackedModuleIds?.length ?? modules.length}</div>
+                    <div className="stat-label">Modules Tracked</div>
+                  </div>
                 </div>
-              </div>
+              </ScrollReveal>
             </div>
 
             <div className="modules-progress">
               <h2>Module Breakdown</h2>
 
-              {progressData.map(({ module, weeks, completedCount, totalWeeks }) => (
-                <div key={module.id} className="module-progress-card">
+              {progressData.map(({ module, weeks, completedCount, totalWeeks }, index) => (
+                <ScrollReveal key={module.id} direction="bottom" delay={index * 50}>
+                  <div className="module-progress-card">
                   <div className="module-progress-header">
                     <div>
                       <h3>{module.name}</h3>
@@ -939,8 +957,9 @@ export default function ProgressPage() {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+              </ScrollReveal>
+            ))}
+          </div>
 
             {overallStats.totalCompleted === 0 && progressData.length > 0 && (
               <div className="empty-state">

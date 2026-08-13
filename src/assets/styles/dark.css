@@ -23,4 +23,12 @@
 
   --border-color: #2A3550;
 
+  /* Flashcard Accents (Dark Mode - Neon/Tint) */
+  --fc-green:  #22C55E;
+  --fc-purple: #A855F7;
+  --fc-blue:   #3B82F6;
+  --fc-cyan:   #06B6D4;
+  --fc-yellow: #EAB308;
+  --fc-pink:   #EC4899;
+  --fc-red:    #EF4444;
 }

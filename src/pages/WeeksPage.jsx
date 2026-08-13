@@ -5,6 +5,7 @@ import { questions } from "../data/questions/index.js"; // CHANGED: was ../data/
 import WeekCard from "../components/WeekCard";
 import Breadcrumb from "../components/Breadcrumb";
 import OfflineInfoButton from "../components/OfflineInfoButton";
+import ScrollReveal from "../components/ScrollReveal";
 
 const BookIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -66,64 +67,66 @@ export default function WeeksPage() {
 
       {/* Roadmap card — ITJVA only */}
       {moduleId === "ITJVA" && (
-        <div
-          onClick={() => navigate(`/module/${moduleId}/roadmap`)}
-          style={{
-            background: "rgba(var(--bg-card-rgb), 0.72)",
-            backdropFilter: "blur(12px) saturate(160%)",
-            WebkitBackdropFilter: "blur(12px) saturate(160%)",
-            border: "1px solid rgba(var(--border-color-rgb), 0.55)",
-            borderRadius: "14px",
-            padding: "22px 24px",
-            marginBottom: "24px",
-            cursor: "pointer",
-            transition: "transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s ease, border-color 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-3px)";
-            e.currentTarget.style.background = "rgba(var(--bg-card-rgb), 0.92)";
-            e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.85)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.background = "rgba(var(--bg-card-rgb), 0.72)";
-            e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.55)";
-          }}
-        >
-          <div style={{
-            display: "flex", alignItems: "center",
-            justifyContent: "space-between", gap: "16px",
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
-              <div style={{
-                width: "42px", height: "42px", borderRadius: "10px",
-                background: "rgba(var(--bg-secondary-rgb), 0.7)",
-                border: "1px solid rgba(var(--border-color-rgb), 0.4)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "var(--accent-primary)", flexShrink: 0,
-              }}>
-                <BookIcon />
-              </div>
-              <div>
-                <h3 style={{
-                  margin: "0 0 6px 0", color: "var(--accent-primary)",
-                  fontSize: "1.15rem", fontWeight: 600,
+        <ScrollReveal direction="bottom" delay={100} duration={600}>
+          <div
+            onClick={() => navigate(`/module/${moduleId}/roadmap`)}
+            style={{
+              background: "rgba(var(--bg-card-rgb), 0.72)",
+              backdropFilter: "blur(12px) saturate(160%)",
+              WebkitBackdropFilter: "blur(12px) saturate(160%)",
+              border: "1px solid rgba(var(--border-color-rgb), 0.55)",
+              borderRadius: "14px",
+              padding: "22px 24px",
+              marginBottom: "24px",
+              cursor: "pointer",
+              transition: "transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s ease, border-color 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.background = "rgba(var(--bg-card-rgb), 0.92)";
+              e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.85)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.background = "rgba(var(--bg-card-rgb), 0.72)";
+              e.currentTarget.style.borderColor = "rgba(var(--border-color-rgb), 0.55)";
+            }}
+          >
+            <div style={{
+              display: "flex", alignItems: "center",
+              justifyContent: "space-between", gap: "16px",
+            }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                <div style={{
+                  width: "42px", height: "42px", borderRadius: "10px",
+                  background: "rgba(var(--bg-secondary-rgb), 0.7)",
+                  border: "1px solid rgba(var(--border-color-rgb), 0.4)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "var(--accent-primary)", flexShrink: 0,
                 }}>
-                  Accelerated Learning Roadmap
-                </h3>
-                <p style={{
-                  margin: 0, color: "var(--text-secondary)",
-                  fontSize: "14px", lineHeight: "1.5",
-                }}>
-                  Curated resources and learning paths for mastering Java efficiently
-                </p>
+                  <BookIcon />
+                </div>
+                <div>
+                  <h3 style={{
+                    margin: "0 0 6px 0", color: "var(--accent-primary)",
+                    fontSize: "1.15rem", fontWeight: 600,
+                  }}>
+                    Accelerated Learning Roadmap
+                  </h3>
+                  <p style={{
+                    margin: 0, color: "var(--text-secondary)",
+                    fontSize: "14px", lineHeight: "1.5",
+                  }}>
+                    Curated resources and learning paths for mastering Java efficiently
+                  </p>
+                </div>
               </div>
-            </div>
-            <div style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
-              <ArrowRightIcon />
+              <div style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
+                <ArrowRightIcon />
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       )}
 
       {/*
@@ -135,47 +138,61 @@ export default function WeeksPage() {
         ? blockKeys.map((blockKey) => (
             <div key={blockKey}>
               {/* Block divider header */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: "12px",
-                margin: "8px 0 14px",
-              }}>
-                <span style={{
-                  fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em",
-                  textTransform: "uppercase", color: "var(--text-secondary)",
-                  whiteSpace: "nowrap",
-                }}>
-                  Block {blockKey}
-                </span>
+              <ScrollReveal direction="bottom" delay={0} duration={500}>
                 <div style={{
-                  flex: 1, height: "1px",
-                  background: "rgba(var(--border-color-rgb), 0.3)",
-                }} />
-              </div>
+                  display: "flex", alignItems: "center", gap: "12px",
+                  margin: "8px 0 14px",
+                }}>
+                  <span style={{
+                    fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em",
+                    textTransform: "uppercase", color: "var(--text-secondary)",
+                    whiteSpace: "nowrap",
+                  }}>
+                    Block {blockKey}
+                  </span>
+                  <div style={{
+                    flex: 1, height: "1px",
+                    background: "rgba(var(--border-color-rgb), 0.3)",
+                  }} />
+                </div>
+              </ScrollReveal>
 
-              {blocks[blockKey].map((week) => {
+              {blocks[blockKey].map((week, index) => {
                 const hasQuestions = questions[moduleId]?.[week.id]?.length > 0;
                 return (
-                  <WeekCard
+                  <ScrollReveal
                     key={`${week.id}-${pageKey}`}
-                    moduleId={moduleId}
-                    week={week}
-                    hasQuestions={hasQuestions}
-                    blockWeekNumber={weekBlockPosition[week.id]?.blockWeekNumber}
-                  />
+                    direction="bottom"
+                    delay={index < 4 ? index * 80 : 0}
+                    duration={index < 4 ? 400 : 600}
+                  >
+                    <WeekCard
+                      moduleId={moduleId}
+                      week={week}
+                      hasQuestions={hasQuestions}
+                      blockWeekNumber={weekBlockPosition[week.id]?.blockWeekNumber}
+                    />
+                  </ScrollReveal>
                 );
               })}
             </div>
           ))
-        : moduleWeeks.map((week) => {
+        : moduleWeeks.map((week, index) => {
             const hasQuestions = questions[moduleId]?.[week.id]?.length > 0;
             return (
-              <WeekCard
+              <ScrollReveal
                 key={`${week.id}-${pageKey}`}
-                moduleId={moduleId}
-                week={week}
-                hasQuestions={hasQuestions}
-                blockWeekNumber={weekBlockPosition[week.id]?.blockWeekNumber}
-              />
+                direction="bottom"
+                delay={index < 4 ? index * 80 : 0}
+                duration={index < 4 ? 400 : 600}
+              >
+                <WeekCard
+                  moduleId={moduleId}
+                  week={week}
+                  hasQuestions={hasQuestions}
+                  blockWeekNumber={weekBlockPosition[week.id]?.blockWeekNumber}
+                />
+              </ScrollReveal>
             );
           })
       }

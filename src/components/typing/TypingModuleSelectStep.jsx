@@ -7,6 +7,7 @@
 
 import TypingModuleSearchBar from "./TypingModuleSearchBar";
 import TypingModuleGrid from "../TypingModuleGrid";
+import ScrollReveal from "../ScrollReveal";
 
 export default function TypingModuleSelectStep({
   loadingModule,
@@ -27,36 +28,38 @@ export default function TypingModuleSelectStep({
           Loading module questions…
         </p>
       )}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "20px", marginBottom: "20px", flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: "280px" }}>
-          <TypingModuleSearchBar
-            value={moduleQuery}
-            onChange={onModuleQueryChange}
-            totalModules={availableModules.length}
-            visibleModules={filteredModules.length}
-            accentColor={accentColor}
-            accentRgb={accentRgb}
-          />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "10px", flexWrap: "wrap" }}>
-            <div style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-              Your progress report becomes available after your first typing attempt.
+      <ScrollReveal direction="top" duration={600} distance="30px">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "20px", marginBottom: "20px", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: "280px" }}>
+            <TypingModuleSearchBar
+              value={moduleQuery}
+              onChange={onModuleQueryChange}
+              totalModules={availableModules.length}
+              visibleModules={filteredModules.length}
+              accentColor={accentColor}
+              accentRgb={accentRgb}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "10px", flexWrap: "wrap" }}>
+              <div style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+                Your progress report becomes available after your first typing attempt.
+              </div>
+              <button
+                type="button"
+                className="button"
+                onClick={onViewProgressReport}
+                disabled={!hasMadeFirstAttempt}
+                style={{
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  opacity: hasMadeFirstAttempt ? 1 : 0.6,
+                }}
+              >
+                {hasMadeFirstAttempt ? "View progress report" : "Progress report"}
+              </button>
             </div>
-            <button
-              type="button"
-              className="button"
-              onClick={onViewProgressReport}
-              disabled={!hasMadeFirstAttempt}
-              style={{
-                padding: "10px 16px",
-                fontSize: "14px",
-                opacity: hasMadeFirstAttempt ? 1 : 0.6,
-              }}
-            >
-              {hasMadeFirstAttempt ? "View progress report" : "Progress report"}
-            </button>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
       <TypingModuleGrid modules={filteredModules} loading={loadingModule} onSelect={onSelectModule} />
     </section>
   );

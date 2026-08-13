@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext";
+import ScrollReveal from "../components/ScrollReveal";
 
 /* ── Icons ───────────────────────────────────────────────── */
 
@@ -191,74 +192,76 @@ export default function SupportPage() {
       {/* ════════════════════════════════════════════════════
           HERO
           ════════════════════════════════════════════════════ */}
-      <section style={{
-        position: "relative",
-        padding: "42px 40px 64px",
-        maxWidth: "860px",
-        margin: "0 auto",
-        textAlign: "center",
-      }}>
-        {/* Ambient glow */}
-        <div style={{
-          position: "absolute", top: "0", left: "50%",
-          transform: "translateX(-50%)",
-          width: "600px", height: "320px",
-          background: `radial-gradient(ellipse 70% 60% at 50% 10%, rgba(${accentPrimary}, 0.10), transparent 80%)`,
-          pointerEvents: "none", zIndex: 0,
-        }} />
-
-        <div style={{ position: "relative", zIndex: 1 }}>
-          {/* Eyebrow */}
+      <ScrollReveal direction="bottom" duration={700}>
+        <section style={{
+          position: "relative",
+          padding: "42px 40px 64px",
+          maxWidth: "860px",
+          margin: "0 auto",
+          textAlign: "center",
+        }}>
+          {/* Ambient glow */}
           <div style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            background: "rgba(var(--bg-card-rgb), 0.7)",
-            border: "1px solid rgba(var(--border-color-rgb), 0.4)",
-            borderRadius: "999px",
-            padding: "6px 16px",
-            marginBottom: "28px",
-            fontSize: "13px", fontWeight: 600,
-            color: accentPrimaryColor,
-            letterSpacing: "0.06em",
-          }}>
-            <HeartIcon size={13} />
-            Support The Brighter Side
+            position: "absolute", top: "0", left: "50%",
+            transform: "translateX(-50%)",
+            width: "600px", height: "320px",
+            background: `radial-gradient(ellipse 70% 60% at 50% 10%, rgba(${accentPrimary}, 0.10), transparent 80%)`,
+            pointerEvents: "none", zIndex: 0,
+          }} />
+
+          <div style={{ position: "relative", zIndex: 1 }}>
+            {/* Eyebrow */}
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              background: "rgba(var(--bg-card-rgb), 0.7)",
+              border: "1px solid rgba(var(--border-color-rgb), 0.4)",
+              borderRadius: "999px",
+              padding: "6px 16px",
+              marginBottom: "28px",
+              fontSize: "13px", fontWeight: 600,
+              color: accentPrimaryColor,
+              letterSpacing: "0.06em",
+            }}>
+              <HeartIcon size={13} />
+              Support The Brighter Side
+            </div>
+
+            <h1 style={{
+              margin: "0 0 20px",
+              fontSize: "clamp(2rem, 5vw, 3rem)",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              color: "var(--text-primary)",
+              lineHeight: 1.15,
+            }}>
+              Help Keep This Resource{" "}
+              <span style={{ color: accentPrimaryColor }}>Alive & Growing</span>
+            </h1>
+
+            <p style={{
+              margin: "0 auto 16px",
+              maxWidth: "790px",
+              fontSize: "17px",
+              color: "var(--text-primary)",
+              lineHeight: 1.7,
+            }}>
+              "The Brighter Side" believes students deserve a fair shot at preparing properly. To that end, we create (and constantly update) each week's practice assessment so it mirrors the originals, and while we're not compensated for it, we're committed to keeping it going.
+            </p>
+
+            <p style={{
+              margin: "0 auto",
+              maxWidth: "620px",
+              fontSize: "17px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.7,
+            }}>
+              If it's helped you feel
+              more confident, sharpened your skills, or eased the stress of preparation —
+              consider giving back. Even a small gesture goes a long way.
+            </p>
           </div>
-
-          <h1 style={{
-            margin: "0 0 20px",
-            fontSize: "clamp(2rem, 5vw, 3rem)",
-            fontWeight: 800,
-            letterSpacing: "-0.03em",
-            color: "var(--text-primary)",
-            lineHeight: 1.15,
-          }}>
-            Help Keep This Resource{" "}
-            <span style={{ color: accentPrimaryColor }}>Alive & Growing</span>
-          </h1>
-
-          <p style={{
-            margin: "0 auto 16px",
-            maxWidth: "790px",
-            fontSize: "17px",
-            color: "var(--text-primary)",
-            lineHeight: 1.7,
-          }}>            
-            "The Brighter Side" believes students deserve a fair shot at preparing properly. To that end, we create (and constantly update) each week's practice assessment so it mirrors the originals, and while we're not compensated for it, we're committed to keeping it going.
-          </p>
-
-          <p style={{
-            margin: "0 auto",
-            maxWidth: "620px",
-            fontSize: "17px",
-            color: "var(--text-secondary)",
-            lineHeight: 1.7,
-          }}>
-            If it's helped you feel
-            more confident, sharpened your skills, or eased the stress of preparation —
-            consider giving back. Even a small gesture goes a long way.
-          </p>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
 
       {/* ════════════════════════════════════════════════════
           SUPPORT CARDS
@@ -277,91 +280,101 @@ export default function SupportPage() {
         }}
           className="support-cards-grid"
         >
-          <SupportCard
-            type="monetary"
-            icon={<CoffeeIcon />}
-            accentRgb="244,169,0"
-            accentColor="var(--golden-amber)"
-            eyebrow="Monetary Support"
-            title="Buy Me a Coffee"
-            description="Put a smile on our faces. Your support directly helps us dedicate more time to refining questions, explanations, and the overall student experience."
-            buttonLabel="Buy Me a Coffee"
-          />
+          <ScrollReveal direction="bottom" delay={100}>
+            <SupportCard
+              type="monetary"
+              icon={<CoffeeIcon />}
+              accentRgb="244,169,0"
+              accentColor="var(--golden-amber)"
+              eyebrow="Monetary Support"
+              title="Buy Me a Coffee"
+              description="Put a smile on our faces. Your support directly helps us dedicate more time to refining questions, explanations, and the overall student experience."
+              buttonLabel="Buy Me a Coffee"
+            />
+          </ScrollReveal>
 
-          <SupportCard
-            type="correction"
-            icon={<EditIcon />}
-            accentRgb="0,191,255"
-            accentColor="var(--vibrant-cyan)"
-            eyebrow="Content Quality"
-            title="Report a Correction"
-            description="Spotted a mistake? That's incredibly valuable — your feedback directly improves the accuracy of questions and explanations for every student."
-            buttonLabel="Report a Correction"
-          />
+          <ScrollReveal direction="bottom" delay={250}>
+            <SupportCard
+              type="correction"
+              icon={<EditIcon />}
+              accentRgb="0,191,255"
+              accentColor="var(--vibrant-cyan)"
+              eyebrow="Content Quality"
+              title="Report a Correction"
+              description="Spotted a mistake? That's incredibly valuable — your feedback directly improves the accuracy of questions and explanations for every student."
+              buttonLabel="Report a Correction"
+            />
+          </ScrollReveal>
 
-          <SupportCard
-            type="idea"
-            icon={<LightbulbIcon />}
-            accentRgb="118,209,61"
-            accentColor="var(--lush-lime)"
-            eyebrow="Feature Ideas"
-            title="Suggest an Improvement"
-            description="Got a new feature idea or a better way to explain something? I'd genuinely love to hear it. Your perspective shapes where this platform goes next."
-            buttonLabel="Suggest an Idea"
-          />
+          <ScrollReveal direction="bottom" delay={400}>
+            <SupportCard
+              type="idea"
+              icon={<LightbulbIcon />}
+              accentRgb="118,209,61"
+              accentColor="var(--lush-lime)"
+              eyebrow="Feature Ideas"
+              title="Suggest an Improvement"
+              description="Got a new feature idea or a better way to explain something? I'd genuinely love to hear it. Your perspective shapes where this platform goes next."
+              buttonLabel="Suggest an Idea"
+            />
+          </ScrollReveal>
         </div>
 
         {/* Footer note */}
-        <p style={{
-          textAlign: "center",
-          marginTop: "36px",
-          fontSize: "14px",
-          color: "var(--text-secondary)",
-          opacity: 0.7,
-        }}>
-          Every message helps improve the quality of questions, explanations, and student experience.
-        </p>
+        <ScrollReveal direction="bottom" delay={550}>
+          <p style={{
+            textAlign: "center",
+            marginTop: "36px",
+            fontSize: "14px",
+            color: "var(--text-secondary)",
+            opacity: 0.7,
+          }}>
+            Every message helps improve the quality of questions, explanations, and student experience.
+          </p>
+        </ScrollReveal>
       </section>
 
       {/* ════════════════════════════════════════════════════
           SECURITY DISCLAIMER
           ════════════════════════════════════════════════════ */}
-      <section style={{
-        maxWidth: "680px",
-        margin: "0 auto",
-        padding: "0 40px 80px",
-        position: "relative", zIndex: 1,
-      }}>
-        <div style={{
-          background: "rgba(var(--bg-card-rgb), 0.5)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(var(--border-color-rgb), 0.35)",
-          borderRadius: "14px",
-          padding: "20px 24px",
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "14px",
+      <ScrollReveal direction="bottom" delay={200}>
+        <section style={{
+          maxWidth: "680px",
+          margin: "0 auto",
+          padding: "0 40px 80px",
+          position: "relative", zIndex: 1,
         }}>
           <div style={{
-            color: "var(--text-secondary)",
-            flexShrink: 0,
-            marginTop: "2px",
+            background: "rgba(var(--bg-card-rgb), 0.5)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(var(--border-color-rgb), 0.35)",
+            borderRadius: "14px",
+            padding: "20px 24px",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "14px",
           }}>
-            <ShieldIcon size={16} />
+            <div style={{
+              color: "var(--text-secondary)",
+              flexShrink: 0,
+              marginTop: "2px",
+            }}>
+              <ShieldIcon size={16} />
+            </div>
+            <p style={{
+              margin: 0,
+              fontSize: "13.5px",
+              color: "var(--text-secondary)",
+              lineHeight: "1.65",
+            }}>
+              <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Your safety matters.</strong>{" "}
+              We will never ask for your password or card details. All communication regarding
+              support happens securely and directly via WhatsApp. No third-party processors involved.
+            </p>
           </div>
-          <p style={{
-            margin: 0,
-            fontSize: "13.5px",
-            color: "var(--text-secondary)",
-            lineHeight: "1.65",
-          }}>
-            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>Your safety matters.</strong>{" "}
-            We will never ask for your password or card details. All communication regarding
-            support happens securely and directly via WhatsApp. No third-party processors involved.
-          </p>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
 
       {/* Responsive styles */}
       <style>{`

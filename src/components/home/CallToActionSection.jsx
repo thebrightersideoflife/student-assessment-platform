@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRightIcon } from "../moduleMeta";
+import ScrollReveal from "../ScrollReveal";
 
 /**
  * CallToActionSection
@@ -40,59 +41,61 @@ export default function CallToActionSection({ theme }) {
       padding: "40px 40px 100px",
       position: "relative", zIndex: 1,
     }}>
-      <div className="cta-collage">
+      <ScrollReveal direction="bottom">
+        <div className="cta-collage">
 
-        {/* Glow behind the fan */}
-        <div className="cta-glow" />
+          {/* Glow behind the fan */}
+          <div className="cta-glow" />
 
-        {/* Fanned cards */}
-        <div className="cta-cards">
-          {cards.map((card) => (
-            <div className={card.className} key={card.src}>
-              <img
-                src={card.src}
-                alt={card.alt}
-                onError={e => {
-                  e.target.style.display = "none";
-                  e.target.parentElement.style.background =
-                    "linear-gradient(135deg, rgba(var(--bg-card-rgb),0.9), rgba(0,191,255,0.08))";
+          {/* Fanned cards */}
+          <div className="cta-cards">
+            {cards.map((card) => (
+              <div className={card.className} key={card.src}>
+                <img
+                  src={card.src}
+                  alt={card.alt}
+                  onError={e => {
+                    e.target.style.display = "none";
+                    e.target.parentElement.style.background =
+                      "linear-gradient(135deg, rgba(var(--bg-card-rgb),0.9), rgba(0,191,255,0.08))";
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Overlay + CTA */}
+          <div className="cta-overlay">
+            <div className="cta-overlay-content">
+              <span className="cta-eyebrow" style={{
+                color: theme === "light" ? "var(--sunset-orange)" : "var(--vibrant-cyan)",
+              }}>
+                Ready when you are
+              </span>
+              <h2 className="cta-heading">
+                Your next assessment is one click away
+              </h2>
+              <p className="cta-subtext">
+                Pick a module, start with Week 1, and track your progress as you go.
+              </p>
+              <button
+                className="button solid cta-button"
+                onClick={() => navigate("/modules")}
+                style={{
+                  marginTop: "8px",
+                  padding: "16px 36px",
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  borderRadius: "14px",
+                  display: "flex", alignItems: "center", gap: "10px",
                 }}
-              />
+              >
+                Get Started <ArrowRightIcon size={18} />
+              </button>
             </div>
-          ))}
-        </div>
-
-        {/* Overlay + CTA */}
-        <div className="cta-overlay">
-          <div className="cta-overlay-content">
-            <span className="cta-eyebrow" style={{
-              color: theme === "light" ? "var(--sunset-orange)" : "var(--vibrant-cyan)",
-            }}>
-              Ready when you are
-            </span>
-            <h2 className="cta-heading">
-              Your next assessment is one click away
-            </h2>
-            <p className="cta-subtext">
-              Pick a module, start with Week 1, and track your progress as you go.
-            </p>
-            <button
-              className="button solid cta-button"
-              onClick={() => navigate("/modules")}
-              style={{
-                marginTop: "8px",
-                padding: "16px 36px",
-                fontSize: "18px",
-                fontWeight: 700,
-                borderRadius: "14px",
-                display: "flex", alignItems: "center", gap: "10px",
-              }}
-            >
-              Get Started <ArrowRightIcon size={18} />
-            </button>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Styles for the collage */}
       <style>{`

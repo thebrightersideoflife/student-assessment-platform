@@ -1,3 +1,5 @@
+import ScrollReveal from "../ScrollReveal";
+
 export default function TypingPracticeHero({ accentColor, accentRgb }) {
   return (
     <section
@@ -21,61 +23,67 @@ export default function TypingPracticeHero({ accentColor, accentRgb }) {
         }}
       />
 
-      <div
-        className="typing-hero-card"
-        style={{
-          position: "relative",
-          zIndex: 1,
-          padding: "32px 36px",
-          borderRadius: "28px",
-          border: "1px solid rgba(var(--border-color-rgb), 0.35)",
-          background: "rgba(var(--bg-card-rgb), 0.78)",
-          backdropFilter: "blur(18px) saturate(150%)",
-          WebkitBackdropFilter: "blur(18px) saturate(150%)",
-          boxShadow: "0 18px 50px rgba(0,0,0,0.08)",
-          display: "flex",
-          alignItems: "center",
-          gap: "40px",
-        }}
-      >
-        {/* Left Side: Image */}
-        <div style={{ flex: "0 0 240px", display: "flex", justifyContent: "center" }} className="hero-image-container">
-          <img
-            src="/images/TypingPractice.png"
-            alt="Typing Practice Illustration"
-            style={{
-              width: "100%",
-              height: "auto",
-              maxWidth: "240px",
-              borderRadius: "16px",
-              objectFit: "contain",
-            }}
-          />
-        </div>
+      <ScrollReveal direction="bottom" duration={700}>
+        <div
+          className="typing-hero-card"
+          style={{
+            position: "relative",
+            zIndex: 1,
+            padding: "32px 36px",
+            borderRadius: "28px",
+            border: "1px solid rgba(var(--border-color-rgb), 0.35)",
+            background: "rgba(var(--bg-card-rgb), 0.78)",
+            backdropFilter: "blur(18px) saturate(150%)",
+            WebkitBackdropFilter: "blur(18px) saturate(150%)",
+            boxShadow: "0 18px 50px rgba(0,0,0,0.08)",
+            display: "flex",
+            alignItems: "center",
+            gap: "40px",
+          }}
+        >
+          {/* Left Side: Image */}
+          <ScrollReveal direction="left" delay={200} distance="40px">
+            <div style={{ flex: "0 0 240px", display: "flex", justifyContent: "center" }} className="hero-image-container">
+              <img
+                src="/images/TypingPractice.png"
+                alt="Typing Practice Illustration"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  maxWidth: "240px",
+                  borderRadius: "16px",
+                  objectFit: "contain",
+                }}
+              />
+            </div>
+          </ScrollReveal>
 
-        {/* Right Side: Content */}
-        <div style={{ flex: 1, textAlign: "left" }} className="hero-content-container">
-          <h1
-            style={{
-              margin: "0 0 14px",
-              fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              color: "var(--text-primary)",
-              lineHeight: 1.15,
-            }}
-          >
-            Sharpen your speed and <span style={{ color: accentColor }}>lock in the essentials</span>
-          </h1>
+          {/* Right Side: Content */}
+          <ScrollReveal direction="right" delay={350} distance="40px">
+            <div style={{ flex: 1, textAlign: "left" }} className="hero-content-container">
+              <h1
+                style={{
+                  margin: "0 0 14px",
+                  fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
+                  fontWeight: 800,
+                  letterSpacing: "-0.03em",
+                  color: "var(--text-primary)",
+                  lineHeight: 1.15,
+                }}
+              >
+                Sharpen your speed and <span style={{ color: accentColor }}>lock in the essentials</span>
+              </h1>
 
-          <p style={{ margin: "0 0 10px", fontSize: "17px", color: "var(--text-primary)", lineHeight: 1.7 }}>
-            Practice typing the question, then the model answer, then the explanation — all as one flowing revision loop.
-          </p>
-          <p style={{ margin: "0", fontSize: "16px", color: "var(--text-secondary)", lineHeight: 1.7 }}>
-            Search below for the exact module you want, then jump straight into a focused typing session.
-          </p>
+              <p style={{ margin: "0 0 10px", fontSize: "17px", color: "var(--text-primary)", lineHeight: 1.7 }}>
+                Practice typing the question, then the model answer, then the explanation — all as one flowing revision loop.
+              </p>
+              <p style={{ margin: "0", fontSize: "16px", color: "var(--text-secondary)", lineHeight: 1.7 }}>
+                Search below for the exact module you want, then jump straight into a focused typing session.
+              </p>
+            </div>
+          </ScrollReveal>
         </div>
-      </div>
+      </ScrollReveal>
 
       <style>{`
         @media (max-width: 820px) {

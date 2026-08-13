@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { modules } from "../data/modules";
 import ModuleCard from "../components/ModuleCard";
 import Breadcrumb from "../components/Breadcrumb";
+import ScrollReveal from "../components/ScrollReveal";
 import WeaknessQuizPromoCard from "../components/WeaknessQuizPromoCard";
 import AssessmentStorage from "../utils/assessmentStorage";
 
@@ -119,13 +120,21 @@ export default function ModulesPage() {
 
       <h1 style={{ marginBottom: "24px" }}>Modules</h1>
 
-      <NoticeBoard />
+      <ScrollReveal direction="bottom" duration={500}>
+        <NoticeBoard />
+      </ScrollReveal>
 
-      {modules.map(module => (
-        <ModuleCard
+      {modules.map((module, index) => (
+        <ScrollReveal
           key={module.id}
-          module={module}
-        />
+          direction="bottom"
+          delay={index < 3 ? index * 100 : 0}
+          duration={index < 3 ? 400 : 600}
+        >
+          <ModuleCard
+            module={module}
+          />
+        </ScrollReveal>
       ))}
     </div>
   );

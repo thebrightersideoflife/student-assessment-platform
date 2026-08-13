@@ -11,6 +11,7 @@ import ProgressPage from "../pages/ProgressPage";
 import SupportPage from "../pages/SupportPage";
 import QuestionSearchPage from "../pages/QuestionSearchPage";
 import RevisionPage from "../pages/RevisionPage";
+import FlashcardsPage from "../pages/FlashcardsPage";
 import WeaknessQuizPage from "../pages/WeaknessQuizPage";
 import TypingPracticePage from "../pages/TypingPracticePage";
 import TypingReportPage from "../pages/TypingReportPage";
@@ -43,6 +44,8 @@ export default function AppRouter() {
         <Route path="/module/:moduleId/roadmap" element={<RoadmapPage />}/>
 
         <Route path="/revision" element={<RevisionPage />} />
+
+        <Route path="/flashcards" element={<FlashcardsPage />} />
 
         <Route path="/weakness-quiz" element={<WeaknessQuizPage />} />
 

@@ -1,0 +1,18 @@
+.scroll-reveal {
+  opacity: 0;
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  /* will-change is added only when necessary, but here we keep it for smoothness as per standard practice for these specific properties */
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

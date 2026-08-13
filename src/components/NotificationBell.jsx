@@ -35,7 +35,22 @@ function hydrateNotices(initialNotices = [], typingGoalMinutes = null, todayMinu
 
   const systemUpdateId = "system-update-reminder";
   const typingReminderId = "typing-goal-reminder";
+  const flashcardFeatureId = "flashcard-feature-notice";
   const nextNotices = [...notices];
+
+  if (!nextNotices.some((notice) => notice.id === flashcardFeatureId)) {
+    nextNotices.unshift({
+      id: flashcardFeatureId,
+      title: "New feature: Flashcards",
+      message: "Build memory using flashcards. Flip through questions, test your knowledge, and reveal answers instantly.",
+      read: false,
+      actionLabel: "Try them out",
+      actionHandler: null,
+      navigateTo: "/flashcards",
+      deleted: false,
+      day: dayKey,
+    });
+  }
 
   if (!nextNotices.some((notice) => notice.id === systemUpdateId)) {
     nextNotices.unshift({
