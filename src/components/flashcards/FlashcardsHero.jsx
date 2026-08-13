@@ -1,8 +1,5 @@
 import React from "react";
 import { Settings, RefreshCw, ChevronRight } from "lucide-react";
-
-import React from "react";
-import { Settings, RefreshCw, ChevronRight } from "lucide-react";
 import ScrollReveal from "../ScrollReveal";
 
 export default function FlashcardsHero({ onOpenSettings, onShuffle, cardsCount, currentIndex, accentRgb }) {
