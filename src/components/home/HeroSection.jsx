@@ -176,10 +176,10 @@ export default function HeroSection({ theme, totalWeeks }) {
               maxWidth: "520px",
             }}>
               <p style={{ margin: 0 }}>
-                We know how frustrating it's been to ask for past assessment papers and be told <em style={{ color: "var(--text-primary)", fontStyle: "normal" }}>"no."</em> Not because Eduvos doesn't care, but because their system currently has limits — papers repeat, and the risk of unfair advantage is real. But we also know what it feels like to want to prepare properly, to test yourself against something real, and to feel ready when the moment comes.
+                We know how frustrating it's been to ask for past assessment papers and be told <em style={{ color: "var(--text-primary)", fontStyle: "normal" }}>"no."</em> Not because Eduvos doesn't care, but because their system currently has limits (papers repeat, and the risk of unfair advantage is real). But we also know what it feels like to want to prepare properly, to test yourself against something real, and to feel ready when the formatives and summatives come.
               </p>
               <p style={{ margin: 0 }}>
-                That's why this resource exists. Every week, we release practice assessments designed to <em style={{ color: "var(--text-primary)", fontStyle: "normal" }}>mirror the challenge of the originals</em> — same intensity, same depth — without compromising the integrity of the exams themselves. Think of them as your training ground.
+                That's why this resource exists. Every week, we release practice assessments designed to <em style={{ color: "var(--text-primary)", fontStyle: "normal" }}>mirror the challenge of the originals</em>, keeping the same intensity and the same depth, without compromising the integrity of the exams themselves. Think of them as the exams you used to practice with during your Gr. 10, 11 & 12; but this time, for university.
               </p>
                 <p style={{ margin: 0, fontWeight: 600, color: "var(--text-primary)", fontSize: "18px" }}>
                 Use it, abuse it, make it yours.

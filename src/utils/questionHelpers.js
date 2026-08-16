@@ -89,3 +89,28 @@ export const DISPLAY_ONLY_TYPES = ["scenario", "show-answer"];
 export function getRequiredQuestions(questions = []) {
   return questions.filter(q => GRADABLE_TYPES.includes(q.type));
 }
+
+/**
+ * Returns the mark value for a question object.
+ * Logic is centralized here to avoid discrepancies between digital scoring and printing.
+ *
+ * @param {object} q — the question object
+ * @returns {number}
+ */
+export function getQuestionMarkValue(q) {
+  if (!q || q.type === "scenario") return 0;
+
+  // 1. Explicit points field takes precedence for all types.
+  if (q.points != null) return q.points;
+
+  // 2. Fill-in-the-blank defaults to one mark per blank if points is missing.
+  if (q.type === "fill-in-the-blank") {
+    return Array.isArray(q.blanks) ? q.blanks.length : 0;
+  }
+
+  // 3. show-answer (essay/memo) questions are 0 unless explicit points given.
+  if (q.type === "show-answer") return 0;
+
+  // 4. multiple-choice and open-ended default to 1 mark.
+  return 1;
+}

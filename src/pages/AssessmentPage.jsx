@@ -20,7 +20,9 @@ import {
 import useCountdownTimer from "../utils/useCountdownTimer";
 import AssessmentStorage from "../utils/assessmentStorage";
 import AnswerValidator from "../utils/answerValidator";
-import { getWeekLabel, getWeekKindConfig, getRequiredQuestions } from "../utils/questionHelpers";
+import {
+  getWeekLabel, getWeekKindConfig, getRequiredQuestions, getQuestionMarkValue
+} from "../utils/questionHelpers";
 import { questions } from "../data/questions/index.js";
 import { modules } from "../data/modules";
 import { weeks as allWeeks } from "../data/weeks";
@@ -216,22 +218,33 @@ export default function AssessmentPage() {
     const questionResults = [];
 
     for (const q of qs) {
+      const qMarks = getQuestionMarkValue(q);
+      total += qMarks;
+
       let questionCorrect = false;
 
       if (q.type === "fill-in-the-blank") {
         const blanks = q.blanks || [];
-        total += blanks.length;
         const sels = answersMap[q.id]?.selections || {};
-        let blankCorrect = 0;
+        let blankCorrectCount = 0;
         for (const b of blanks) {
-          if (sels[b.id] === b.correctAnswer) { score += 1; blankCorrect += 1; }
+          if (sels[b.id] === b.correctAnswer) { blankCorrectCount += 1; }
         }
+
+        // Award marks based on correct blanks.
+        // If explicit 'points' is provided, we scale the score.
+        // If not, it's 1 point per blank.
+        if (q.points != null && blanks.length > 0) {
+          score += (blankCorrectCount / blanks.length) * q.points;
+        } else {
+          score += blankCorrectCount;
+        }
+
         // Counts as correct for topic purposes only when all blanks are right.
-        questionCorrect = blanks.length > 0 && blankCorrect === blanks.length;
+        questionCorrect = blanks.length > 0 && blankCorrectCount === blanks.length;
       } else {
-        total += 1;
         questionCorrect = isQuestionCorrect(q, answersMap[q.id]);
-        if (questionCorrect) score += 1;
+        if (questionCorrect) score += qMarks;
       }
 
       // Only record questions that carry at least one tag — used for the

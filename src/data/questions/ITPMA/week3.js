@@ -58,7 +58,7 @@ The proposed project manager discovers that:
     validationOptions: {
       allowPartialMatch: true,
       caseSensitive: false,
-      tolerance: 0,
+      tolerance: 20,
     },
     explanation: 'The **Initiating** process group formally establishes and authorises the project and identifies its initial stakeholders.',
   },

@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import PrintLayout from "./PrintLayout";
 import MermaidDiagram from "./MermaidDiagram";
 import formatTextToNodes from "../utils/formatText.jsx";
+import { getQuestionMarkValue } from "../utils/questionHelpers";
 
 /* ── Helpers ──────────────────────────────────────────────── */
 function qLabel(q, displayIndex) {
@@ -49,13 +50,14 @@ function ScenarioPrintBlock({ question }) {
 }
 
 function MultipleChoicePrintBlock({ question, displayIndex }) {
+  const marks = getQuestionMarkValue(question);
   return (
     <div className="question-block">
       <div className="q-number-row">
         <div className="q-number">{qLabel(question, displayIndex)}</div>
         <div className="q-text">{formatTextToNodes(question.text || question.question)}</div>
         <div className="q-marks">
-          [{question.points || 1} {(question.points || 1) === 1 ? "mark" : "marks"}]
+          [{marks} {marks === 1 ? "mark" : "marks"}]
         </div>
       </div>
 
@@ -92,13 +94,14 @@ function MultipleChoicePrintBlock({ question, displayIndex }) {
 }
 
 function OpenEndedPrintBlock({ question, displayIndex, lineCount = 5 }) {
+  const marks = getQuestionMarkValue(question);
   return (
     <div className="question-block">
       <div className="q-number-row">
         <div className="q-number">{qLabel(question, displayIndex)}</div>
         <div className="q-text">{formatTextToNodes(question.text || question.question)}</div>
         <div className="q-marks">
-          [{question.points || 1} {(question.points || 1) === 1 ? "mark" : "marks"}]
+          [{marks} {marks === 1 ? "mark" : "marks"}]
         </div>
       </div>
 
@@ -133,6 +136,7 @@ function OpenEndedPrintBlock({ question, displayIndex, lineCount = 5 }) {
 function FillInTheBlankPrintBlock({ question, displayIndex }) {
   const blanks = question.blanks || [];
   const parts  = (question.text || "").split("___");
+  const marks  = getQuestionMarkValue(question);
 
   return (
     <div className="question-block">
@@ -142,7 +146,7 @@ function FillInTheBlankPrintBlock({ question, displayIndex }) {
           Fill in the blanks by choosing from the options provided.
         </div>
         <div className="q-marks">
-          [{question.points || blanks.length} {(question.points || blanks.length) === 1 ? "mark" : "marks"}]
+          [{marks} {marks === 1 ? "mark" : "marks"}]
         </div>
       </div>
 
@@ -194,6 +198,7 @@ function ShowAnswerPrintBlock({ question, displayIndex }) {
   const modelAnswer = Array.isArray(question.correctAnswers)
     ? question.correctAnswers[0]
     : question.correctAnswers;
+  const marks = getQuestionMarkValue(question);
 
   return (
     <div className="question-block">
@@ -201,7 +206,7 @@ function ShowAnswerPrintBlock({ question, displayIndex }) {
         <div className="q-number">{qLabel(question, displayIndex)}</div>
         <div className="q-text">{formatTextToNodes(question.text)}</div>
         <div className="q-marks">
-          [{question.points || 0} {(question.points || 0) === 1 ? "mark" : "marks"}]
+          [{marks} {marks === 1 ? "mark" : "marks"}]
         </div>
       </div>
 
@@ -306,9 +311,7 @@ export default function PrintableQuestions({
   );
 
   const totalMarks = examData?.totalMarks ||
-    printableQuestions
-      .filter(q => gradableTypes.includes(q.type))
-      .reduce((sum, q) => sum + (q.points || 1), 0);
+    printableQuestions.reduce((sum, q) => sum + getQuestionMarkValue(q), 0);
 
   const timeLimit = examData?.timeLimit || 120;
 
@@ -338,9 +341,7 @@ export default function PrintableQuestions({
         const secQuestions = printableQuestions.filter(
           q => q.sectionId === sec.id
         );
-        const secMarks = secQuestions
-          .filter(q => gradableTypes.includes(q.type))
-          .reduce((s, q) => s + (q.points || 1), 0);
+        const secMarks = secQuestions.reduce((s, q) => s + getQuestionMarkValue(q), 0);
 
         return (
           <div key={sec.id}>

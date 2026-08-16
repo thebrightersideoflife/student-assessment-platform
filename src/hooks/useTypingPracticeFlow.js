@@ -19,7 +19,7 @@ import { modules } from "../data/modules";
 import { weeks } from "../data/weeks";
 import { questions } from "../data/questions/index.js";
 import { extractPassages, applyMode, shuffleArray } from "../utils/typingExtractor";
-import { loadSettings, saveSettings, saveSessionDetail, computeSessionStats, recordGoalChange, loadSessions } from "../utils/typingStorage";
+import { loadSettings, saveSettings, saveSessionDetail, computeSessionStats, recordGoalChange, loadSessions, getTodayPracticeSeconds } from "../utils/typingStorage";
 import { shuffleWithRecency } from "../utils/typingRecency";
 import { getTypingReadyModules } from "../utils/typingContent";
 
@@ -113,6 +113,11 @@ export function useTypingPracticeFlow() {
   const [dailyGoalWpmByMode, setDailyGoalWpmByMode] = useState(_saved.goalWpm);
   const [dailyGoalTime,      setDailyGoalTime]       = useState(_saved.goalTime);
   const dailyGoalWpm = dailyGoalWpmByMode?.[selectedMode] ?? null;
+
+  // Today's accumulated typing time (seconds) across all modes
+  const [todayTotalSeconds, setTodayTotalSeconds] = useState(() => getTodayPracticeSeconds());
+
+  const refreshTodayTotalSeconds = () => setTodayTotalSeconds(getTodayPracticeSeconds());
 
   // Settings modal
   const [settingsModal,    setSettingsModal]    = useState(null); // null | "goal" | "difficulty" | "duration"
@@ -317,6 +322,7 @@ export function useTypingPracticeFlow() {
     setResultIsUnit(false);
     setSaveRejectedReason(saveResult.saved ? null : saveResult.reason);
     setStep(STEP.RESULTS);
+    refreshTodayTotalSeconds();
     // On first-ever results visit, prompt the user to set their WPM goal —
     // only for a session that actually counted.
     if (saveResult.saved && !hasAutoOpenedGoalRef.current && !_saved.goalSet) {
@@ -353,6 +359,7 @@ export function useTypingPracticeFlow() {
     setResultIsUnit(true);
     setSaveRejectedReason(saveResult.saved ? null : saveResult.reason);
     setStep(STEP.RESULTS);
+    refreshTodayTotalSeconds();
     if (saveResult.saved && !hasAutoOpenedGoalRef.current && !_saved.goalSet) {
       hasAutoOpenedGoalRef.current = true;
       setSettingsModal("goal");
@@ -561,7 +568,7 @@ export function useTypingPracticeFlow() {
     unitIndexRef,
 
     // goals + settings modal
-    dailyGoalWpmByMode, dailyGoalTime, dailyGoalWpm,
+    dailyGoalWpmByMode, dailyGoalTime, dailyGoalWpm, todayTotalSeconds,
     settingsModal, setSettingsModal,
 
     // module list

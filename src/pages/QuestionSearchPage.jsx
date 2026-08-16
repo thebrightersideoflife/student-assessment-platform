@@ -1,32 +1,19 @@
 // src/pages/QuestionSearchPage.jsx
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Search, X, ArrowRight, Filter, ChevronDown, Check,
+  RotateCcw, LayoutGrid, ListChecks, Type, MessageSquareText
+} from "lucide-react";
 import { modules } from "../data/modules";
 import { buildQuestionIndex, queryQuestionIndex } from "../utils/search";
 
-/* ── Icons ──────────────────────────────────────────────────────────────── */
-const SearchIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-  </svg>
-);
-const ClearIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-);
-const ArrowIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-  </svg>
-);
-
 /* ── Type badge config ───────────────────────────────────────────────────── */
 const TYPE_CONFIG = {
-  "multiple-choice":   { label: "MC",        color: "var(--cornflower-blue)",  bg: "rgba(100,149,237,0.12)" },
-  "open-ended":        { label: "Open",       color: "var(--lush-lime)",        bg: "rgba(118,209,61,0.10)"  },
-  "fill-in-the-blank": { label: "Fill",       color: "var(--golden-amber)",     bg: "rgba(244,169,0,0.10)"   },
-  "show-answer":       { label: "Essay",      color: "var(--accent-secondary)", bg: "rgba(0,191,255,0.10)"   },
+  "multiple-choice":   { label: "MC",        color: "var(--cornflower-blue)",  bg: "rgba(100,149,237,0.12)", icon: <ListChecks size={14} /> },
+  "open-ended":        { label: "Open",       color: "var(--lush-lime)",        bg: "rgba(118,209,61,0.10)",  icon: <MessageSquareText size={14} /> },
+  "fill-in-the-blank": { label: "Fill",       color: "var(--golden-amber)",     bg: "rgba(244,169,0,0.10)",   icon: <Type size={14} /> },
+  "show-answer":       { label: "Essay",      color: "var(--accent-secondary)", bg: "rgba(0,191,255,0.10)",   icon: <LayoutGrid size={14} /> },
 };
 
 const ALL_TYPES = Object.keys(TYPE_CONFIG);
@@ -36,6 +23,124 @@ const TYPE_LABELS = {
   "fill-in-the-blank": "Fill in the Blank",
   "show-answer":       "Essay / Self-grade",
 };
+
+/* ── Filter Dropdown Component ───────────────────────────────────────────── */
+function FilterDropdown({ label, value, options, onChange, icon: Icon, placeholder = "All" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 14px",
+          borderRadius: "10px",
+          border: value
+            ? "1.5px solid var(--accent-primary)"
+            : "1px solid rgba(var(--border-color-rgb), 0.5)",
+          background: value
+            ? "rgba(var(--accent-primary-rgb), 0.08)"
+            : "rgba(var(--bg-secondary-rgb), 0.5)",
+          color: value ? "var(--accent-primary)" : "var(--text-secondary)",
+          fontSize: "13px",
+          fontWeight: value ? 700 : 500,
+          cursor: "pointer",
+          transition: "all 0.2s ease",
+          backdropFilter: "blur(8px)",
+          outline: "none"
+        }}
+      >
+        <Icon size={16} style={{ opacity: value ? 1 : 0.6 }} />
+        <span>{selectedOption ? selectedOption.label : label}</span>
+        <ChevronDown
+          size={14}
+          style={{
+            opacity: 0.5,
+            transform: isOpen ? "rotate(180deg)" : "none",
+            transition: "transform 0.2s ease"
+          }}
+        />
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 6px)",
+          left: 0,
+          zIndex: 100,
+          minWidth: "200px",
+          maxHeight: "300px",
+          overflowY: "auto",
+          background: "var(--bg-card)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(var(--border-color-rgb), 0.6)",
+          borderRadius: "12px",
+          padding: "6px",
+          boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
+          animation: "fcScaleIn 0.2s ease-out"
+        }}>
+          <div
+            onClick={() => { onChange(""); setIsOpen(false); }}
+            style={{
+              padding: "8px 12px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              color: !value ? "var(--accent-primary)" : "var(--text-secondary)",
+              fontWeight: !value ? 700 : 500,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: !value ? "rgba(var(--accent-primary-rgb), 0.08)" : "transparent"
+            }}
+          >
+            {placeholder}
+            {!value && <Check size={14} />}
+          </div>
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => { onChange(opt.value); setIsOpen(false); }}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "8px",
+                fontSize: "13px",
+                color: value === opt.value ? "var(--accent-primary)" : "var(--text-primary)",
+                fontWeight: value === opt.value ? 700 : 500,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: value === opt.value ? "rgba(var(--accent-primary-rgb), 0.08)" : "transparent"
+              }}
+            >
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {opt.label}
+              </span>
+              {value === opt.value && <Check size={14} />}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── Highlight helper ───────────────────────────────────────────────────── */
 function highlight(text, tokens) {
@@ -131,8 +236,12 @@ function ResultCard({ result, navigate }) {
             border: `1px solid ${tc.color}40`,
             borderRadius: "999px",
             padding: "2px 9px",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px"
           }}
         >
+          {tc.icon}
           {tc.label}
         </span>
       </div>
@@ -187,9 +296,69 @@ function ResultCard({ result, navigate }) {
             gap: "5px",
           }}
         >
-          Go to assessment <ArrowIcon />
+          Go to assessment <ArrowRight size={14} />
         </span>
       </div>
+    </div>
+  );
+}
+
+/* ── Pagination Controls ────────────────────────────────────────────────── */
+function PaginationControls({ currentPage, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: "12px",
+      marginTop: "40px",
+      padding: "20px 0"
+    }}>
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="button"
+        style={{
+          padding: "8px 16px",
+          borderRadius: "10px",
+          fontSize: "13px",
+          fontWeight: 700,
+          opacity: currentPage === 1 ? 0.4 : 1,
+          cursor: currentPage === 1 ? "not-allowed" : "pointer"
+        }}
+      >
+        Previous
+      </button>
+
+      <span style={{
+        fontSize: "14px",
+        fontWeight: 600,
+        color: "var(--text-secondary)",
+        background: "rgba(var(--bg-secondary-rgb), 0.5)",
+        padding: "6px 12px",
+        borderRadius: "8px",
+        border: "1px solid rgba(var(--border-color-rgb), 0.3)"
+      }}>
+        Page <strong style={{ color: "var(--accent-primary)" }}>{currentPage}</strong> of {totalPages}
+      </span>
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="button solid"
+        style={{
+          padding: "8px 16px",
+          borderRadius: "10px",
+          fontSize: "13px",
+          fontWeight: 700,
+          opacity: currentPage === totalPages ? 0.4 : 1,
+          cursor: currentPage === totalPages ? "not-allowed" : "pointer"
+        }}
+      >
+        Next
+      </button>
     </div>
   );
 }
@@ -208,10 +377,14 @@ export default function QuestionSearchPage() {
   const [debouncedQuery, setDebounced]  = useState(initialQuery);
   const [filterModule, setFilterModule] = useState(searchParams.get("module") || "");
   const [filterType, setFilterType]     = useState(searchParams.get("type") || "");
+  const [currentPage, setCurrentPage]   = useState(1);
   const [index, setIndex]               = useState([]);
   const [indexReady, setIndexReady]     = useState(false);
   const inputRef = useRef(null);
+  const resultsTopRef = useRef(null);
   const debounceRef = useRef(null);
+
+  const ITEMS_PER_PAGE = 10;
 
   // Build index once on mount — async import so no bundle bloat at load time
   useEffect(() => {
@@ -253,23 +426,38 @@ export default function QuestionSearchPage() {
     }, 200);
   }, [filterModule, filterType, setSearchParams]);
 
-  // Sync filter changes to URL
+  // Sync filter changes to URL and reset page
   useEffect(() => {
     const params = {};
     if (debouncedQuery) params.q = debouncedQuery;
     if (filterModule) params.module = filterModule;
     if (filterType) params.type = filterType;
     setSearchParams(params, { replace: true });
-  }, [filterModule, filterType]);
+    setCurrentPage(1);
+  }, [filterModule, filterType, debouncedQuery, setSearchParams]);
 
   // Run search
   const results = useMemo(() => {
     if (!indexReady || debouncedQuery.trim().length < 2) return [];
-    return queryQuestionIndex(index, debouncedQuery, 30, {
+    return queryQuestionIndex(index, debouncedQuery, 200, {
       moduleId: filterModule || undefined,
       type: filterType || undefined,
     });
   }, [index, indexReady, debouncedQuery, filterModule, filterType]);
+
+  const totalPages = Math.ceil(results.length / ITEMS_PER_PAGE);
+  const paginatedResults = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return results.slice(start, start + ITEMS_PER_PAGE);
+  }, [results, currentPage, ITEMS_PER_PAGE]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    // Small delay to ensure the page content has updated before scrolling
+    setTimeout(() => {
+      resultsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 10);
+  };
 
   const hasQuery = debouncedQuery.trim().length >= 2;
   const showEmpty = hasQuery && indexReady && results.length === 0;
@@ -283,7 +471,7 @@ export default function QuestionSearchPage() {
 
         {/* ── Page header ──────────────────────────────────────────── */}
         <div style={{ paddingTop: "8px", marginBottom: "32px" }}>
-          <h1 style={{ marginBottom: "6px" }}>Question Search</h1>
+          <h1 ref={resultsTopRef} style={{ marginBottom: "6px" }}>Question Search</h1>
           <p style={{ fontSize: "15px", color: "var(--text-secondary)", margin: 0 }}>
             Search across every question in the bank — by keyword, concept, or anything you half-remember.
           </p>
@@ -293,7 +481,7 @@ export default function QuestionSearchPage() {
         <div
           style={{
             position: "relative",
-            marginBottom: "20px",
+            marginBottom: "24px",
           }}
         >
           <span
@@ -305,9 +493,10 @@ export default function QuestionSearchPage() {
               color: "var(--text-secondary)",
               pointerEvents: "none",
               display: "flex",
+              opacity: 0.7
             }}
           >
-            <SearchIcon size={20} />
+            <Search size={20} />
           </span>
 
           <input
@@ -324,19 +513,21 @@ export default function QuestionSearchPage() {
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
               border: "1px solid rgba(var(--border-color-rgb), 0.55)",
-              borderRadius: "14px",
+              borderRadius: "16px",
               color: "var(--text-primary)",
               outline: "none",
-              transition: "border-color 0.18s ease, box-shadow 0.18s ease",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+              transition: "all 0.2s ease",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
             }}
             onFocus={(e) => {
               e.target.style.borderColor = "var(--accent-primary)";
-              e.target.style.boxShadow = "0 0 0 3px rgba(var(--accent-primary-rgb, 42,92,167), 0.12)";
+              e.target.style.background = "var(--bg-card)";
+              e.target.style.boxShadow = "0 8px 30px rgba(var(--accent-primary-rgb, 42,92,167), 0.12)";
             }}
             onBlur={(e) => {
               e.target.style.borderColor = "rgba(var(--border-color-rgb), 0.55)";
-              e.target.style.boxShadow = "0 2px 12px rgba(0,0,0,0.08)";
+              e.target.style.background = "rgba(var(--bg-card-rgb), 0.82)";
+              e.target.style.boxShadow = "0 4px 20px rgba(0,0,0,0.06)";
             }}
           />
 
@@ -348,17 +539,20 @@ export default function QuestionSearchPage() {
                 right: "16px",
                 top: "50%",
                 transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
+                background: "rgba(var(--bg-secondary-rgb), 0.6)",
+                border: "1px solid rgba(var(--border-color-rgb), 0.4)",
                 cursor: "pointer",
                 color: "var(--text-secondary)",
-                padding: "4px",
+                padding: "6px",
                 display: "flex",
-                borderRadius: "4px",
+                borderRadius: "50%",
+                transition: "all 0.2s"
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-secondary)"; e.currentTarget.style.color = "var(--poppy-red)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(var(--bg-secondary-rgb), 0.6)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
               title="Clear search"
             >
-              <ClearIcon />
+              <X size={14} />
             </button>
           )}
         </div>
@@ -367,67 +561,43 @@ export default function QuestionSearchPage() {
         <div
           style={{
             display: "flex",
-            gap: "10px",
+            gap: "12px",
             flexWrap: "wrap",
-            marginBottom: "28px",
+            marginBottom: "32px",
             alignItems: "center",
           }}
         >
-          <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 600, flexShrink: 0 }}>
-            Filter:
-          </span>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            color: "var(--text-secondary)",
+            fontSize: "13px",
+            fontWeight: 700,
+            marginRight: "4px",
+            opacity: 0.8
+          }}>
+            <Filter size={14} />
+            Filter By
+          </div>
 
-          {/* Module filter */}
-          <select
+          <FilterDropdown
+            label="All Modules"
             value={filterModule}
-            onChange={(e) => setFilterModule(e.target.value)}
-            style={{
-              fontSize: "13px",
-              fontWeight: 500,
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: filterModule
-                ? "1.5px solid var(--accent-primary)"
-                : "1px solid rgba(var(--border-color-rgb), 0.5)",
-              background: filterModule
-                ? "rgba(var(--bg-secondary-rgb), 0.8)"
-                : "rgba(var(--bg-secondary-rgb), 0.5)",
-              color: filterModule ? "var(--accent-primary)" : "var(--text-secondary)",
-              cursor: "pointer",
-              outline: "none",
-            }}
-          >
-            <option value="">All modules</option>
-            {modules.map((m) => (
-              <option key={m.id} value={m.id}>{m.id} — {m.name}</option>
-            ))}
-          </select>
+            icon={LayoutGrid}
+            options={modules.map(m => ({ value: m.id, label: `${m.id} — ${m.name}` }))}
+            onChange={setFilterModule}
+            placeholder="All Modules"
+          />
 
-          {/* Type filter */}
-          <select
+          <FilterDropdown
+            label="All Types"
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            style={{
-              fontSize: "13px",
-              fontWeight: 500,
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: filterType
-                ? "1.5px solid var(--accent-primary)"
-                : "1px solid rgba(var(--border-color-rgb), 0.5)",
-              background: filterType
-                ? "rgba(var(--bg-secondary-rgb), 0.8)"
-                : "rgba(var(--bg-secondary-rgb), 0.5)",
-              color: filterType ? "var(--accent-primary)" : "var(--text-secondary)",
-              cursor: "pointer",
-              outline: "none",
-            }}
-          >
-            <option value="">All types</option>
-            {ALL_TYPES.map((t) => (
-              <option key={t} value={t}>{TYPE_LABELS[t]}</option>
-            ))}
-          </select>
+            icon={ListChecks}
+            options={ALL_TYPES.map(t => ({ value: t, label: TYPE_LABELS[t] }))}
+            onChange={setFilterType}
+            placeholder="All Types"
+          />
 
           {/* Active filter clear */}
           {(filterModule || filterType) && (
@@ -435,33 +605,42 @@ export default function QuestionSearchPage() {
               onClick={() => { setFilterModule(""); setFilterType(""); }}
               style={{
                 fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                background: "none",
-                border: "none",
+                fontWeight: 700,
+                color: "var(--poppy-red)",
+                background: "rgba(255, 64, 64, 0.08)",
+                border: "1px solid rgba(255, 64, 64, 0.2)",
+                borderRadius: "8px",
                 cursor: "pointer",
-                padding: "4px 6px",
-                textDecoration: "underline",
-                textUnderlineOffset: "3px",
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.2s"
               }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 64, 64, 0.15)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 64, 64, 0.08)"}
             >
-              Clear filters
+              <RotateCcw size={12} />
+              Reset Filters
             </button>
           )}
 
           {/* Result count */}
           {hasQuery && indexReady && results.length > 0 && (
-            <span
+            <div
               style={{
                 marginLeft: "auto",
-                fontSize: "12px",
+                fontSize: "13px",
+                fontWeight: 600,
                 color: "var(--text-secondary)",
-                flexShrink: 0,
+                background: "rgba(var(--bg-secondary-rgb), 0.5)",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                border: "1px solid rgba(var(--border-color-rgb), 0.3)",
               }}
             >
-              {results.length} result{results.length !== 1 ? "s" : ""}
-              {results.length === 30 ? " (showing top 30)" : ""}
-            </span>
+              <strong style={{ color: "var(--accent-primary)" }}>{results.length}</strong> result{results.length !== 1 ? "s" : ""} found
+            </div>
           )}
         </div>
 
@@ -530,15 +709,23 @@ export default function QuestionSearchPage() {
 
         {/* Results grid */}
         {results.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {results.map((result) => (
-              <ResultCard
-                key={`${result.item.moduleId}_${result.item.weekId}_${result.item.questionId}`}
-                result={result}
-                navigate={navigate}
-              />
-            ))}
-          </div>
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {paginatedResults.map((result) => (
+                <ResultCard
+                  key={`${result.item.moduleId}_${result.item.weekId}_${result.item.questionId}`}
+                  result={result}
+                  navigate={navigate}
+                />
+              ))}
+            </div>
+
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </>
         )}
       </div>
     </div>

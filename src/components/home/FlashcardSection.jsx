@@ -144,8 +144,7 @@ export default function FlashcardSection({ theme }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
               {[
                 "Personalized study sessions by module",
-                "Filter by Multiple Choice, Fill-in-Blank, or Open-ended",
-                "Beautiful, high-contrast landscape design",
+                "Filter by Multiple Choice, Fill-in-Blank, or Open-ended"
               ].map((feature, idx) => (
                 <div key={idx} style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "15px", color: "var(--text-secondary)" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

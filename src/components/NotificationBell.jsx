@@ -158,10 +158,12 @@ export default function NotificationBell({
       const typingReminderIndex = next.findIndex((notice) => notice.id === "typing-goal-reminder");
       if (typingReminderIndex >= 0) {
         const reminder = next[typingReminderIndex];
-        if (!reminder.deleted && reminder.day !== currentDay) {
+        // If the day has changed, reset deleted/read status so it reappears
+        if (reminder.day !== currentDay) {
           next[typingReminderIndex] = {
             ...reminder,
             read: false,
+            deleted: false,
             day: currentDay,
           };
         }

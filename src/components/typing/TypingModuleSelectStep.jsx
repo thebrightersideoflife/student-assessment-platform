@@ -8,6 +8,7 @@
 import TypingModuleSearchBar from "./TypingModuleSearchBar";
 import TypingModuleGrid from "../TypingModuleGrid";
 import ScrollReveal from "../ScrollReveal";
+import DailyPracticeProgressBar from "./DailyPracticeProgressBar";
 
 export default function TypingModuleSelectStep({
   loadingModule,
@@ -20,6 +21,8 @@ export default function TypingModuleSelectStep({
   hasMadeFirstAttempt,
   onViewProgressReport,
   onSelectModule,
+  todayTotalSeconds,
+  dailyGoalTime,
 }) {
   return (
     <section style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 40px 80px", position: "relative", zIndex: 1 }}>
@@ -28,7 +31,15 @@ export default function TypingModuleSelectStep({
           Loading module questions…
         </p>
       )}
+
       <ScrollReveal direction="top" duration={600} distance="30px">
+        <DailyPracticeProgressBar
+          todayTotalSeconds={todayTotalSeconds}
+          goalMinutes={dailyGoalTime}
+          accentColor={accentColor}
+          accentRgb={accentRgb}
+        />
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "20px", marginBottom: "20px", flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: "280px" }}>
             <TypingModuleSearchBar

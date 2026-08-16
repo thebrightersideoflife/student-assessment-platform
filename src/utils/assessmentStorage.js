@@ -56,9 +56,9 @@ const APP_VERSION_KEY = "app_version";
 const WEAKNESS_QUIZ_KEY_PREFIX = "weakness_quiz_";
 
 // Bump this whenever grading logic changes in a way that could change a
-// stored score for the same answers (e.g. the open-ended re-grading fix this
+// stored score for the same answers (e.g. the point-weighting fix this
 // version was introduced for). Independent of APP_VERSION — see file header.
-const SCORING_VERSION = 1;
+const SCORING_VERSION = 2;
 
 class AssessmentStorage {
   // ─── Initialization & Version Management ────────────────────────────────────

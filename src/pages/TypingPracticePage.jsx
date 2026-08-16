@@ -41,7 +41,7 @@ export default function TypingPracticePage() {
     passages, loadingModule, result, resultIsUnit, nextTestIsUnit,
     saveRejectedReason,
     moduleQuery, setModuleQuery, hasMadeFirstAttempt, unitIndexRef,
-    dailyGoalWpmByMode, dailyGoalTime, dailyGoalWpm,
+    dailyGoalWpmByMode, dailyGoalTime, dailyGoalWpm, todayTotalSeconds,
     settingsModal, setSettingsModal,
     availableModules, filteredModules,
     handleModuleSelect, handleDurationSelect, handleTestTypeSelect,
@@ -77,6 +77,8 @@ export default function TypingPracticePage() {
           hasMadeFirstAttempt={hasMadeFirstAttempt}
           onViewProgressReport={() => navigate("/typing/report")}
           onSelectModule={handleModuleSelect}
+          todayTotalSeconds={todayTotalSeconds}
+          dailyGoalTime={dailyGoalTime}
         />
       )}
 

@@ -7,7 +7,7 @@ import {
   buildFlashcardSet,
   loadUserSelectedModules
 } from "../utils/flashcardUtils.js";
-import { Settings, ChevronLeft, ChevronRight, X, Filter, RefreshCw, Layers, Check, CheckSquare, Edit3, HelpCircle, ListChecks, Type, MessageSquareText } from "lucide-react";
+import { Settings, ChevronLeft, ChevronRight, X, Filter, RefreshCw, Layers, Check, CheckSquare, Edit3, HelpCircle, ListChecks, Type, MessageSquareText, Trash2, RotateCcw, EyeOff } from "lucide-react";
 import { useTypingAccent } from "../hooks/useTypingAccent";
 import FlashcardsHero from "../components/flashcards/FlashcardsHero.jsx";
 import ScrollReveal from "../components/ScrollReveal";
@@ -34,6 +34,51 @@ const QUESTION_TYPES = [
     icon: <MessageSquareText size={28} />,
   }
 ];
+
+/* ── Removed Cards Sidebar Component ─────────────────────────────────────── */
+function RemovedCardsSidebar({ isOpen, onClose, excludedCards, onRestore }) {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fc-sidebar-overlay" onClick={onClose}>
+      <div className="fc-sidebar-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="fc-sidebar-header">
+          <h3>Removed Cards</h3>
+          <button className="fc-modal-close" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="fc-sidebar-content">
+          {excludedCards.length > 0 ? (
+            excludedCards.map((card) => (
+              <div key={card.id} className="fc-removed-item">
+                <div className="fc-removed-item-text">{card.text}</div>
+                <div className="fc-removed-item-meta">
+                  <span className="fc-module-id" style={{ fontSize: "11px", opacity: 0.6 }}>
+                    {card._sourceModuleId}
+                  </span>
+                  <button
+                    className="fc-restore-btn"
+                    onClick={() => onRestore(card.id)}
+                  >
+                    <RotateCcw size={12} style={{ marginRight: "4px" }} />
+                    Restore
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ textAlign: "center", color: "var(--text-secondary)", marginTop: "40px" }}>
+              <Trash2 size={40} style={{ opacity: 0.2, marginBottom: "16px" }} />
+              <p>No cards have been removed from the deck.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 /* ── Settings Modal Component ────────────────────────────────────────────── */
 function FlashcardSettingsModal({
@@ -188,6 +233,16 @@ export default function FlashcardsPage() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [excludedIds, setExcludedIds] = useState(() => {
+    const raw = localStorage.getItem("fc_excluded_ids");
+    return raw ? JSON.parse(raw) : [];
+  });
+
+  // Persist excluded IDs
+  useEffect(() => {
+    localStorage.setItem("fc_excluded_ids", JSON.stringify(excludedIds));
+  }, [excludedIds]);
 
   // Initial load
   useEffect(() => {
@@ -212,14 +267,16 @@ export default function FlashcardsPage() {
     }
 
     const pool = collectFlashcardPool(selectedModules);
-    // Filter by selected question types
-    const filteredPool = pool.filter(q => selectedTypes.includes(q.type));
+    // Filter by selected question types AND excluded IDs
+    const filteredPool = pool.filter(q =>
+      selectedTypes.includes(q.type) && !excludedIds.includes(q.id)
+    );
     const prioritizedSet = buildFlashcardSet(filteredPool);
 
     setCards(prioritizedSet);
     setCurrentIndex(0);
     setIsFlipped(false);
-  }, [selectedModules, selectedTypes]);
+  }, [selectedModules, selectedTypes, excludedIds]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < cards.length - 1) {
@@ -241,12 +298,28 @@ export default function FlashcardsPage() {
 
   const handleShuffle = () => {
     const pool = collectFlashcardPool(selectedModules);
-    const filteredPool = pool.filter(q => selectedTypes.includes(q.type));
+    const filteredPool = pool.filter(q =>
+      selectedTypes.includes(q.type) && !excludedIds.includes(q.id)
+    );
     const newSet = buildFlashcardSet(filteredPool);
     setCards(newSet);
     setCurrentIndex(0);
     setIsFlipped(false);
   };
+
+  const handleExcludeCard = (cardId) => {
+    setExcludedIds(prev => [...prev, cardId]);
+  };
+
+  const handleRestoreCard = (cardId) => {
+    setExcludedIds(prev => prev.filter(id => id !== cardId));
+  };
+
+  const excludedCards = useMemo(() => {
+    if (excludedIds.length === 0) return [];
+    const pool = collectFlashcardPool(modules.map(m => m.id));
+    return pool.filter(q => excludedIds.includes(q.id));
+  }, [excludedIds]);
 
   const toggleModule = (modId) => {
     setSelectedModules(prev => {
@@ -305,57 +378,83 @@ export default function FlashcardsPage() {
       <div className="container">
         {cards.length > 0 ? (
           <ScrollReveal direction="bottom" duration={800} delay={200}>
-            <div className="fc-main-layout">
-              {/* Previous Side Button */}
-              <div className="fc-side-nav left">
-                <button
-                  className="fc-nav-btn"
-                  onClick={handlePrev}
-                  disabled={currentIndex === 0}
-                  aria-label="Previous card"
-                >
-                  <ChevronLeft size={32} />
-                </button>
+            <div className="fc-main-layout-wrapper">
+              <div className="fc-main-layout">
+                {/* Previous Side Button */}
+                <div className="fc-side-nav left">
+                  <button
+                    className="fc-nav-btn"
+                    onClick={handlePrev}
+                    disabled={currentIndex === 0}
+                    aria-label="Previous card"
+                  >
+                    <ChevronLeft size={32} />
+                  </button>
+                </div>
+
+                {/* Flashcard */}
+                <div className="fc-card-wrapper">
+                  <Flashcard
+                    question={cards[currentIndex]}
+                    isFlipped={isFlipped}
+                    onFlip={() => setIsFlipped(prev => !prev)}
+                  />
+                </div>
+
+                {/* Next Side Button */}
+                <div className="fc-side-nav right">
+                  <button
+                    className="fc-nav-btn"
+                    onClick={handleNext}
+                    disabled={currentIndex === cards.length - 1}
+                    aria-label="Next card"
+                  >
+                    <ChevronRight size={32} />
+                  </button>
+                </div>
+
+                {/* Mobile Controls (shown only on small screens via CSS) */}
+                <div className="fc-mobile-controls">
+                  <button
+                    className="button"
+                    onClick={handlePrev}
+                    disabled={currentIndex === 0}
+                    style={{ flex: 1, justifyContent: "center", padding: "16px" }}
+                  >
+                    <ChevronLeft size={20} /> Previous
+                  </button>
+                  <button
+                    className="button solid"
+                    onClick={handleNext}
+                    disabled={currentIndex === cards.length - 1}
+                    style={{ flex: 1, justifyContent: "center", padding: "16px" }}
+                  >
+                    Next <ChevronRight size={20} />
+                  </button>
+                </div>
               </div>
 
-              {/* Flashcard */}
-              <div className="fc-card-wrapper">
-                <Flashcard
-                  question={cards[currentIndex]}
-                  isFlipped={isFlipped}
-                  onFlip={() => setIsFlipped(prev => !prev)}
-                />
-              </div>
-
-              {/* Next Side Button */}
-              <div className="fc-side-nav right">
+              {/* Exclude & Manage Option */}
+              <div className="fc-exclude-wrapper">
                 <button
-                  className="fc-nav-btn"
-                  onClick={handleNext}
-                  disabled={currentIndex === cards.length - 1}
-                  aria-label="Next card"
+                  className="fc-exclude-btn"
+                  onClick={() => handleExcludeCard(cards[currentIndex].id)}
+                  title="Remove this card from the deck"
                 >
-                  <ChevronRight size={32} />
+                  <EyeOff size={16} />
+                  Don't show again
                 </button>
-              </div>
 
-              {/* Mobile Controls (shown only on small screens via CSS) */}
-              <div className="fc-mobile-controls">
                 <button
-                  className="button"
-                  onClick={handlePrev}
-                  disabled={currentIndex === 0}
-                  style={{ flex: 1, justifyContent: "center", padding: "16px" }}
+                  className="fc-manage-removed-btn"
+                  onClick={() => setIsSidebarOpen(true)}
+                  title="Manage removed cards"
                 >
-                  <ChevronLeft size={20} /> Previous
-                </button>
-                <button
-                  className="button solid"
-                  onClick={handleNext}
-                  disabled={currentIndex === cards.length - 1}
-                  style={{ flex: 1, justifyContent: "center", padding: "16px" }}
-                >
-                  Next <ChevronRight size={20} />
+                  <Trash2 size={16} />
+                  Removed Cards
+                  {excludedIds.length > 0 && (
+                    <span className="fc-removed-badge">{excludedIds.length}</span>
+                  )}
                 </button>
               </div>
             </div>
@@ -384,6 +483,14 @@ export default function FlashcardsPage() {
           onSelectAllTypes={selectAllTypes}
           onClearTypes={clearTypes}
           availableModules={modules}
+        />
+
+        {/* Removed Cards Sidebar */}
+        <RemovedCardsSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          excludedCards={excludedCards}
+          onRestore={handleRestoreCard}
         />
       </div>
     </div>

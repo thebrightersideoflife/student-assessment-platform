@@ -564,3 +564,160 @@
   opacity: 0.4;
   margin-bottom: 32px;
 }
+
+/* ── Exclude & Manage Action ────────────────────────────── */
+.fc-exclude-wrapper {
+  margin-top: -24px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  z-index: 20;
+}
+
+.fc-main-layout-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.fc-exclude-btn, .fc-manage-removed-btn {
+  background: rgba(var(--bg-secondary-rgb), 0.6);
+  border: 1px solid rgba(var(--border-color-rgb), 0.4);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.fc-exclude-btn:hover {
+  background: rgba(var(--poppy-red-rgb), 0.08);
+  border-color: var(--poppy-red);
+  color: var(--poppy-red);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--poppy-red-rgb), 0.15);
+}
+
+.fc-manage-removed-btn:hover {
+  background: rgba(var(--accent-primary-rgb), 0.08);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.15);
+}
+
+.fc-removed-badge {
+  background: var(--fc-purple);
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ── Removed Cards Sidebar ─────────────────────────────────── */
+.fc-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 2500;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fc-sidebar-panel {
+  width: 400px;
+  height: 100%;
+  background: var(--bg-card);
+  border-left: 1px solid rgba(var(--border-color-rgb), 0.6);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  animation: fcSidebarSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fcSidebarSlide {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.fc-sidebar-header {
+  padding: 32px 24px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(var(--border-color-rgb), 0.3);
+}
+
+.fc-sidebar-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.fc-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.fc-removed-item {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(var(--bg-secondary-rgb), 0.4);
+  border: 1px solid rgba(var(--border-color-rgb), 0.3);
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.fc-removed-item:hover {
+  background: rgba(var(--bg-secondary-rgb), 0.8);
+  border-color: rgba(var(--border-color-rgb), 0.6);
+}
+
+.fc-removed-item-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fc-removed-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fc-restore-btn {
+  background: rgba(var(--accent-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
+  color: var(--accent-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fc-restore-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+}

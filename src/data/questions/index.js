@@ -76,11 +76,14 @@ import ITSSA_W6 from "./ITSSA/week6.js";
 import ITPMA_W1 from "./ITPMA/week1.js";
 import ITPMA_W2 from "./ITPMA/week2.js";
 import ITPMA_W3 from "./ITPMA/week3.js";
+import ITPMA_W4 from "./ITPMA/week4.js";
+import ITPMA_W5 from "./ITPMA/week5.js";
 
 // ── ITCOA ──────────────────────────────────────────────────────────────────
 import ITCOA_W1 from "./ITCOA/week1.js";
 import ITCOA_W2 from "./ITCOA/week2.js";
 import ITCOA_W3 from "./ITCOA/week3.js";
+import ITCOA_W4 from "./ITCOA/week4.js";
 
 // ── Assembly map ───────────────────────────────────────────────────────────
 // Week keys must match the id strings in src/data/weeks.js
@@ -141,11 +144,14 @@ const rawQuestions = {
    "1": ITPMA_W1,
    "2": ITPMA_W2,
    "3": ITPMA_W3,
+   "4": ITPMA_W4,
+   "5": ITPMA_W5,
   },
   ITCOA: {
    "1": ITCOA_W1,
    "2": ITCOA_W2,
    "3": ITCOA_W3,
+   "4": ITCOA_W4,
   },
 };
 
