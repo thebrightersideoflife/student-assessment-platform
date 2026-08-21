@@ -455,6 +455,15 @@ export const weeks = {
         audioDescription: "An introduction to the IT Project Management module, covering key concepts and expectations for Week 5." 
       },
       duration: 150,
+    },
+    {
+      id: "6",
+      block: 3,
+      moduleAudio: {
+        audioUrl: "/audio/itpma-week6-intro.mp3",
+        audioDescription: "An introduction to the IT Project Management module, covering key concepts and expectations for Week 6." 
+      },
+      duration: 180,
     }
     // add weeks as you build them
   ],
@@ -493,6 +502,16 @@ export const weeks = {
       moduleAudio: {
         audioUrl: "/audio/itcoa-week4-intro.mp3",
         audioDescription: "An introduction to the Web Server Management module, covering key concepts and expectations for Week 4."  
+      },
+      duration: 180,
+    },
+    {
+      id: "5",
+      name: "Week 5",
+      block: 3,
+      moduleAudio: {
+        audioUrl: "/audio/itcoa-week5-intro.mp3",
+        audioDescription: "An introduction to the Web Server Management module, covering key concepts and expectations for Week 5."  
       },
       duration: 180,
     }

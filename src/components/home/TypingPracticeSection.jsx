@@ -90,7 +90,7 @@ export default function TypingPracticeSection({ theme }) {
               }}
             >
               <p style={{ margin: 0 }}>
-                Search for the module you want, choose a duration, and type your way through the questions, model answers, and explanations — all in one focused session.
+                Search for the module you want, choose a duration, and type your way through the questions, model answers, and explanations.
               </p>
               <p style={{ margin: 0 }}>
                 It is a fast way to revise while building confidence, accuracy, and speed without leaving the course content behind.

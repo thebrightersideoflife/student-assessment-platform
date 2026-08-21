@@ -2,7 +2,11 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ScrollReveal from "../ScrollReveal";
 
-const VIDEOS = [
+const VIDEOS = [  
+  {
+    id: "SoCF4O1FNYk",
+    title: "Student Assessment Platform — Latest Features",
+  },
   {
     id: "QW6y-F4Pr3Q",
     title: "Student Assessment Platform — Introduction",
@@ -10,10 +14,6 @@ const VIDEOS = [
   {
     id: "qo7SuzQMi8w",
     title: "Student Assessment Platform — Walkthrough",
-  },
-  {
-    id: "SoCF4O1FNYk",
-    title: "Student Assessment Platform — Latest Features",
   }
 ];
 

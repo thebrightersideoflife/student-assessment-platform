@@ -136,7 +136,7 @@ export default function PodcastSection({ theme }) {
               color: "var(--text-secondary)",
             }}>
               <p style={{ margin: 0 }}>
-                Every week is accompanied by a carefully crafted podcast that summarizes the key concepts and topics you'll encounter in that week's assessment. Listen during your commute, workout, or while relaxing — get ahead of the material before you dive into the practice questions.
+                Every week is accompanied by a carefully crafted podcast that summarizes the key concepts and topics you'll encounter in that week's assessment. Listen during your commute, workout, or while relaxing. Listen to a quick summary before you dive into the practice questions.
               </p>
               <p style={{ margin: 0 }}>
                 Our podcasts are designed to give you the confidence and context you need to approach each assessment prepared and ready. Think of it as your personal study companion.

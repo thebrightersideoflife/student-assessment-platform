@@ -33,7 +33,7 @@ function hydrateNotices(initialNotices = [], typingGoalMinutes = null, todayMinu
   // };
   // notices.unshift(customNotice);
 
-  const systemUpdateId = "system-update-reminder";
+  const systemUpdateId = "system-update-reminder-v2";
   const typingReminderId = "typing-goal-reminder";
   const flashcardFeatureId = "flashcard-feature-notice";
   const nextNotices = [...notices];
@@ -56,7 +56,7 @@ function hydrateNotices(initialNotices = [], typingGoalMinutes = null, todayMinu
     nextNotices.unshift({
       id: systemUpdateId,
       title: "New assessments available",
-      message: "Fresh assessments have been added to the system — take a look when you’re ready.",
+      message: "Fresh assessments have been added to the system (Week 6 of ITPMA & Week 5 of ITCOA) take a look when you’re ready.",
       read: false,
       actionLabel: "Go there",
       actionHandler: null,
@@ -191,6 +191,10 @@ export default function NotificationBell({
     setNotices((prev) => prev.map((notice) => (notice.id === noticeId ? { ...notice, deleted: true, read: true } : notice)));
   };
 
+  const handleClearAll = () => {
+    setNotices((prev) => prev.map((notice) => ({ ...notice, deleted: true, read: true })));
+  };
+
   return (
     <>
       <style>{`
@@ -262,19 +266,51 @@ export default function NotificationBell({
                 : "linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(247, 250, 255, 0.76))",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
               <strong style={{ fontSize: "13px", color: "var(--text-primary)" }}>Notifications</strong>
-              <button
-                className="action-button"
-                onClick={handleClose}
-                style={{ padding: "4px" }}
-                aria-label="Close notifications"
-              >
-                <X size={14} />
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {visibleNotices.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--accent-primary)",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      padding: "4px 8px",
+                      borderRadius: "6px",
+                      opacity: 0.8,
+                      transition: "all 0.2s"
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.background = "rgba(var(--accent-primary-rgb), 0.08)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.8"; e.currentTarget.style.background = "none"; }}
+                  >
+                    Clear all
+                  </button>
+                )}
+                <button
+                  className="action-button"
+                  onClick={handleClose}
+                  style={{ padding: "4px" }}
+                  aria-label="Close notifications"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              maxHeight: "360px",
+              overflowY: "auto",
+              paddingRight: "4px",
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(var(--border-color-rgb), 0.5) transparent"
+            }}>
               {visibleNotices.length > 0 ? (
                 visibleNotices.map((notice, index) => (
                   <div

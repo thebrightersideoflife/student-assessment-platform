@@ -81,10 +81,11 @@ export function loadUserSelectedModules(allAvailableModuleIds) {
   const MODULE_SELECTION_KEY = "progress_tracked_modules";
   try {
     const raw = localStorage.getItem(MODULE_SELECTION_KEY);
-    if (!raw) return allAvailableModuleIds;
+    // Default to the first module only if nothing is stored yet
+    if (!raw) return allAvailableModuleIds.length > 0 ? [allAvailableModuleIds[0]] : [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : allAvailableModuleIds;
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : [allAvailableModuleIds[0]];
   } catch {
-    return allAvailableModuleIds;
+    return allAvailableModuleIds.length > 0 ? [allAvailableModuleIds[0]] : [];
   }
 }
