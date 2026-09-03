@@ -122,7 +122,7 @@ export default [
       "windows admin center",
       "system configuration"
     ],
-    "explanation": "Windows Admin Center (WAC) is the Microsoft browser-based management solution referenced throughout the Week 5 material."
+    "explanation": "Windows Admin Center (WAC) is Microsoft's modern, browser-based management platform. It allows administrators to manage single or multiple Windows servers (both Core and Desktop Experience) through a unified, graphical interface without requiring a local GUI on the target machine."
   },
   {
     "id": "ITCOA_W5_Q6",
@@ -230,7 +230,7 @@ export default [
       "sconfig",
       "system configuration"
     ],
-    "explanation": "The Week 5 material identifies SConfig option 2 as the hostname/computer-name configuration option."
+    "explanation": "In the SConfig utility, Option 2 is the dedicated menu item for 'Computer Name'. Selecting this allows an administrator to rename the server, which is a required step for establishing a permanent identity before tasks like domain promotion."
   },
   {
     "id": "ITCOA_W5_Q11",
@@ -276,7 +276,7 @@ export default [
       "powershell",
       "system configuration"
     ],
-    "explanation": "Rename-Computer is the cmdlet shown in the Week 5 material for changing the computer name."
+    "explanation": "The `Rename-Computer` cmdlet is the authoritative PowerShell command for changing a machine's hostname. Unlike older methods, it handles the necessary registry and system changes safely and prompts for the required restart to commit the new name."
   },
   {
     "id": "ITCOA_W5_Q13",
@@ -367,7 +367,7 @@ export default [
       "powershell",
       "system configuration"
     ],
-    "explanation": "Install-WindowsFeature is used in the Week 5 material to install server roles and features."
+    "explanation": "The `Install-WindowsFeature` cmdlet (formerly `Add-WindowsFeature`) is the standard PowerShell tool for managing server roles and features in Windows Server. It allows for automated, scriptable installations that are essential for managing 'headless' Server Core environments."
   },
   {
     "id": "ITCOA_W5_Q17",
@@ -388,7 +388,7 @@ export default [
       "active directory",
       "powershell"
     ],
-    "explanation": "This command installs the AD DS role and includes the management tools, matching the Week 5 procedure."
+    "explanation": "Installing the AD-Domain-Services role alone does not include the GUI or command-line tools needed to manage it. The `-IncludeManagementTools` parameter ensures that relevant snap-ins and PowerShell modules (like the Active Directory module) are installed alongside the service."
   },
   {
     "id": "ITCOA_W5_Q18",
@@ -456,7 +456,7 @@ export default [
       "active directory",
       "powershell"
     ],
-    "explanation": "Install-ADDSDomainController is the cmdlet used in the Week 5 material to promote a machine to a domain controller."
+    "explanation": "The `Install-ADDSDomainController` cmdlet is part of the ADDSDeployment module. It initiates the promotion process, configuring the server as a DC in an existing domain, which includes setting up the NTDS database, SYSVOL folder, and necessary service records."
   },
   {
     "id": "ITCOA_W5_Q21",
@@ -476,7 +476,7 @@ export default [
       "active directory",
       "system configuration"
     ],
-    "explanation": "Repadmin /showrepl is the command presented in the source material. 'Active Directory Users and Computers' is not accepted because it is not the requested replication command."
+    "explanation": "The `Repadmin` (Replication Administration) tool is a diagnostic utility for monitoring Active Directory replication. The `/showrepl` switch provides a detailed report of the replication status between domain controllers, helping to verify that a new DC is correctly synchronising with the rest of the forest."
   },
   {
     "id": "ITCOA_W5_Q22",
@@ -690,7 +690,7 @@ export default [
       "powershell",
       "system configuration"
     ],
-    "explanation": "The Week 5 material identifies F5 as Run Script in PowerShell ISE."
+    "explanation": "In PowerShell ISE, **F5** is the global shortcut for 'Run Script'. It executes the entire script file currently open in the editor window, which is efficient for testing full automation workflows."
   },
   {
     "id": "ITCOA_W5_Q32",
@@ -714,7 +714,7 @@ export default [
       "powershell",
       "system configuration"
     ],
-    "explanation": "The Week 5 material identifies F8 as Run Selection in PowerShell ISE."
+    "explanation": "In PowerShell ISE, **F8** allows for granular testing by running only the specific lines of code that the administrator has highlighted. This is invaluable for debugging complex scripts one logical block at a time without restarting the entire execution."
   },
   {
     "id": "SCENARIO_ITCOA_W5_Q5",

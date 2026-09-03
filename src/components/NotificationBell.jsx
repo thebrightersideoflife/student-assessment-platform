@@ -33,7 +33,7 @@ function hydrateNotices(initialNotices = [], typingGoalMinutes = null, todayMinu
   // };
   // notices.unshift(customNotice);
 
-  const systemUpdateId = "system-update-reminder-v2";
+  const systemUpdateId = "system-update-reminder-v3";
   const typingReminderId = "typing-goal-reminder";
   const flashcardFeatureId = "flashcard-feature-notice";
   const nextNotices = [...notices];
@@ -56,7 +56,7 @@ function hydrateNotices(initialNotices = [], typingGoalMinutes = null, todayMinu
     nextNotices.unshift({
       id: systemUpdateId,
       title: "New assessments available",
-      message: "Fresh assessments have been added to the system (Week 6 of ITPMA & Week 5 of ITCOA) take a look when you’re ready.",
+      message: "Fresh assessments have been added to the system (Week 7 of ITPMA & Week 6 of ITCOA) take a look when you’re ready.",
       read: false,
       actionLabel: "Go there",
       actionHandler: null,
