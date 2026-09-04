@@ -88,6 +88,7 @@ import ITCOA_W3 from "./ITCOA/week3.js";
 import ITCOA_W4 from "./ITCOA/week4.js";
 import ITCOA_W5 from "./ITCOA/week5.js";
 import ITCOA_W6 from "./ITCOA/week6.js";
+import ITCOA_W7 from "./ITCOA/week7.js";
 
 // ── Assembly map ───────────────────────────────────────────────────────────
 // Week keys must match the id strings in src/data/weeks.js
@@ -160,6 +161,7 @@ const rawQuestions = {
    "4": ITCOA_W4,
    "5": ITCOA_W5,
    "6": ITCOA_W6,
+   "7": ITCOA_W7
   },
 };
 

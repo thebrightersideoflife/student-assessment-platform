@@ -539,21 +539,21 @@ export default function ProgressPage() {
 
   function handleExportPDF() {
     // Force light theme so the print stylesheet gets clean colours
-    const prev = document.documentElement.getAttribute("data-theme");
+    const prevTheme = document.documentElement.getAttribute("data-theme");
     document.documentElement.setAttribute("data-theme", "light");
 
-    const date = new Date().toLocaleDateString("en-ZA", {
-      day: "numeric", month: "long", year: "numeric",
-    });
     const prevTitle = document.title;
     document.title = `Progress_Report_${new Date().toISOString().slice(0, 10)}`;
 
-    window.print();
+    const cleanup = () => {
+      document.title = prevTitle;
+      if (prevTheme) document.documentElement.setAttribute("data-theme", prevTheme);
+      else document.documentElement.removeAttribute("data-theme");
+      window.removeEventListener("afterprint", cleanup);
+    };
 
-    // Restore theme + title after the print dialog closes
-    document.title = prevTitle;
-    if (prev) document.documentElement.setAttribute("data-theme", prev);
-    else document.documentElement.removeAttribute("data-theme");
+    window.addEventListener("afterprint", cleanup);
+    window.print();
   }
 
   async function refreshProgressData() {

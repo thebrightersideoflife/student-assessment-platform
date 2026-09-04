@@ -76,6 +76,16 @@ export default function PrintLayout({
             </button>
           )}
           <button className="print-bar-btn" onClick={async () => {
+            const prevTitle = document.title;
+            const filename = `${moduleId.toUpperCase()}_Week${weekId}_Assessment_${new Date().toISOString().slice(0, 10)}`;
+            document.title = filename;
+
+            const cleanup = () => {
+              document.title = prevTitle;
+              window.removeEventListener("afterprint", cleanup);
+            };
+            window.addEventListener("afterprint", cleanup);
+
             try {
               if (window.__MERMAID_PRINT_REGISTRY && typeof window.__MERMAID_PRINT_REGISTRY.prepareAll === 'function') {
                 // wait briefly for diagrams to render (with timeout inside prepareAll)

@@ -104,9 +104,10 @@ export default function TypingReportPage() {
   useEffect(() => {
     const prevTitle = document.title;
     const today = new Date().toISOString().slice(0, 10);
-    document.title = `TypingReport-${today}`;
+    const modeLabel = MODE_LABELS[activeMode] || activeMode || "All";
+    document.title = `TypingReport_${modeLabel}_${today}`;
     return () => { document.title = prevTitle; };
-  }, []);
+  }, [activeMode]);
 
   // Note: unlike AssessmentPage, this page does NOT set data-print="active".
   // The app header stays visible here on screen — only @media print (in
