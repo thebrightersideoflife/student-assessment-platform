@@ -74,12 +74,20 @@ export default function CrosswordGame({ grid, placedWords }) {
   }
 
   function handleCellClick(r, c) {
+    if (selectedCell?.r === r && selectedCell?.c === c) {
+      const cellWords = getCellWords(r, c);
+      if (cellWords.length > 1) {
+        // Only toggle if it's an intersection
+        setDirection(prev => (prev === 0 ? 1 : 0));
+      }
+    }
+  }
+
+  function handleCellFocus(r, c) {
     const cellWords = getCellWords(r, c);
-    if (cellWords.length > 1) {
-      // It's an intersection, toggle direction
-      setDirection(prev => (prev === 0 ? 1 : 0));
-    } else if (cellWords.length === 1) {
-      // Force direction to the only word available
+    // If current direction isn't valid for this cell, switch to a valid one
+    const hasWordInCurrentDir = cellWords.some(pw => pw.dr === direction);
+    if (!hasWordInCurrentDir && cellWords.length > 0) {
       setDirection(cellWords[0].dr);
     }
     setSelectedCell({ r, c });
@@ -91,7 +99,18 @@ export default function CrosswordGame({ grid, placedWords }) {
     // Start timer on first input
     if (!timerStarted) setTimerStarted(true);
 
-    const cleanVal = val.toUpperCase().substring(val.length - 1); // Get last char entered
+    const prevVal = userGrid[r][c] || "";
+    let cleanVal = val.trim().toUpperCase();
+
+    // If multiple characters (meaning user typed over existing),
+    // prioritize the NEW character regardless of where the caret was.
+    if (cleanVal.length > 1) {
+        if (cleanVal[0] === prevVal) {
+            cleanVal = cleanVal.slice(1);
+        } else {
+            cleanVal = cleanVal.slice(0, 1);
+        }
+    }
 
     const newGrid = [...userGrid];
     newGrid[r][c] = cleanVal;
@@ -306,7 +325,10 @@ export default function CrosswordGame({ grid, placedWords }) {
                       onChange={(e) => handleCellChange(rIdx, cIdx, e.target.value)}
                       onClick={() => handleCellClick(rIdx, cIdx)}
                       onKeyDown={(e) => handleKeyDown(e, rIdx, cIdx)}
-                      onFocus={() => setSelectedCell({ r: rIdx, c: cIdx })}
+                      onFocus={(e) => {
+                        handleCellFocus(rIdx, cIdx);
+                        e.target.select(); // Auto-select text on focus to allow easy overwriting
+                      }}
                       style={{
                         width: '100%', height: '100%',
                         border: 'none', background: 'transparent',
@@ -400,12 +422,33 @@ export default function CrosswordGame({ grid, placedWords }) {
 
         {isWon && (
           <div style={{
-            marginTop: '30px', padding: '20px',
-            background: 'rgba(118,209,61,0.1)', border: '1px solid var(--lush-lime)',
-            borderRadius: '16px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out'
+            marginTop: '30px', padding: '24px',
+            background: 'rgba(var(--bg-card-rgb), 0.8)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid var(--lush-lime)',
+            borderRadius: '20px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
           }}>
-            <h3 style={{ color: 'var(--lush-lime)', margin: 0, fontSize: '1.5rem' }}>🎉 Puzzle Solved!</h3>
-            <p style={{ margin: '8px 0 0', opacity: 0.8 }}>Completion time: {formatTime(seconds)}</p>
+            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏆</div>
+            <h3 style={{ color: 'var(--lush-lime)', margin: '0 0 8px 0', fontSize: '1.8rem' }}>Puzzle Solved!</h3>
+
+            <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '14px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Final Score</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 800, color: score >= (placedWords.length * 100) ? 'var(--golden-amber)' : 'var(--text-primary)' }}>
+                    {score}
+                </div>
+            </div>
+
+            <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                {score >= (placedWords.length * 100) ? "✨ Flawless Victory! No reveals used. ✨" :
+                 score > 0 ? "Great job! You found most of them yourself." :
+                 "Phew! That was a tough one. Keep practicing!"}
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                <span><strong>Time:</strong> {formatTime(seconds)}</span>
+                <span><strong>Reveals:</strong> {revealedWordIds.size}</span>
+            </div>
           </div>
         )}
       </div>
