@@ -209,6 +209,14 @@ export default function NotificationBell({
           box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
         }
 
+        @media (max-width: 480px) {
+          .notification-panel {
+            width: calc(100vw - 32px) !important;
+            right: -10px !important;
+            max-height: 80vh !important;
+          }
+        }
+
         .notice-card {
           opacity: 0.86;
           transition: all 180ms ease;

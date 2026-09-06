@@ -1,13 +1,31 @@
 // src/components/WeekCard.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import AssessmentStorage from "../utils/assessmentStorage";
 import { getWeekLabel, getWeekKindConfig } from "../utils/questionHelpers";
+import { questions } from "../data/questions";
+import { extractGameTerms } from "../utils/gameUtils";
+import { modules } from "../data/modules";
+import { MODULE_META, DEFAULT_META } from "./moduleMeta";
 
 export default function WeekCard({ moduleId, week, hasQuestions, blockWeekNumber }) {
   const navigate = useNavigate();
   const [completionStatus, setCompletionStatus] = useState(null);
   const [isCompleted, setIsCompleted] = useState(false);
+
+  const meta = MODULE_META[moduleId] || DEFAULT_META;
+
+  const moduleName = useMemo(() => {
+    return modules.find(m => m.id === moduleId)?.name || moduleId;
+  }, [moduleId]);
+
+  const gameTerms = useMemo(() => {
+    if (!hasQuestions) return [];
+    const weekQuestions = questions[moduleId]?.[week.id] || [];
+    return extractGameTerms(weekQuestions);
+  }, [moduleId, week.id, hasQuestions]);
+
+  const hasEnoughForGame = gameTerms.length >= 5;
 
   useEffect(() => {
     const checkCompletion = () => {

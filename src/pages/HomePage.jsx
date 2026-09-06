@@ -8,6 +8,7 @@ import PodcastSection from "../components/home/PodcastSection";
 import VideoSection from "../components/home/VideoSection";
 import FeaturedModulesSection from "../components/home/FeaturedModulesSection";
 import FlashcardSection from "../components/home/FlashcardSection";
+import GamesSection from "../components/home/GamesSection";
 import OfflineSection from "../components/home/OfflineSection";
 import CallToActionSection from "../components/home/CallToActionSection";
 import ScrollReveal from "../components/ScrollReveal";
@@ -34,6 +35,7 @@ export default function HomePage() {
 
       <FeaturedModulesSection modules={modules} totalWeeks={totalWeeks} />
       <FlashcardSection theme={theme} />
+      <GamesSection theme={theme} />
       <OfflineSection theme={theme} />
       <CallToActionSection theme={theme} />
 

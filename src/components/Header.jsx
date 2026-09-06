@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Puzzle } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
 import { loadSettings, getTodayPracticeSeconds } from "../utils/typingStorage";
@@ -253,7 +254,33 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchOpen]);
 
-  const isActive = (path) => location.pathname === path;
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 960 && menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [menuOpen]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  const isActive = (path) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
 
   const progressPercentage =
     overallProgress.total > 0
@@ -356,6 +383,15 @@ export default function Header() {
 
         {/* Actions */}
         <div className="header-actions">
+          {/* Study Games */}
+          <button
+            className={`action-button puzzle-button ${isActive("/games") ? "active" : ""}`}
+            onClick={() => navigateTo("/games")}
+            title="Play Study Games"
+          >
+            <Puzzle size={20} strokeWidth={isActive("/games") ? 2.5 : 2} />
+          </button>
+
           {/* Progress Circle */}
           <div
             className="progress-indicator action-button"
@@ -503,7 +539,8 @@ export default function Header() {
           <div className="mobile-menu-inner">
             <button className={`mobile-nav-item ${isActive("/resources") ? "active" : ""}`} onClick={() => navigateTo("/resources")}>Resources</button>
             <button className={`mobile-nav-item ${isActive("/modules") ? "active" : ""}`} onClick={() => navigateTo("/modules")}>Modules</button>
-            <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>            
+            <button className={`mobile-nav-item ${isActive("/games") ? "active" : ""}`} onClick={() => navigateTo("/games")}>Study Games</button>
+            <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>
             <button className={`mobile-nav-item ${isActive("/flashcards") ? "active" : ""}`} onClick={() => navigateTo("/flashcards")}>Flashcards</button>
             <button className={`mobile-nav-item ${isActive("/typing") ? "active" : ""}`} onClick={() => navigateTo("/typing")}>Typing Practice</button>
             <button className={`mobile-nav-item ${isActive("/support") ? "active" : ""}`} onClick={() => navigateTo("/support")}>Support</button>

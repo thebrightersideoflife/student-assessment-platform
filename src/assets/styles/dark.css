@@ -23,6 +23,10 @@
 
   --border-color: #2A3550;
 
+  /* Game Accent - Dark mode keeps the vibrant cyan highlight */
+  --game-accent: var(--vibrant-cyan);
+  --game-accent-rgb: var(--vibrant-cyan-rgb);
+
   /* Flashcard Accents (Dark Mode - Neon/Tint) */
   --fc-green:  #22C55E;
   --fc-purple: #A855F7;

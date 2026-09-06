@@ -3,8 +3,10 @@
   /* Artistic palette */
   --golden-amber: #F4A900;
   --vibrant-cyan: #00BFFF;
+  --vibrant-cyan-rgb: 0, 191, 255;
   --royal-blue: #2A5CA7;
   --sunset-orange: #FF7F24;
+  --sunset-orange-rgb: 255, 127, 36;
 
   --poppy-red: #FF4040;
   --cornflower-blue: #6495ED;

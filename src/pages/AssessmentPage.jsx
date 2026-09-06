@@ -1,6 +1,7 @@
 // src/pages/AssessmentPage.jsx
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Puzzle } from "lucide-react";
 import QuestionRenderer from "../components/QuestionRenderer";
 import Breadcrumb from "../components/Breadcrumb";
 import CompletionBadge from "../components/CompletionBadge";
@@ -43,6 +44,55 @@ const infoCard = {
   alignItems: "center",
   gap: "14px",
 };
+
+/* ══════════════════════════════════════════════════════════════
+   FloatingGamesButton
+══════════════════════════════════════════════════════════════ */
+function FloatingGamesButton({ moduleId }) {
+  const navigate = useNavigate();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setVisible(window.scrollY > 200);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <button
+      onClick={() => navigate(`/games/${moduleId}`)}
+      title="Play Study Games for this module"
+      onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+      onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      style={{
+        position: "fixed",
+        bottom: "88px",
+        right: "24px",
+        width: "52px",
+        height: "52px",
+        borderRadius: "50%",
+        background: "rgba(255,255,255,0.1)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        color: "var(--text-primary)",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+        transform: "scale(1)",
+        transition: "all 0.3s ease",
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? "auto" : "none",
+        zIndex: 9998,
+      }}
+    >
+      <Puzzle size={24} strokeWidth={2.5} />
+    </button>
+  );
+}
 
 /* ══════════════════════════════════════════════════════════════
    AssessmentPage
@@ -693,6 +743,11 @@ export default function AssessmentPage() {
             : "Answer all questions above to unlock the submit button."}
         </p>
       </div>
+
+      {/* Floating Games button — fixed position, right side, only in practice mode */}
+      {!timedMode && !submitted && (!showGate || gateCleared) && (
+        <FloatingGamesButton moduleId={moduleId} />
+      )}
 
       {/* Floating mini-timer — fixed position, right side, only in timed mode */}
       {timedMode && gateCleared && !submitted && (

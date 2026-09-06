@@ -5,6 +5,8 @@ import HomePage from "../pages/HomePage";
 import ModulesPage from "../pages/ModulesPage";
 import WeeksPage from "../pages/WeeksPage";
 import AssessmentPage from "../pages/AssessmentPage";
+import GamesPage from "../pages/GamesPage";
+import StudyGamesHubPage from "../pages/StudyGamesHubPage";
 import RoadmapPage from "../pages/RoadmapPage";
 import ResourcesPage from "../pages/ResourcesPage";
 import ProgressPage from "../pages/ProgressPage";
@@ -40,6 +42,13 @@ export default function AppRouter() {
         <Route path="/module/:moduleId" element={<WeeksPage />} />
 
         <Route path="/module/:moduleId/week/:weekId" element={<AssessmentPage />}/>
+
+        <Route path="/games" element={<StudyGamesHubPage />} />
+        <Route path="/games/:moduleId" element={<GamesPage />} />
+        <Route path="/games/:moduleId/:weekId" element={<GamesPage />} />
+
+        {/* Deprecated/Redirect legacy path if needed, but for now just add the new ones */}
+        <Route path="/module/:moduleId/week/:weekId/games" element={<GamesPage />}/>
 
         <Route path="/module/:moduleId/roadmap" element={<RoadmapPage />}/>
 
