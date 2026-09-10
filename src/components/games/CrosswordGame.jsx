@@ -1,7 +1,7 @@
 // src/components/games/CrosswordGame.jsx
 import { useState, useEffect, useRef, useMemo } from "react";
 
-export default function CrosswordGame({ grid, placedWords }) {
+export default function CrosswordGame({ grid, placedWords, onWordFound }) {
   const [userGrid, setUserGrid] = useState(
     grid.map(row => row.map(cell => (cell === '' ? null : '')))
   );
@@ -135,6 +135,7 @@ export default function CrosswordGame({ grid, placedWords }) {
         if (isCorrect) {
             setCompletedWordIds(prev => new Set([...prev, pw.id]));
             setScore(prev => prev + 100);
+            onWordFound?.();
         }
     });
 
@@ -223,6 +224,7 @@ export default function CrosswordGame({ grid, placedWords }) {
     setUserGrid(newGrid);
     setRevealedWordIds(prev => new Set([...prev, activeWord.id]));
     setScore(prev => prev - 50);
+    onWordFound?.();
 
     // Check win condition after reveal
     const win = grid.every((row, rIdx) =>
@@ -234,136 +236,169 @@ export default function CrosswordGame({ grid, placedWords }) {
   }
 
   return (
-    <div className="crossword-container" style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
+    <div className="crossword-container" style={{
+      display: 'flex',
+      gap: 'clamp(20px, 4vw, 32px)',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      width: '100%',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    }}>
 
       {/* The Grid Area */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="crossword-grid-area" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        width: '100%',
+        maxWidth: 'fit-content',
+        alignItems: 'center'
+      }}>
         {/* Stats Row */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div className="crossword-stats-row" style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          width: '100%',
+          justifyContent: 'flex-start'
+        }}>
             {/* Timer Display */}
-            <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            fontSize: '18px', fontWeight: 700, color: 'var(--text-secondary)',
-            background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '8px 16px', borderRadius: '12px',
-            alignSelf: 'flex-start', border: '1px solid rgba(var(--border-color-rgb), 0.2)'
+            <div className="crossword-stat-badge" style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              fontSize: '16px', fontWeight: 700, color: 'var(--text-secondary)',
+              background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '6px 14px', borderRadius: '10px',
+              border: '1px solid rgba(var(--border-color-rgb), 0.2)'
             }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            {formatTime(seconds)}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              {formatTime(seconds)}
             </div>
 
             {/* Score Display */}
-            <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            fontSize: '18px', fontWeight: 700, color: score >= 0 ? 'var(--lush-lime)' : 'var(--poppy-red)',
-            background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '8px 16px', borderRadius: '12px',
-            alignSelf: 'flex-start', border: '1px solid rgba(var(--border-color-rgb), 0.2)',
-            transition: 'all 0.3s ease'
+            <div className="crossword-stat-badge" style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              fontSize: '16px', fontWeight: 700, color: score >= 0 ? 'var(--lush-lime)' : 'var(--poppy-red)',
+              background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '6px 14px', borderRadius: '10px',
+              border: '1px solid rgba(var(--border-color-rgb), 0.2)',
+              transition: 'all 0.3s ease'
             }}>
-            <span style={{ fontSize: '14px', opacity: 0.8, color: 'var(--text-secondary)' }}>SCORE</span>
-            {score}
+              <span style={{ fontSize: '12px', opacity: 0.6, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>SCORE</span>
+              {score}
             </div>
         </div>
 
-        <div className="crossword-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${grid.length}, 38px)`,
-          gap: '3px',
-          background: 'rgba(var(--border-color-rgb), 0.4)',
-          padding: '4px',
-          borderRadius: '10px',
-          border: '2px solid rgba(var(--border-color-rgb), 0.5)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+        <div className="crossword-grid-wrapper" style={{
+          padding: 'clamp(4px, 2vw, 8px)',
+          background: 'rgba(var(--border-color-rgb), 0.3)',
+          borderRadius: '12px',
+          border: '1px solid rgba(var(--border-color-rgb), 0.4)',
+          boxShadow: '0 15px 45px rgba(0,0,0,0.08)',
+          width: 'fit-content',
+          maxWidth: '100%',
+          overflow: 'auto'
         }}>
-          {userGrid.map((row, rIdx) =>
-            row.map((cell, cIdx) => {
-              const isBlack = cell === null;
-              const number = gridNumbers[rIdx][cIdx];
-              const isFocused = selectedCell?.r === rIdx && selectedCell?.c === cIdx;
+          <div className="crossword-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${grid.length}, var(--cw-cell-size, 38px))`,
+            gap: '2px',
+            userSelect: 'none'
+          }}>
+            {userGrid.map((row, rIdx) =>
+              row.map((cell, cIdx) => {
+                const isBlack = cell === null;
+                const number = gridNumbers[rIdx][cIdx];
+                const isFocused = selectedCell?.r === rIdx && selectedCell?.c === cIdx;
 
-              // Highlight logic
-              let highlight = 'transparent';
-              if (isFocused) {
-                highlight = 'rgba(var(--game-accent-rgb), 0.4)';
-              } else if (activeWord) {
-                if (direction === 0 && rIdx === activeWord.row && cIdx >= activeWord.col && cIdx < activeWord.col + activeWord.answer.length) {
-                  highlight = 'rgba(var(--game-accent-rgb), 0.15)';
-                } else if (direction === 1 && cIdx === activeWord.col && rIdx >= activeWord.row && rIdx < activeWord.row + activeWord.answer.length) {
-                  highlight = 'rgba(var(--game-accent-rgb), 0.15)';
+                // Highlight logic
+                let highlight = 'transparent';
+                if (isFocused) {
+                  highlight = 'rgba(var(--game-accent-rgb), 0.4)';
+                } else if (activeWord) {
+                  if (direction === 0 && rIdx === activeWord.row && cIdx >= activeWord.col && cIdx < activeWord.col + activeWord.answer.length) {
+                    highlight = 'rgba(var(--game-accent-rgb), 0.15)';
+                  } else if (direction === 1 && cIdx === activeWord.col && rIdx >= activeWord.row && rIdx < activeWord.row + activeWord.answer.length) {
+                    highlight = 'rgba(var(--game-accent-rgb), 0.15)';
+                  }
                 }
-              }
 
-              return (
-                <div key={`${rIdx}-${cIdx}`} style={{
-                  width: '38px', height: '38px',
-                  background: isBlack ? 'var(--bg-secondary)' : 'var(--bg-card)',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '2px',
-                  backgroundColor: isBlack ? 'var(--bg-secondary)' : highlight,
-                  border: isBlack ? 'none' : '1px solid rgba(var(--border-color-rgb), 0.3)'
-                }}>
-                  {/* Reveal Answer Bubble */}
-                  {activeWord && !revealedWordIds.has(activeWord.id) &&
-                   rIdx === (activeWord.dr === 0 ? activeWord.row : activeWord.row + activeWord.answer.length - 1) &&
-                   cIdx === (activeWord.dr === 0 ? activeWord.col + activeWord.answer.length - 1 : activeWord.col) && (
-                    <div className="reveal-bubble-container">
-                        <button className="reveal-bubble" onClick={(e) => { e.stopPropagation(); handleRevealAnswer(); }}>
-                            <span className="reveal-text">Reveal Answer</span>
-                            <span className="reveal-icon">?</span>
-                        </button>
-                    </div>
-                  )}
+                return (
+                  <div key={`${rIdx}-${cIdx}`} style={{
+                    width: 'var(--cw-cell-size, 38px)',
+                    height: 'var(--cw-cell-size, 38px)',
+                    background: isBlack ? 'var(--bg-secondary)' : 'var(--bg-card)',
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '3px',
+                    backgroundColor: isBlack ? 'rgba(var(--bg-secondary-rgb), 0.6)' : highlight,
+                    border: isBlack ? 'none' : '1px solid rgba(var(--border-color-rgb), 0.3)',
+                    transition: 'background-color 0.2s ease'
+                  }}>
+                    {/* Reveal Answer Bubble */}
+                    {activeWord && !revealedWordIds.has(activeWord.id) &&
+                     rIdx === (activeWord.dr === 0 ? activeWord.row : activeWord.row + activeWord.answer.length - 1) &&
+                     cIdx === (activeWord.dr === 0 ? activeWord.col + activeWord.answer.length - 1 : activeWord.col) && (
+                      <div className="reveal-bubble-container">
+                          <button className="reveal-bubble" onClick={(e) => { e.stopPropagation(); handleRevealAnswer(); }}>
+                              <span className="reveal-text">Reveal Answer</span>
+                              <span className="reveal-icon">?</span>
+                          </button>
+                      </div>
+                    )}
 
-                  {!isBlack && (
-                    <input
-                      ref={el => inputRefs.current[`${rIdx}-${cIdx}`] = el}
-                      type="text"
-                      value={cell}
-                      autoComplete="off"
-                      onChange={(e) => handleCellChange(rIdx, cIdx, e.target.value)}
-                      onClick={() => handleCellClick(rIdx, cIdx)}
-                      onKeyDown={(e) => handleKeyDown(e, rIdx, cIdx)}
-                      onFocus={(e) => {
-                        handleCellFocus(rIdx, cIdx);
-                        e.target.select(); // Auto-select text on focus to allow easy overwriting
-                      }}
-                      style={{
-                        width: '100%', height: '100%',
-                        border: 'none', background: 'transparent',
-                        textAlign: 'center', fontSize: '18px', fontWeight: 800,
-                        color: cell === grid[rIdx][cIdx] ? 'var(--lush-lime)' : 'var(--text-primary)',
-                        caretColor: 'transparent',
-                        outline: isFocused ? '2px solid var(--game-accent)' : 'none',
-                        zIndex: 2
-                      }}
-                    />
-                  )}
-                  {number && (
-                    <span style={{
-                      position: 'absolute', top: '2px', left: '3px',
-                      fontSize: '10px', fontWeight: 800, opacity: 0.7, zIndex: 1,
-                      color: 'var(--text-secondary)'
-                    }}>
-                      {number}
-                    </span>
-                  )}
-                </div>
-              );
-            })
-          )}
+                    {!isBlack && (
+                      <input
+                        ref={el => inputRefs.current[`${rIdx}-${cIdx}`] = el}
+                        type="text"
+                        value={cell}
+                        autoComplete="off"
+                        onChange={(e) => handleCellChange(rIdx, cIdx, e.target.value)}
+                        onClick={() => handleCellClick(rIdx, cIdx)}
+                        onKeyDown={(e) => handleKeyDown(e, rIdx, cIdx)}
+                        onFocus={(e) => {
+                          handleCellFocus(rIdx, cIdx);
+                          e.target.select(); // Auto-select text on focus to allow easy overwriting
+                        }}
+                        style={{
+                          width: '100%', height: '100%',
+                          border: 'none', background: 'transparent',
+                          textAlign: 'center', fontSize: 'var(--cw-font-size, 18px)', fontWeight: 800,
+                          color: cell === grid[rIdx][cIdx] ? 'var(--lush-lime)' : 'var(--text-primary)',
+                          caretColor: 'transparent',
+                          outline: isFocused ? '2px solid var(--game-accent)' : 'none',
+                          outlineOffset: '-2px',
+                          zIndex: 2,
+                          padding: 0
+                        }}
+                      />
+                    )}
+                    {number && (
+                      <span style={{
+                        position: 'absolute', top: '2px', left: '3px',
+                        fontSize: 'var(--cw-num-size, 10px)', fontWeight: 800, opacity: 0.7, zIndex: 1,
+                        color: 'var(--text-secondary)'
+                      }}>
+                        {number}
+                      </span>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
       {/* Clues */}
       <div className="crossword-clues" style={{
-        flex: 1, minWidth: '320px', maxWidth: '480px',
-        textAlign: 'left', maxHeight: '600px', overflowY: 'auto',
-        paddingRight: '15px', paddingLeft: '5px'
+        flex: 1, minWidth: 'min(100%, 320px)', maxWidth: '500px',
+        textAlign: 'left', maxHeight: 'max(400px, 60vh)', overflowY: 'auto',
+        paddingRight: '12px', paddingLeft: '4px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-             <h4 style={{ margin: 0, color: 'var(--game-accent)', fontSize: '1.2rem' }}>Clues</h4>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+             <h4 style={{ margin: 0, color: 'var(--game-accent)', fontSize: '1.25rem', fontWeight: 800 }}>Clues</h4>
         </div>
 
         <div style={{ marginBottom: '28px' }}>

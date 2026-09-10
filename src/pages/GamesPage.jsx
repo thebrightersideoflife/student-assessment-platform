@@ -120,31 +120,34 @@ export default function GamesPage() {
         { label: "Module-wide Puzzle" }
       ]} />
 
-      <div style={{
+      <div className="games-header" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: '20px', marginBottom: '32px'
       }}>
-        <div>
-          <h1 style={{ margin: 0 }}>Study Game: {module?.name || moduleId}</h1>
-          <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: '16px' }}>
+        <div className="games-title-block">
+          <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}>Study Game: {module?.name || moduleId}</h1>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: '14px' }}>
             Mixed topics from all weeks
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="games-controls-wrapper" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
             {/* Game Type Switcher */}
-            <div style={{
+            <div className="game-type-switcher" style={{
                 display: 'flex', background: 'rgba(var(--bg-card-rgb), 0.6)',
-                padding: '5px', borderRadius: '14px', border: '1px solid rgba(var(--border-color-rgb), 0.2)',
-                flexShrink: 0
+                padding: '4px', borderRadius: '12px', border: '1px solid rgba(var(--border-color-rgb), 0.2)',
+                flexShrink: 0,
+                opacity: hasStarted ? 0.6 : 1,
+                pointerEvents: hasStarted ? 'none' : 'auto',
             }}>
                 <button
                     onClick={() => setGameType("crossword")}
                     style={{
-                        padding: '10px 24px', borderRadius: '10px', border: 'none',
+                        padding: '8px 16px', borderRadius: '9px', border: 'none',
                         background: gameType === 'crossword' ? `color-mix(in srgb, ${meta.accent}, black 15%)` : 'transparent',
                         color: gameType === 'crossword' ? '#fff' : 'var(--text-primary)',
-                        fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+                        fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+                        transition: 'all 0.2s ease'
                     }}
                 >
                     Crossword
@@ -152,10 +155,11 @@ export default function GamesPage() {
                 <button
                     onClick={() => setGameType("wordsearch")}
                     style={{
-                        padding: '10px 24px', borderRadius: '10px', border: 'none',
+                        padding: '8px 16px', borderRadius: '9px', border: 'none',
                         background: gameType === 'wordsearch' ? `color-mix(in srgb, ${meta.accent}, black 15%)` : 'transparent',
                         color: gameType === 'wordsearch' ? '#fff' : 'var(--text-primary)',
-                        fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+                        fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+                        transition: 'all 0.2s ease'
                     }}
                 >
                     Word Search
@@ -164,22 +168,21 @@ export default function GamesPage() {
 
             {/* Difficulty Toggle (Word Search Only) */}
             {gameType === "wordsearch" && (
-                <div style={{
+                <div className="difficulty-toggle" style={{
                     display: 'flex', background: 'rgba(var(--bg-card-rgb), 0.6)',
-                    padding: '5px', borderRadius: '14px', border: '1px solid rgba(var(--border-color-rgb), 0.2)',
+                    padding: '4px', borderRadius: '12px', border: '1px solid rgba(var(--border-color-rgb), 0.2)',
                     flexShrink: 0,
                     opacity: hasStarted ? 0.6 : 1,
                     pointerEvents: hasStarted ? 'none' : 'auto',
-                    title: hasStarted ? 'Cannot change difficulty mid-game' : ''
                 }}>
                     <button
                         onClick={() => setDifficulty("normal")}
                         style={{
-                            padding: '10px 20px', borderRadius: '10px', border: 'none',
+                            padding: '8px 14px', borderRadius: '9px', border: 'none',
                             background: difficulty === 'normal' ? `color-mix(in srgb, ${meta.accent}, black 15%)` : 'transparent',
                             color: difficulty === 'normal' ? '#fff' : 'var(--text-primary)',
-                            fontSize: '13px', fontWeight: 700, cursor: 'pointer',
-                            boxShadow: difficulty === 'normal' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
+                            fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                            transition: 'all 0.2s ease'
                         }}
                     >
                         Normal
@@ -187,59 +190,65 @@ export default function GamesPage() {
                     <button
                         onClick={() => setDifficulty("hard")}
                         style={{
-                            padding: '10px 20px', borderRadius: '10px', border: 'none',
+                            padding: '8px 14px', borderRadius: '9px', border: 'none',
                             background: difficulty === 'hard' ? 'var(--poppy-red)' : 'transparent',
                             color: difficulty === 'hard' ? '#fff' : 'var(--text-primary)',
-                            fontSize: '13px', fontWeight: 700, cursor: 'pointer'
+                            fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                            transition: 'all 0.2s ease'
                         }}
                     >
-                        Hard Mode
+                        Hard
                     </button>
                 </div>
             )}
 
             {/* Action Buttons Group */}
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="action-buttons-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <button
                     onClick={handleNewGame}
-                    className="action-button"
+                    className="action-button-mini"
+                    title="Generate New Game"
                     style={{
-                        display: 'flex', alignItems: 'center', gap: '12px',
-                        background: 'rgba(var(--bg-card-rgb), 0.8)', padding: '14px 32px',
-                        borderRadius: '16px', border: '1px solid rgba(var(--border-color-rgb), 0.3)',
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        background: 'rgba(var(--bg-card-rgb), 0.8)', padding: '10px 16px',
+                        borderRadius: '12px', border: '1px solid rgba(var(--border-color-rgb), 0.3)',
                         cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
-                        fontSize: '16px', flexShrink: 0, minWidth: '170px', justifyContent: 'center'
+                        fontSize: '14px', transition: 'all 0.2s ease'
                     }}
                 >
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                    New Game
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                    <span className="btn-label">New</span>
                 </button>
 
                 <button
                     onClick={handleNextGame}
-                    className="action-button"
+                    className="action-button-mini accent"
+                    title="Go to Next Game"
                     style={{
-                        display: 'flex', alignItems: 'center', gap: '12px',
-                        background: `color-mix(in srgb, ${meta.accent}, black 15%)`, color: '#fff', padding: '14px 32px',
-                        borderRadius: '16px', border: 'none',
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        background: `color-mix(in srgb, ${meta.accent}, black 15%)`, color: '#fff', padding: '10px 16px',
+                        borderRadius: '12px', border: 'none',
                         cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap',
-                        fontSize: '16px', flexShrink: 0, minWidth: '170px', justifyContent: 'center'
+                        fontSize: '14px', transition: 'all 0.2s ease'
                     }}
                 >
-                    Next Game
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    <span className="btn-label">Next</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
             </div>
         </div>
       </div>
 
-      <div style={{
+      <div className="game-board-container" style={{
         background: 'rgba(var(--bg-card-rgb), 0.4)',
         backdropFilter: 'blur(20px)',
-        padding: '40px', borderRadius: '28px',
+        padding: 'clamp(16px, 4vw, 40px)',
+        borderRadius: '24px',
         border: `1px solid rgba(${meta.accentRgb}, 0.15)`,
-        minHeight: '600px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        position: 'relative'
+        minHeight: 'min(600px, 80vh)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
         {isGenerating ? (
             <div style={{ textAlign: 'center', opacity: 0.8, animation: 'pulse 1.5s infinite' }}>
@@ -247,7 +256,12 @@ export default function GamesPage() {
                 <h3 style={{ margin: 0 }}>Generating new puzzle...</h3>
             </div>
         ) : gameType === "crossword" && crosswordData ? (
-           <CrosswordGame grid={crosswordData.grid} placedWords={crosswordData.placedWords} key={`cw-${gameVersion}-${currentWeekId}`} />
+           <CrosswordGame
+            grid={crosswordData.grid}
+            placedWords={crosswordData.placedWords}
+            onWordFound={() => setHasStarted(true)}
+            key={`cw-${gameVersion}-${currentWeekId}`}
+           />
         ) : gameType === "wordsearch" && wordSearchData ? (
           <WordSearchGame
             grid={wordSearchData.grid}
@@ -269,12 +283,72 @@ export default function GamesPage() {
             50% { transform: scale(1.05); opacity: 1; }
             100% { transform: scale(0.95); opacity: 0.6; }
         }
-        .action-button:hover {
+        .action-button:hover, .action-button-mini:hover {
             transform: translateY(-2px);
             filter: brightness(1.1);
         }
-        .action-button:active {
+        .action-button:active, .action-button-mini:active {
             transform: translateY(0);
+        }
+
+        /* Responsive Grid Scaling */
+        :root {
+            --cw-cell-size: 38px;
+            --cw-font-size: 18px;
+            --cw-num-size: 10px;
+            --ws-cell-size: 35px;
+            --ws-font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --cw-cell-size: 32px;
+                --cw-font-size: 16px;
+                --cw-num-size: 9px;
+                --ws-cell-size: 30px;
+                --ws-font-size: 14px;
+            }
+            .games-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+            .games-controls-wrapper {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 540px) {
+            :root {
+                --cw-cell-size: 28px;
+                --cw-font-size: 14px;
+                --cw-num-size: 8px;
+                --ws-cell-size: 24px;
+                --ws-font-size: 12px;
+            }
+            .games-controls-wrapper {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 12px !important;
+            }
+            .action-buttons-group {
+                justify-content: space-between;
+            }
+            .btn-label {
+                display: none;
+            }
+            .action-button-mini {
+                padding: 10px !important;
+                flex: 1;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 400px) {
+            :root {
+                --cw-cell-size: 24px;
+                --ws-cell-size: 20px;
+            }
         }
       `}</style>
     </div>

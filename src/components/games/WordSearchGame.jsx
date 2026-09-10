@@ -53,17 +53,14 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
 
     // Determine the best-fit direction: Horizontal, Vertical, or 45-deg Diagonal
     if (absRowDiff < absColDiff / 2) {
-      // Closer to Horizontal
       dr = 0;
       dc = Math.sign(colDiff);
       steps = absColDiff;
     } else if (absColDiff < absRowDiff / 2) {
-      // Closer to Vertical
       dr = Math.sign(rowDiff);
       dc = 0;
       steps = absRowDiff;
     } else {
-      // Closer to Diagonal
       dr = Math.sign(rowDiff);
       dc = Math.sign(colDiff);
       steps = Math.min(absRowDiff, absColDiff);
@@ -73,7 +70,6 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
     for (let i = 0; i <= steps; i++) {
       const nr = dragStart.r + i * dr;
       const nc = dragStart.c + i * dc;
-      // Safety check for grid bounds
       if (nr >= 0 && nr < grid.length && nc >= 0 && nc < grid[0].length) {
         newSelected.push({ r: nr, c: nc });
       }
@@ -82,6 +78,7 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
   }
 
   function handleMouseUp() {
+    if (!isDragging) return;
     setIsDragging(false);
 
     // Check if selected cells form one of the placed words
@@ -118,109 +115,137 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
 
   const isAllFound = foundWordIds.size === placedWords.length;
 
-  // Calculate exact grid column height to align scrollbar
-  // Cell: 35px, Gap: 4px, Padding: 8px * 2 = 16px
-  const gridHeight = grid.length * 35 + (grid.length - 1) * 4 + 16;
-  // Stats row is approx 38px + 16px gap = 54px
+  // Layout sizing logic
+  const gridHeight = grid.length * (difficulty === 'hard' ? 24 : 35) + (grid.length - 1) * 2 + 16;
   const totalLeftHeight = gridHeight + 54;
 
   return (
-    <div className="wordsearch-container" style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
+    <div className="wordsearch-container" style={{
+      display: 'flex',
+      gap: 'clamp(20px, 4vw, 32px)',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      width: '100%',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    }}>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexShrink: 0 }}>
+      {/* Grid Side */}
+      <div className="wordsearch-grid-area" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        width: '100%',
+        maxWidth: 'fit-content',
+        alignItems: 'center'
+      }}>
         {/* Stats Row */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            {/* Timer Display */}
-            <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            fontSize: '18px', fontWeight: 700, color: 'var(--text-secondary)',
-            background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '8px 16px', borderRadius: '12px',
-            alignSelf: 'flex-start', border: '1px solid rgba(var(--border-color-rgb), 0.2)'
+        <div className="wordsearch-stats-row" style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          width: '100%',
+          justifyContent: 'flex-start'
+        }}>
+            <div className="wordsearch-stat-badge" style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              fontSize: '16px', fontWeight: 700, color: 'var(--text-secondary)',
+              background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '6px 14px', borderRadius: '10px',
+              border: '1px solid rgba(var(--border-color-rgb), 0.2)'
             }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            {formatTime(seconds)}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              {formatTime(seconds)}
             </div>
 
-            {/* Score Display */}
-            <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            fontSize: '18px', fontWeight: 700, color: score >= 0 ? 'var(--lush-lime)' : 'var(--poppy-red)',
-            background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '8px 16px', borderRadius: '12px',
-            alignSelf: 'flex-start', border: '1px solid rgba(var(--border-color-rgb), 0.2)',
-            transition: 'all 0.3s ease'
+            <div className="wordsearch-stat-badge" style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              fontSize: '16px', fontWeight: 700, color: score >= 0 ? 'var(--lush-lime)' : 'var(--poppy-red)',
+              background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '6px 14px', borderRadius: '10px',
+              border: '1px solid rgba(var(--border-color-rgb), 0.2)',
+              transition: 'all 0.3s ease'
             }}>
-            <span style={{ fontSize: '14px', opacity: 0.8, color: 'var(--text-secondary)' }}>SCORE</span>
-            {score}
+              <span style={{ fontSize: '12px', opacity: 0.6, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>SCORE</span>
+              {score}
             </div>
         </div>
 
-        {/* The Grid */}
-        <div
-          className="wordsearch-grid"
-          onMouseLeave={handleMouseUp}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${grid.length}, 35px)`,
-            gap: '4px',
-            background: 'rgba(var(--border-color-rgb), 0.15)',
-            padding: '8px',
-            borderRadius: '12px',
-            userSelect: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          {grid.map((row, rIdx) =>
-            row.map((cell, cIdx) => {
-              const isSelected = selectedCells.some(s => s.r === rIdx && s.c === cIdx);
-              const isPermanentlyHighlighted = permanentHighlightCells.has(`${rIdx}-${cIdx}`);
+        {/* The Grid Wrapper */}
+        <div className="wordsearch-grid-wrapper" style={{
+          padding: 'clamp(4px, 2vw, 8px)',
+          background: 'rgba(var(--border-color-rgb), 0.15)',
+          borderRadius: '12px',
+          border: '1px solid rgba(var(--border-color-rgb), 0.2)',
+          boxShadow: '0 15px 45px rgba(0,0,0,0.08)',
+          width: 'fit-content',
+          maxWidth: '100%',
+          overflow: 'auto',
+          userSelect: 'none',
+          cursor: 'pointer'
+        }}>
+          <div
+            className="wordsearch-grid"
+            onMouseLeave={handleMouseUp}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${grid.length}, var(--ws-cell-size, 35px))`,
+              gap: '2px'
+            }}
+          >
+            {grid.map((row, rIdx) =>
+              row.map((cell, cIdx) => {
+                const isSelected = selectedCells.some(s => s.r === rIdx && s.c === cIdx);
+                const isPermanentlyHighlighted = permanentHighlightCells.has(`${rIdx}-${cIdx}`);
 
-              let bgColor = 'var(--bg-card)';
-              let textColor = 'var(--text-primary)';
+                let bgColor = 'var(--bg-card)';
+                let textColor = 'var(--text-primary)';
 
-              if (isSelected) {
-                bgColor = 'var(--game-accent)';
-                textColor = '#000';
-              } else if (isPermanentlyHighlighted) {
-                bgColor = 'rgba(var(--game-accent-rgb), 0.12)';
-                textColor = 'var(--text-primary)';
-              }
+                if (isSelected) {
+                  bgColor = 'var(--game-accent)';
+                  textColor = '#000';
+                } else if (isPermanentlyHighlighted) {
+                  bgColor = 'rgba(var(--game-accent-rgb), 0.12)';
+                  textColor = 'var(--text-primary)';
+                }
 
-              return (
-                <div
-                  key={`${rIdx}-${cIdx}`}
-                  onMouseDown={() => handleMouseDown(rIdx, cIdx)}
-                  onMouseEnter={() => handleMouseEnter(rIdx, cIdx)}
-                  onMouseUp={handleMouseUp}
-                  style={{
-                    width: '35px', height: '35px',
-                    background: bgColor,
-                    color: textColor,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    borderRadius: '6px', fontSize: '16px', fontWeight: 800,
-                    transition: 'background 0.15s ease, color 0.15s ease',
-                    border: isPermanentlyHighlighted
-                      ? '2.5px solid rgba(var(--game-accent-rgb), 0.6)'
-                      : '1px solid rgba(var(--border-color-rgb), 0.1)',
-                    boxShadow: isPermanentlyHighlighted ? '0 0 8px rgba(var(--game-accent-rgb), 0.15)' : 'none'
-                  }}
-                >
-                  {cell}
-                </div>
-              );
-            })
-          )}
+                return (
+                  <div
+                    key={`${rIdx}-${cIdx}`}
+                    onMouseDown={() => handleMouseDown(rIdx, cIdx)}
+                    onMouseEnter={() => handleMouseEnter(rIdx, cIdx)}
+                    onMouseUp={handleMouseUp}
+                    style={{
+                      width: 'var(--ws-cell-size, 35px)',
+                      height: 'var(--ws-cell-size, 35px)',
+                      background: bgColor,
+                      color: textColor,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: '4px', fontSize: 'var(--ws-font-size, 16px)', fontWeight: 800,
+                      transition: 'background 0.15s ease, color 0.15s ease',
+                      border: isPermanentlyHighlighted
+                        ? '2.5px solid rgba(var(--game-accent-rgb), 0.6)'
+                        : '1px solid rgba(var(--border-color-rgb), 0.1)',
+                      boxShadow: isPermanentlyHighlighted ? '0 0 8px rgba(var(--game-accent-rgb), 0.15)' : 'none'
+                    }}
+                  >
+                    {cell}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Word List */}
+      {/* Word List Side */}
       <div className="wordsearch-list" style={{
-        flex: 1, minWidth: '300px', maxWidth: '450px',
+        flex: 1, minWidth: 'min(100%, 300px)', maxWidth: '450px',
         textAlign: 'left',
-        maxHeight: `${totalLeftHeight}px`,
+        maxHeight: 'max(400px, 70vh)',
         display: 'flex',
         flexDirection: 'column'
       }}>
-        <h4 style={{ marginBottom: '16px', color: 'var(--game-accent)', flexShrink: 0 }}>
+        <h4 style={{ marginBottom: '16px', color: 'var(--game-accent)', fontSize: '1.25rem', fontWeight: 800 }}>
           {difficulty === "hard" ? "Identify the answers hidden in the grid:" : "Find these terms:"}
         </h4>
         <div
@@ -230,49 +255,55 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
                 flexDirection: 'column',
                 gap: '12px',
                 overflowY: 'auto',
-                paddingRight: '10px', // Space for scrollbar
+                paddingRight: '12px',
+                paddingLeft: '4px',
                 flex: 1
             }}
         >
-          {placedWords.map(pw => (
-            <div key={pw.id} style={{
-              padding: '10px 16px', borderRadius: '12px',
-              background: foundWordIds.has(pw.id) ? 'rgba(118,209,61,0.15)' : 'rgba(var(--bg-card-rgb), 0.6)',
-              color: foundWordIds.has(pw.id) ? 'var(--lush-lime)' : 'var(--text-primary)',
-              fontSize: '14px', fontWeight: 600, border: '1px solid',
-              borderColor: foundWordIds.has(pw.id) ? 'rgba(118,209,61,0.3)' : 'rgba(var(--border-color-rgb), 0.2)',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-                <span style={{
-                    textDecoration: foundWordIds.has(pw.id) ? 'line-through' : 'none',
-                    opacity: foundWordIds.has(pw.id) ? 0.7 : 1,
-                    lineHeight: 1.4,
-                    flex: 1
-                }}>
-                  {difficulty === "hard" ? `? ${pw.hint}` : pw.displayAnswer}
-                </span>
+          {placedWords.map(pw => {
+            const isFound = foundWordIds.has(pw.id);
+            const isRevealed = revealedWordIds.has(pw.id);
 
-                {/* Reveal Answer Bubble for Hard Mode */}
-                {difficulty === "hard" && !foundWordIds.has(pw.id) && !revealedWordIds.has(pw.id) && (
-                    <div className="reveal-bubble-container" style={{ position: 'relative', bottom: 'auto', right: 'auto' }}>
-                        <button className="reveal-bubble" onClick={(e) => { e.stopPropagation(); handleRevealAnswer(pw.id); }}>
-                            <span className="reveal-text">Reveal Answer</span>
-                            <span className="reveal-icon">?</span>
-                        </button>
+            return (
+              <div key={pw.id} style={{
+                padding: '10px 16px', borderRadius: '12px',
+                background: isFound ? 'rgba(118,209,61,0.15)' : 'rgba(var(--bg-card-rgb), 0.6)',
+                color: isFound ? 'var(--lush-lime)' : 'var(--text-primary)',
+                fontSize: '14px', fontWeight: 600, border: '1px solid',
+                borderColor: isFound ? 'rgba(118,209,61,0.3)' : 'rgba(var(--border-color-rgb), 0.2)',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+                  <span style={{
+                      textDecoration: isFound ? 'line-through' : 'none',
+                      opacity: isFound ? 0.7 : 1,
+                      lineHeight: 1.4,
+                      flex: 1
+                  }}>
+                    {difficulty === "hard" ? `? ${pw.hint}` : pw.displayAnswer}
+                  </span>
+
+                  {/* Reveal Answer Bubble for Hard Mode */}
+                  {difficulty === "hard" && !isFound && !isRevealed && (
+                      <div className="reveal-bubble-container" style={{ position: 'relative', marginLeft: '8px' }}>
+                          <button className="reveal-bubble" onClick={(e) => { e.stopPropagation(); handleRevealAnswer(pw.id); }}>
+                              <span className="reveal-text">Reveal Answer</span>
+                              <span className="reveal-icon">?</span>
+                          </button>
+                      </div>
+                  )}
+                </div>
+                {difficulty === "hard" && (isFound || isRevealed) && (
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700, marginTop: '2px' }}>
+                      Answer: {pw.displayAnswer}
                     </div>
                 )}
               </div>
-              {difficulty === "hard" && (foundWordIds.has(pw.id) || revealedWordIds.has(pw.id)) && (
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700, marginTop: '2px' }}>
-                    Answer: {pw.displayAnswer}
-                  </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -280,11 +311,6 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
         .wordsearch-scroll-list::-webkit-scrollbar { width: 5px; }
         .wordsearch-scroll-list::-webkit-scrollbar-track { background: transparent; }
         .wordsearch-scroll-list::-webkit-scrollbar-thumb { background: rgba(var(--border-color-rgb), 0.2); border-radius: 10px; }
-
-        .reveal-bubble-container {
-            margin-left: 8px;
-            flex-shrink: 0;
-        }
 
         .reveal-bubble {
             background: var(--game-accent);
@@ -304,7 +330,6 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             overflow: hidden;
             white-space: nowrap;
-            line-height: 1;
         }
 
         .reveal-text {
@@ -327,18 +352,47 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
             opacity: 1;
             margin-right: 6px;
         }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
       `}</style>
 
-        {isAllFound && (
-          <div style={{
-            marginTop: '32px', padding: '16px',
-            background: 'rgba(118,209,61,0.1)', border: '1px solid var(--lush-lime)',
-            borderRadius: '12px', textAlign: 'center'
-          }}>
-            <h3 style={{ color: 'var(--lush-lime)', margin: 0 }}>🎉 Well Done!</h3>
-            <p style={{ margin: '8px 0 0', fontSize: '14px' }}>Completion time: {formatTime(seconds)}</p>
+      {isAllFound && (
+        <div style={{
+          marginTop: '30px', padding: '24px',
+          background: 'rgba(var(--bg-card-rgb), 0.8)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid var(--lush-lime)',
+          borderRadius: '20px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+          width: '100%',
+          maxWidth: '400px',
+          zIndex: 100
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏆</div>
+          <h3 style={{ color: 'var(--lush-lime)', margin: '0 0 8px 0', fontSize: '1.8rem' }}>Well Done!</h3>
+
+          <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Final Score</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: score >= (placedWords.length * 100) ? 'var(--golden-amber)' : 'var(--text-primary)' }}>
+                  {score}
+              </div>
           </div>
-        )}
+
+          <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-primary)', fontWeight: 600 }}>
+              {score >= (placedWords.length * 100) ? "✨ Flawless Discovery! ✨" :
+                score > 0 ? "Great job! You found them all." :
+                "Persistence pays off! Keep studying."}
+          </p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+              <span><strong>Time:</strong> {formatTime(seconds)}</span>
+              {difficulty === "hard" && <span><strong>Reveals:</strong> {revealedWordIds.size}</span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
