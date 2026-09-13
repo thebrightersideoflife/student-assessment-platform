@@ -1,9 +1,18 @@
-import React from "react";
-import { Settings, RefreshCw, ChevronRight, Trash2 } from "lucide-react";
+import React, { useContext } from "react";
+import { Settings, RefreshCw } from "lucide-react";
 import ScrollReveal from "../ScrollReveal";
+import { ThemeContext } from "../../context/ThemeContext";
 
 export default function FlashcardsHero({ onOpenSettings, onShuffle, cardsCount, currentIndex, accentRgb }) {
-  const purpleAccent = "var(--fc-purple)";
+  const { theme } = useContext(ThemeContext);
+  const isDark = theme === "dark";
+
+  // Theming based on mode
+  const highlightColor = isDark ? "var(--fc-purple)" : "var(--royal-blue)";
+  const shadowColor = isDark ? "rgba(168, 85, 247, 0.15)" : "rgba(37, 99, 235, 0.12)";
+  const glowGradient = isDark
+    ? `linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.03) 50%, transparent 100%)`
+    : `linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(37, 99, 235, 0.02) 50%, transparent 100%)`;
 
   return (
     <section
@@ -20,7 +29,7 @@ export default function FlashcardsHero({ onOpenSettings, onShuffle, cardsCount, 
         style={{
           position: "absolute",
           inset: "0 0 20px 0",
-          background: `linear-gradient(135deg, rgba(${accentRgb}, 0.16), rgba(${accentRgb}, 0.04) 45%, transparent 100%)`,
+          background: glowGradient,
           borderRadius: "32px",
           filter: "blur(10px)",
           pointerEvents: "none",
@@ -35,11 +44,11 @@ export default function FlashcardsHero({ onOpenSettings, onShuffle, cardsCount, 
             position: "relative",
             zIndex: 1,
             borderRadius: "28px",
-            border: "1px solid rgba(var(--border-color-rgb), 0.35)",
+            border: isDark ? "none" : "1px solid rgba(var(--border-color-rgb), 0.35)",
             background: "rgba(var(--bg-card-rgb), 0.78)",
             backdropFilter: "blur(20px) saturate(160%)",
             WebkitBackdropFilter: "blur(20px) saturate(160%)",
-            boxShadow: "0 18px 50px rgba(0,0,0,0.08)",
+            boxShadow: "none",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
@@ -82,7 +91,7 @@ export default function FlashcardsHero({ onOpenSettings, onShuffle, cardsCount, 
                     lineHeight: 1.15,
                   }}
                 >
-                  Master your course with <span style={{ color: purpleAccent }}>smart digital flashcards</span>
+                  Master your course with <span style={{ color: highlightColor }}>smart digital flashcards</span>
                 </h1>
 
                 <p style={{ margin: "0 0 10px", fontSize: "17px", color: "var(--text-primary)", lineHeight: 1.7 }}>

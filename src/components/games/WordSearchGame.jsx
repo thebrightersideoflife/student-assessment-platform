@@ -1,7 +1,8 @@
 // src/components/games/WordSearchGame.jsx
 import { useState, useEffect, useRef } from "react";
+import GameResultModal from "./GameResultModal";
 
-export default function WordSearchGame({ grid, placedWords, difficulty = "normal", onWordFound }) {
+export default function WordSearchGame({ grid, placedWords, difficulty = "normal", onWordFound, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
   const [selectedCells, setSelectedCells] = useState([]);
   const [foundWordIds, setFoundWordIds] = useState(new Set());
   const [permanentHighlightCells, setPermanentHighlightCells] = useState(new Set());
@@ -9,6 +10,27 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
   const [dragStart, setDragStart] = useState(null);
   const [score, setScore] = useState(0);
   const [revealedWordIds, setRevealedWordIds] = useState(new Set());
+  const [showResultModal, setShowResultModal] = useState(false);
+
+  const gridAreaRef = useRef(null);
+  const [syncedHeight, setSyncedHeight] = useState(null);
+
+  // Synchronize Word List height with Grid Area height
+  useEffect(() => {
+    if (gridAreaRef.current) {
+      const updateHeight = () => {
+        setSyncedHeight(gridAreaRef.current.offsetHeight);
+      };
+
+      const resizeObserver = new ResizeObserver(updateHeight);
+      resizeObserver.observe(gridAreaRef.current);
+
+      // Initial measure
+      updateHeight();
+
+      return () => resizeObserver.disconnect();
+    }
+  }, []);
 
   // Timer state
   const [seconds, setSeconds] = useState(0);
@@ -99,7 +121,7 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
       setPermanentHighlightCells(newPermanent);
 
       // Scoring
-      setScore(prev => prev + 100);
+      setScore(prev => prev + 10);
       onWordFound?.();
     }
     setSelectedCells([]);
@@ -109,11 +131,20 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
     if (revealedWordIds.has(wordId) || foundWordIds.has(wordId)) return;
 
     setRevealedWordIds(prev => new Set([...prev, wordId]));
-    setScore(prev => prev - 50);
+    setScore(prev => prev - 5);
     onWordFound?.();
   }
 
   const isAllFound = foundWordIds.size === placedWords.length;
+
+  useEffect(() => {
+    if (isAllFound) {
+        const timer = setTimeout(() => {
+            setShowResultModal(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }
+  }, [isAllFound]);
 
   // Layout sizing logic
   const gridHeight = grid.length * (difficulty === 'hard' ? 24 : 35) + (grid.length - 1) * 2 + 16;
@@ -132,7 +163,7 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
     }}>
 
       {/* Grid Side */}
-      <div className="wordsearch-grid-area" style={{
+      <div className="wordsearch-grid-area" ref={gridAreaRef} style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
@@ -173,10 +204,10 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
         {/* The Grid Wrapper */}
         <div className="wordsearch-grid-wrapper" style={{
           padding: 'clamp(4px, 2vw, 8px)',
-          background: 'rgba(var(--border-color-rgb), 0.15)',
+          background: 'rgba(var(--border-color-rgb), 0.35)',
           borderRadius: '12px',
-          border: '1px solid rgba(var(--border-color-rgb), 0.2)',
-          boxShadow: '0 15px 45px rgba(0,0,0,0.08)',
+          border: '2px solid rgba(var(--border-color-rgb), 0.5)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
           width: 'fit-content',
           maxWidth: '100%',
           overflow: 'auto',
@@ -201,10 +232,10 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
                 let textColor = 'var(--text-primary)';
 
                 if (isSelected) {
-                  bgColor = 'var(--game-accent)';
-                  textColor = '#000';
+                  bgColor = accentColor;
+                  textColor = '#fff'; // White text on selection for maximum contrast
                 } else if (isPermanentlyHighlighted) {
-                  bgColor = 'rgba(var(--game-accent-rgb), 0.12)';
+                  bgColor = `rgba(${accentRgb}, 0.28)`;
                   textColor = 'var(--text-primary)';
                 }
 
@@ -220,12 +251,14 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
                       background: bgColor,
                       color: textColor,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      borderRadius: '4px', fontSize: 'var(--ws-font-size, 16px)', fontWeight: 800,
+                      borderRadius: '4px', fontSize: 'var(--ws-font-size, 17px)', fontWeight: 800,
                       transition: 'background 0.15s ease, color 0.15s ease',
                       border: isPermanentlyHighlighted
-                        ? '2.5px solid rgba(var(--game-accent-rgb), 0.6)'
-                        : '1px solid rgba(var(--border-color-rgb), 0.1)',
-                      boxShadow: isPermanentlyHighlighted ? '0 0 8px rgba(var(--game-accent-rgb), 0.15)' : 'none'
+                        ? `2.5px solid rgba(${accentRgb}, 0.85)`
+                        : '1px solid rgba(var(--border-color-rgb), 0.35)',
+                      boxShadow: isPermanentlyHighlighted
+                        ? `0 0 12px rgba(${accentRgb}, 0.25), inset 0 0 0 1px rgba(255,255,255,0.1)`
+                        : 'none'
                     }}
                   >
                     {cell}
@@ -241,11 +274,12 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
       <div className="wordsearch-list" style={{
         flex: 1, minWidth: 'min(100%, 300px)', maxWidth: '450px',
         textAlign: 'left',
-        maxHeight: 'max(400px, 70vh)',
+        height: syncedHeight ? `${syncedHeight}px` : 'auto',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        transition: 'height 0.2s ease'
       }}>
-        <h4 style={{ marginBottom: '16px', color: 'var(--game-accent)', fontSize: '1.25rem', fontWeight: 800 }}>
+        <h4 style={{ marginBottom: '16px', color: accentColor, fontSize: '1.25rem', fontWeight: 800 }}>
           {difficulty === "hard" ? "Identify the answers hidden in the grid:" : "Find these terms:"}
         </h4>
         <div
@@ -267,10 +301,10 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
             return (
               <div key={pw.id} style={{
                 padding: '10px 16px', borderRadius: '12px',
-                background: isFound ? 'rgba(118,209,61,0.15)' : 'rgba(var(--bg-card-rgb), 0.6)',
+                background: isFound ? 'rgba(118,209,61,0.25)' : 'rgba(var(--bg-card-rgb), 0.85)',
                 color: isFound ? 'var(--lush-lime)' : 'var(--text-primary)',
-                fontSize: '14px', fontWeight: 600, border: '1px solid',
-                borderColor: isFound ? 'rgba(118,209,61,0.3)' : 'rgba(var(--border-color-rgb), 0.2)',
+                fontSize: '14.5px', fontWeight: 700, border: '1px solid',
+                borderColor: isFound ? 'rgba(118,209,61,0.5)' : 'rgba(var(--border-color-rgb), 0.4)',
                 transition: 'all 0.3s ease',
                 display: 'flex',
                 flexDirection: 'column',
@@ -313,7 +347,7 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
         .wordsearch-scroll-list::-webkit-scrollbar-thumb { background: rgba(var(--border-color-rgb), 0.2); border-radius: 10px; }
 
         .reveal-bubble {
-            background: var(--game-accent);
+            background: ${accentColor};
             color: #fff;
             border: none;
             border-radius: 20px;
@@ -359,40 +393,27 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
         }
       `}</style>
 
-      {isAllFound && (
-        <div style={{
-          marginTop: '30px', padding: '24px',
-          background: 'rgba(var(--bg-card-rgb), 0.8)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid var(--lush-lime)',
-          borderRadius: '20px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-          width: '100%',
-          maxWidth: '400px',
-          zIndex: 100
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏆</div>
-          <h3 style={{ color: 'var(--lush-lime)', margin: '0 0 8px 0', fontSize: '1.8rem' }}>Well Done!</h3>
-
-          <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Final Score</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: score >= (placedWords.length * 100) ? 'var(--golden-amber)' : 'var(--text-primary)' }}>
-                  {score}
-              </div>
-          </div>
-
-          <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-primary)', fontWeight: 600 }}>
-              {score >= (placedWords.length * 100) ? "✨ Flawless Discovery! ✨" :
-                score > 0 ? "Great job! You found them all." :
-                "Persistence pays off! Keep studying."}
-          </p>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-              <span><strong>Time:</strong> {formatTime(seconds)}</span>
-              {difficulty === "hard" && <span><strong>Reveals:</strong> {revealedWordIds.size}</span>}
-          </div>
-        </div>
-      )}
+      <GameResultModal
+        open={showResultModal}
+        onClose={() => setShowResultModal(false)}
+        title="Word Search Solved!"
+        subtitle={score >= (placedWords.length * 10) ? "✨ Flawless Discovery! ✨" : "Persistence pays off! Keep studying."}
+        score={score}
+        stats={[
+            { label: 'Time', value: formatTime(seconds), icon: 'clock' },
+            { label: 'Reveals', value: revealedWordIds.size, icon: 'target' }
+        ]}
+        accentColor="var(--lush-lime)"
+        accentRgb="118, 209, 61"
+        primaryAction={{
+            label: 'Keep Studying',
+            onClick: () => setShowResultModal(false)
+        }}
+        secondaryAction={{
+            label: 'Exit',
+            onClick: onExit
+        }}
+      />
     </div>
   );
 }

@@ -1,0 +1,34 @@
+Suggestions for New Auto-Generated Games
+Based on the structure of your question database (which includes terms, definitions, and multiple-choice options), here are four game ideas that could be automatically generated using your existing data:
+1.
+Terminology Match (Memory)
+◦
+How it works: A classic card-flipping game. One set of cards contains Terms (answers) and the other contains Definitions (hints).
+◦
+Data Source: Uses the same extractGameTerms logic we currently use for crosswords.
+◦
+Benefit: Excellent for reinforcing vocabulary and rote memorization of technical definitions.
+2.
+Hangman / Word Scramble
+◦
+How it works: The system provides the Hint as a clue, and the user must solve the word by either guessing letters (Hangman) or re-arranging a jumbled version of the word (Scramble).
+◦
+Data Source: Directly pulls from the displayAnswer and hint fields in your data files.
+◦
+Benefit: More interactive than a crossword and works well for shorter study sessions.
+3.
+True/False Flash Challenge
+◦
+How it works: The system displays a question followed by a potential answer (e.g., "Is Integrity the pillar violated by unauthorized modification?"). The user must hit "True" or "False" rapidly against a timer.
+◦
+Data Source: Uses multiple-choice questions. It picks the correct answer 50% of the time and a random "distractor" option the other 50%.
+◦
+Benefit: Great for building "automaticity"—the ability to recall facts instantly under pressure.
+4.
+Connect the Pairs
+◦
+How it works: Two columns are displayed. On the left is a list of 5–8 Terms, and on the right is a shuffled list of their Definitions. The user must draw lines (or click) to pair them correctly.
+◦
+Data Source: Uses the extractGameTerms pool.
+◦
+Benefit: A high-speed spatial game that is very satisfying to play on mobile/tablets.

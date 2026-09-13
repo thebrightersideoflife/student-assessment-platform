@@ -111,6 +111,44 @@
   border-radius: 2px 2px 0 0;
 }
 
+/* ── Sparkle Animation for Study Games ───────────────────── */
+
+.nav-link-sparkle {
+  position: relative;
+  color: var(--game-accent) !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.nav-link-sparkle:hover {
+  text-shadow: 0 0 10px rgba(var(--game-accent-rgb), 0.4);
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--game-accent);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 6px var(--game-accent), 0 0 12px rgba(var(--game-accent-rgb), 0.5);
+  z-index: 5;
+}
+
+.s1 { top: 20%; left: 10%; animation: sparkle-random 4s infinite 0.2s; }
+.s2 { top: 70%; left: 90%; animation: sparkle-random 3.5s infinite 1.5s; }
+.s3 { top: 45%; left: 50%; animation: sparkle-random 5s infinite 3s; }
+.s4 { top: 10%; left: 70%; animation: sparkle-random 4.5s infinite 0.8s; }
+.s5 { top: 80%; left: 30%; animation: sparkle-random 3.8s infinite 2.2s; }
+
+@keyframes sparkle-random {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  25% { opacity: 0.8; transform: scale(1.4) rotate(45deg); }
+  50% { opacity: 0; transform: scale(0.6) rotate(90deg); }
+  75% { opacity: 0.7; transform: scale(1.1) rotate(135deg); }
+}
+
 .nav-link.disabled {
   opacity: 0.35;
   cursor: not-allowed;
@@ -150,71 +188,7 @@
   color: var(--accent-primary);
 }
 
-/* ── Puzzle Button "Electric" Feature ─────────────────────── */
 
-.puzzle-button {
-  position: relative;
-  z-index: 1;
-}
-
-.puzzle-button svg {
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  color: var(--game-accent) !important;
-  filter: drop-shadow(0 0 4px rgba(var(--game-accent-rgb), 0.4));
-}
-
-/* Intensify glow on hover/active */
-.puzzle-button.active svg,
-.puzzle-button:hover svg {
-  filter: drop-shadow(0 0 8px rgba(var(--game-accent-rgb), 0.8))
-          drop-shadow(0 0 12px rgba(var(--game-accent-rgb), 0.4));
-  transform: scale(1.1) rotate(5deg);
-}
-
-/* Electric pulse aura — strictly outside the button, always active */
-.puzzle-button::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 11px;
-  background: transparent;
-  box-shadow: 0 0 8px 1px rgba(var(--game-accent-rgb), 0.25);
-  z-index: -1;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-  animation: puzzle-electric 2.5s infinite alternate;
-}
-
-.puzzle-button:hover::before,
-.puzzle-button.active::before {
-  box-shadow: 0 0 18px 2px rgba(var(--game-accent-rgb), 0.5);
-  animation: puzzle-electric 1.2s infinite alternate;
-}
-
-@keyframes puzzle-electric {
-  0% { opacity: 0.6; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.05); }
-}
-
-/* Particle/Sparkle effect — always active but subtler */
-.puzzle-button::after {
-  content: '✦';
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-size: 10px;
-  color: var(--game-accent);
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s ease;
-  text-shadow: -15px 25px 0 var(--game-accent);
-  animation: puzzle-sparkle 5s infinite linear;
-}
-
-.puzzle-button:hover::after,
-.puzzle-button.active::after {
-  animation: puzzle-sparkle 2.5s infinite linear;
-}
 
 .action-button:disabled {
   opacity: 0.3;
@@ -462,7 +436,46 @@
   padding: 6px 12px;
   font-size: 12.5px;
   color: var(--text-secondary);
+}
+
+.search-hint-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-hint-main > span:first-child {
   opacity: 0.6;
+}
+
+.search-hint-separator {
+  text-transform: lowercase;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.search-questions-btn {
+  background: rgba(var(--accent-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.25);
+  padding: 6px 16px;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 9px;
+  transition: all 0.2s ease;
+  letter-spacing: -0.01em;
+  box-shadow: 0 0 12px rgba(var(--accent-primary-rgb), 0.1);
+  white-space: nowrap;
+}
+
+.search-questions-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.3);
 }
 
 .search-hint em {
@@ -475,6 +488,7 @@
 .search-shortcut-hint {
   font-size: 11.5px;
   letter-spacing: 0.01em;
+  opacity: 0.6;
 }
 
 /* ── Mobile hamburger & menu ───────────────────────────────── */
@@ -543,6 +557,13 @@
 .mobile-nav-item.active {
   background: rgba(var(--bg-secondary-rgb), 0.9);
   color: var(--accent-primary);
+}
+
+.mobile-nav-item.highlight {
+  border-color: rgba(var(--game-accent-rgb), 0.5);
+  background: rgba(var(--game-accent-rgb), 0.08);
+  color: var(--game-accent);
+  font-weight: 600;
 }
 
 .close-button {

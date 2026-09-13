@@ -52,6 +52,14 @@ export default function GamesSection({ theme }) {
                   textTransform: "uppercase",
                 }}
               >
+                <span style={{
+                    background: accent,
+                    color: theme === 'light' ? 'white' : 'black',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    marginRight: '8px',
+                    fontSize: '11px'
+                }}>New</span>
                 Learn Through Play
               </span>
             </div>

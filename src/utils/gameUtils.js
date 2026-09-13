@@ -31,24 +31,23 @@ export function extractGameTerms(questions = []) {
     if (!rawAnswer) return;
 
     // Clean up answer: Remove whitespace, punctuation, convert to uppercase
-    // For games, we usually want letters only.
-    // If it's something like "WF.MSC", we make it "WFMSC"
-    const cleanAnswer = rawAnswer.trim().toUpperCase().replace(/[^A-Z]/g, '');
+    // Allow numbers for terms like IPv6, OSI-7, etc.
+    const cleanAnswer = rawAnswer.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 
     // Validation:
-    // - Must be between 3 and 10 chars (keep it tight for better intersection)
+    // - Must be between 2 and 14 chars (broaden range for better yield)
     // - Must not be a duplicate
-    // - Hint must exist
+    // - Hint must exist and be reasonably descriptive
     if (
-      cleanAnswer.length >= 3 &&
-      cleanAnswer.length <= 10 &&
+      cleanAnswer.length >= 2 &&
+      cleanAnswer.length <= 14 &&
       !seenAnswers.has(cleanAnswer) &&
-      hint.length > 10
+      hint.length > 8
     ) {
       seenAnswers.add(cleanAnswer);
 
-      // Clean hint: Remove Markdown
-      let cleanHint = hint.replace(/(\*\*|__|_|`|\[|\])/g, '');
+      // Clean hint: Remove Markdown and excessive whitespace
+      let cleanHint = hint.replace(/(\*\*|__|_|`|\[|\])/g, '').replace(/\s+/g, ' ').trim();
 
       terms.push({
         answer: cleanAnswer,
@@ -66,7 +65,11 @@ export function extractGameTerms(questions = []) {
  * Simple Word Search grid generator
  */
 export function generateWordSearch(terms, size = 12) {
-  const grid = Array(size).fill(null).map(() => Array(size).fill(''));
+  // Ensure size is at least as large as the longest word
+  const longestWord = terms.reduce((max, t) => Math.max(max, t.answer.length), 0);
+  const finalSize = Math.max(size, longestWord);
+
+  const grid = Array(finalSize).fill(null).map(() => Array(finalSize).fill(''));
   const placedWords = [];
 
   // Sort terms by length descending to place harder ones first
@@ -99,29 +102,29 @@ export function generateWordSearch(terms, size = 12) {
         let row, col;
 
         if (dr === 0 && dc === 1) { // Right
-            row = Math.floor(Math.random() * size);
-            col = Math.floor(Math.random() * (size - word.length + 1));
+            row = Math.floor(Math.random() * finalSize);
+            col = Math.floor(Math.random() * (finalSize - word.length + 1));
         } else if (dr === 1 && dc === 0) { // Down
-            row = Math.floor(Math.random() * (size - word.length + 1));
-            col = Math.floor(Math.random() * size);
+            row = Math.floor(Math.random() * (finalSize - word.length + 1));
+            col = Math.floor(Math.random() * finalSize);
         } else if (dr === 1 && dc === 1) { // Down-Right
-            row = Math.floor(Math.random() * (size - word.length + 1));
-            col = Math.floor(Math.random() * (size - word.length + 1));
+            row = Math.floor(Math.random() * (finalSize - word.length + 1));
+            col = Math.floor(Math.random() * (finalSize - word.length + 1));
         } else if (dr === 0 && dc === -1) { // Left
-            row = Math.floor(Math.random() * size);
-            col = Math.floor(Math.random() * (size - word.length)) + word.length - 1;
+            row = Math.floor(Math.random() * finalSize);
+            col = Math.floor(Math.random() * (finalSize - word.length)) + word.length - 1;
         } else if (dr === -1 && dc === 0) { // Up
-            row = Math.floor(Math.random() * (size - word.length)) + word.length - 1;
-            col = Math.floor(Math.random() * size);
+            row = Math.floor(Math.random() * (finalSize - word.length)) + word.length - 1;
+            col = Math.floor(Math.random() * finalSize);
         } else if (dr === -1 && dc === -1) { // Up-Left
-            row = Math.floor(Math.random() * (size - word.length)) + word.length - 1;
-            col = Math.floor(Math.random() * (size - word.length)) + word.length - 1;
+            row = Math.floor(Math.random() * (finalSize - word.length)) + word.length - 1;
+            col = Math.floor(Math.random() * (finalSize - word.length)) + word.length - 1;
         } else if (dr === 1 && dc === -1) { // Down-Left
-            row = Math.floor(Math.random() * (size - word.length + 1));
-            col = Math.floor(Math.random() * (size - word.length)) + word.length - 1;
+            row = Math.floor(Math.random() * (finalSize - word.length + 1));
+            col = Math.floor(Math.random() * (finalSize - word.length)) + word.length - 1;
         } else { // Up-Right
-            row = Math.floor(Math.random() * (size - word.length)) + word.length - 1;
-            col = Math.floor(Math.random() * (size - word.length + 1));
+            row = Math.floor(Math.random() * (finalSize - word.length)) + word.length - 1;
+            col = Math.floor(Math.random() * (finalSize - word.length + 1));
         }
 
         // Check if it fits
@@ -129,7 +132,7 @@ export function generateWordSearch(terms, size = 12) {
         for (let i = 0; i < word.length; i++) {
           const r = row + (i * dr);
           const c = col + (i * dc);
-          if (grid[r][c] !== '' && grid[r][c] !== word[i]) {
+          if (r < 0 || r >= finalSize || c < 0 || c >= finalSize || (grid[r][c] !== '' && grid[r][c] !== word[i])) {
             fits = false;
             break;
           }
@@ -151,8 +154,8 @@ export function generateWordSearch(terms, size = 12) {
   // DECEPTIVE FILLER: Use letters that are actually in the answers to make it harder
   const allChars = sortedTerms.map(t => t.answer).join('');
 
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
+  for (let r = 0; r < finalSize; r++) {
+    for (let c = 0; c < finalSize; c++) {
       if (grid[r][c] === '') {
         if (allChars.length > 0 && Math.random() > 0.3) {
             grid[r][c] = allChars[Math.floor(Math.random() * allChars.length)];
@@ -169,101 +172,109 @@ export function generateWordSearch(terms, size = 12) {
 /**
  * Simple Crossword grid generator (Best effort)
  */
-export function generateCrossword(terms, size = 15) {
-  const grid = Array(size).fill(null).map(() => Array(size).fill(''));
-  const placedWords = [];
+export function generateCrossword(terms, size = 16) {
+  let bestResult = { grid: [], placedWords: [] };
 
-  // Sort by length to place long words first
-  const sortedTerms = [...terms].sort((a, b) => b.answer.length - a.answer.length);
+  // Try generating several times with different starting words to find the best layout
+  const attempts = Math.min(terms.length, 5);
+  const shuffledTerms = [...terms].sort(() => Math.random() - 0.5);
 
-  function canPlace(word, r, c, dr, dc) {
-    if (r < 0 || r + dr * (word.length - 1) >= size || c < 0 || c + dc * (word.length - 1) >= size) return false;
+  for (let a = 0; a < attempts; a++) {
+    const grid = Array(size).fill(null).map(() => Array(size).fill(''));
+    const placedWords = [];
+    const pool = [...shuffledTerms];
 
-    let intersections = 0;
-    for (let i = 0; i < word.length; i++) {
-      const currR = r + i * dr;
-      const currC = c + i * dc;
-      const char = grid[currR][currC];
+    // Rotate the pool so each attempt starts with a different word
+    const first = pool.splice(a, 1)[0];
 
-      if (char !== '' && char !== word[i]) return false;
-      if (char === word[i]) intersections++;
+    function canPlace(word, r, c, dr, dc) {
+      if (r < 0 || r + dr * (word.length - 1) >= size || c < 0 || c + dc * (word.length - 1) >= size) return false;
 
-      // Check neighbors (must not touch other words except at intersections)
-      const neighbors = [
-        [currR + dc, currC + dr],
-        [currR - dc, currC - dr]
-      ];
+      let intersections = 0;
+      for (let i = 0; i < word.length; i++) {
+        const currR = r + i * dr;
+        const currC = c + i * dc;
+        const char = grid[currR][currC];
 
-      for (const [nr, nc] of neighbors) {
-        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-          if (grid[nr][nc] !== '' && char === '') return false;
+        if (char !== '' && char !== word[i]) return false;
+        if (char === word[i]) intersections++;
+
+        // Neighbor check: must not touch other words except at intersections
+        // Check cells perpendicular to the word's direction
+        const pr = dc; // perpendicular dr
+        const pc = dr; // perpendicular dc
+
+        if (char === '') {
+          const n1r = currR + pr, n1c = currC + pc;
+          const n2r = currR - pr, n2c = currC - pc;
+          if (n1r >= 0 && n1r < size && n1c >= 0 && n1c < size && grid[n1r][n1c] !== '') return false;
+          if (n2r >= 0 && n2r < size && n2c >= 0 && n2c < size && grid[n2r][n2c] !== '') return false;
         }
       }
 
-      // Check start and end caps
-      if (i === 0) {
-        const pr = r - dr;
-        const pc = c - dc;
-        if (pr >= 0 && pr < size && pc >= 0 && pc < size && grid[pr][pc] !== '') return false;
-      }
-      if (i === word.length - 1) {
-        const nr = currR + dr;
-        const nc = currC + dc;
-        if (nr >= 0 && nr < size && nc >= 0 && nc < size && grid[nr][nc] !== '') return false;
-      }
+      // Check start cap
+      const sr = r - dr, sc = c - dc;
+      if (sr >= 0 && sr < size && sc >= 0 && sc < size && grid[sr][sc] !== '') return false;
+
+      // Check end cap
+      const er = r + dr * word.length, ec = c + dc * word.length;
+      if (er >= 0 && er < size && ec >= 0 && ec < size && grid[er][ec] !== '') return false;
+
+      return placedWords.length === 0 ? true : intersections > 0;
     }
-    return placedWords.length === 0 ? true : intersections > 0;
-  }
 
-  function place(term, r, c, dr, dc) {
-    for (let i = 0; i < term.answer.length; i++) {
-      grid[r + i * dr][c + i * dc] = term.answer[i];
+    function place(term, r, c, dr, dc) {
+      for (let i = 0; i < term.answer.length; i++) {
+        grid[r + i * dr][c + i * dc] = term.answer[i];
+      }
+      placedWords.push({ ...term, row: r, col: c, dr, dc });
     }
-    placedWords.push({ ...term, row: r, col: c, dr, dc });
-  }
 
-  // 1. Place first word in middle
-  const first = sortedTerms.shift();
-  place(first, Math.floor(size / 2), Math.floor((size - first.answer.length) / 2), 0, 1);
+    // Place first word in middle
+    place(first, Math.floor(size / 2), Math.floor((size - first.answer.length) / 2), 0, 1);
 
-  // 2. Try to place others
-  sortedTerms.forEach(term => {
-    let best = null;
-    let maxIntersections = 0;
+    // Try to place others iteratively
+    let added = true;
+    while (added && pool.length > 0) {
+      added = false;
+      for (let i = 0; i < pool.length; i++) {
+        const term = pool[i];
+        let bestPlacement = null;
+        let maxIntersections = 0;
 
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        for (const [dr, dc] of [[0, 1], [1, 0]]) {
-          // Optimization: Only try if there's an intersection
-          let intersectionFound = false;
-          for(let i=0; i<term.answer.length; i++) {
-            const tr = r + i*dr;
-            const tc = c + i*dc;
-            if (tr < size && tc < size && grid[tr][tc] === term.answer[i]) {
-              intersectionFound = true;
-              break;
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) {
+            for (const [dr, dc] of [[0, 1], [1, 0]]) {
+              if (canPlace(term.answer, r, c, dr, dc)) {
+                let score = 0;
+                for (let j = 0; j < term.answer.length; j++) {
+                  if (grid[r + j * dr][c + j * dc] !== '') score++;
+                }
+                if (score > maxIntersections) {
+                  maxIntersections = score;
+                  bestPlacement = { r, c, dr, dc };
+                }
+              }
             }
           }
+        }
 
-          if (intersectionFound && canPlace(term.answer, r, c, dr, dc)) {
-            // Count intersections
-            let score = 0;
-            for(let i=0; i<term.answer.length; i++) {
-              if (grid[r+i*dr][c+i*dc] !== '') score++;
-            }
-            if (score > maxIntersections) {
-              maxIntersections = score;
-              best = { r, c, dr, dc };
-            }
-          }
+        if (bestPlacement) {
+          place(term, bestPlacement.r, bestPlacement.c, bestPlacement.dr, bestPlacement.dc);
+          pool.splice(i, 1);
+          added = true;
+          break; // Restart loop to prioritize new intersections
         }
       }
     }
 
-    if (best) {
-      place(term, best.r, best.c, best.dr, best.dc);
+    if (placedWords.length > bestResult.placedWords.length) {
+      bestResult = { grid, placedWords };
     }
-  });
 
-  return { grid, placedWords };
+    // If we placed all words, stop early
+    if (placedWords.length === terms.length) break;
+  }
+
+  return bestResult;
 }

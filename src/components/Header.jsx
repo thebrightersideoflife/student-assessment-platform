@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Puzzle } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
 import { loadSettings, getTodayPracticeSeconds } from "../utils/typingStorage";
@@ -370,8 +369,13 @@ export default function Header() {
           <Link to="/flashcards" className={`nav-link ${isActive("/flashcards") ? "active" : ""}`}>
             Flashcards
           </Link>
-          <Link to="/search/questions" className={`nav-link ${isActive("/search/questions") ? "active" : ""}`}>
-            Search Questions
+          <Link to="/games" className={`nav-link nav-link-sparkle ${isActive("/games") ? "active" : ""}`}>
+            Study Games
+            <span className="sparkle s1"></span>
+            <span className="sparkle s2"></span>
+            <span className="sparkle s3"></span>
+            <span className="sparkle s4"></span>
+            <span className="sparkle s5"></span>
           </Link>
           <Link to="/support" className={`nav-link ${isActive("/support") ? "active" : ""}`}>
             Support
@@ -383,14 +387,7 @@ export default function Header() {
 
         {/* Actions */}
         <div className="header-actions">
-          {/* Study Games */}
-          <button
-            className={`action-button puzzle-button ${isActive("/games") ? "active" : ""}`}
-            onClick={() => navigateTo("/games")}
-            title="Play Study Games"
-          >
-            <Puzzle size={20} strokeWidth={isActive("/games") ? 2.5 : 2} />
-          </button>
+
 
           {/* Progress Circle */}
           <div
@@ -518,7 +515,16 @@ export default function Header() {
           {/* Hint row */}
           {!searchQuery.trim() && (
             <div className="search-hint">
-              <span>Try <em>ITJVA</em>, <em>Week 3</em>, or <em>roadmap</em></span>
+              <div className="search-hint-main">
+                <span>Try <em>ITJVA</em>, <em>Week 3</em>, or <em>roadmap</em></span>
+                <span className="search-hint-separator">Or</span>
+                <button
+                  className="search-questions-btn"
+                  onClick={() => navigateTo("/search/questions")}
+                >
+                  Search Questions
+                </button>
+              </div>
               <span className="search-shortcut-hint">↑↓ navigate &nbsp;·&nbsp; ↵ open &nbsp;·&nbsp; ESC close</span>
             </div>
           )}
@@ -537,14 +543,12 @@ export default function Header() {
           </div>
 
           <div className="mobile-menu-inner">
-            <button className={`mobile-nav-item ${isActive("/resources") ? "active" : ""}`} onClick={() => navigateTo("/resources")}>Resources</button>
             <button className={`mobile-nav-item ${isActive("/modules") ? "active" : ""}`} onClick={() => navigateTo("/modules")}>Modules</button>
-            <button className={`mobile-nav-item ${isActive("/games") ? "active" : ""}`} onClick={() => navigateTo("/games")}>Study Games</button>
-            <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>
-            <button className={`mobile-nav-item ${isActive("/flashcards") ? "active" : ""}`} onClick={() => navigateTo("/flashcards")}>Flashcards</button>
             <button className={`mobile-nav-item ${isActive("/typing") ? "active" : ""}`} onClick={() => navigateTo("/typing")}>Typing Practice</button>
+            <button className={`mobile-nav-item ${isActive("/flashcards") ? "active" : ""}`} onClick={() => navigateTo("/flashcards")}>Flashcards</button>
+            <button className={`mobile-nav-item highlight ${isActive("/games") ? "active" : ""}`} onClick={() => navigateTo("/games")}>Study Games</button>
+            <button className={`mobile-nav-item ${isActive("/progress") ? "active" : ""}`} onClick={() => navigateTo("/progress")}>My Progress</button>
             <button className={`mobile-nav-item ${isActive("/support") ? "active" : ""}`} onClick={() => navigateTo("/support")}>Support</button>
-            <button className={`mobile-nav-item ${isActive("/search/questions") ? "active" : ""}`} onClick={() => navigateTo("/search/questions")}>Search Questions</button>
           </div>
         </div>,
         document.body

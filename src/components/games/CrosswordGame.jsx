@@ -1,13 +1,15 @@
 // src/components/games/CrosswordGame.jsx
 import { useState, useEffect, useRef, useMemo } from "react";
+import GameResultModal from "./GameResultModal";
 
-export default function CrosswordGame({ grid, placedWords, onWordFound }) {
+export default function CrosswordGame({ grid, placedWords, onWordFound, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
   const [userGrid, setUserGrid] = useState(
     grid.map(row => row.map(cell => (cell === '' ? null : '')))
   );
   const [selectedCell, setSelectedCell] = useState(null);
   const [direction, setDirection] = useState(0); // 0: Across, 1: Down
   const [isWon, setIsWon] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [score, setScore] = useState(0);
   const [revealedWordIds, setRevealedWordIds] = useState(new Set());
   const [completedWordIds, setCompletedWordIds] = useState(new Set());
@@ -19,6 +21,25 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
 
   const inputRefs = useRef({});
   const clueRefs = useRef({});
+  const gridAreaRef = useRef(null);
+  const [syncedHeight, setSyncedHeight] = useState(null);
+
+  // Synchronize Clues height with Grid Area height
+  useEffect(() => {
+    if (gridAreaRef.current) {
+      const updateHeight = () => {
+        setSyncedHeight(gridAreaRef.current.offsetHeight);
+      };
+
+      const resizeObserver = new ResizeObserver(updateHeight);
+      resizeObserver.observe(gridAreaRef.current);
+
+      // Initial measure
+      updateHeight();
+
+      return () => resizeObserver.disconnect();
+    }
+  }, []);
 
   // ─── Standard Crossword Numbering Logic ──────────────────────────────────
   // Words starting at the same cell share the same number.
@@ -43,6 +64,15 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
 
     return { gridNumbers: nums, numberedClues: results };
   }, [grid, placedWords]);
+
+  useEffect(() => {
+    if (isWon) {
+        const timer = setTimeout(() => {
+            setShowResultModal(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }
+  }, [isWon]);
 
   // Timer logic
   useEffect(() => {
@@ -134,7 +164,7 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
 
         if (isCorrect) {
             setCompletedWordIds(prev => new Set([...prev, pw.id]));
-            setScore(prev => prev + 100);
+            setScore(prev => prev + 10);
             onWordFound?.();
         }
     });
@@ -223,7 +253,7 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
 
     setUserGrid(newGrid);
     setRevealedWordIds(prev => new Set([...prev, activeWord.id]));
-    setScore(prev => prev - 50);
+    setScore(prev => prev - 5);
     onWordFound?.();
 
     // Check win condition after reveal
@@ -244,11 +274,12 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
       alignItems: 'flex-start',
       width: '100%',
       maxWidth: '1200px',
-      margin: '0 auto'
+      margin: '0 auto',
+      position: 'relative'
     }}>
 
       {/* The Grid Area */}
-      <div className="crossword-grid-area" style={{
+      <div className="crossword-grid-area" ref={gridAreaRef} style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
@@ -290,10 +321,10 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
 
         <div className="crossword-grid-wrapper" style={{
           padding: 'clamp(4px, 2vw, 8px)',
-          background: 'rgba(var(--border-color-rgb), 0.3)',
+          background: 'rgba(var(--border-color-rgb), 0.45)',
           borderRadius: '12px',
-          border: '1px solid rgba(var(--border-color-rgb), 0.4)',
-          boxShadow: '0 15px 45px rgba(0,0,0,0.08)',
+          border: '2px solid rgba(var(--border-color-rgb), 0.6)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
           width: 'fit-content',
           maxWidth: '100%',
           overflow: 'auto'
@@ -313,12 +344,12 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
                 // Highlight logic
                 let highlight = 'transparent';
                 if (isFocused) {
-                  highlight = 'rgba(var(--game-accent-rgb), 0.4)';
+                  highlight = `rgba(${accentRgb}, 0.6)`;
                 } else if (activeWord) {
                   if (direction === 0 && rIdx === activeWord.row && cIdx >= activeWord.col && cIdx < activeWord.col + activeWord.answer.length) {
-                    highlight = 'rgba(var(--game-accent-rgb), 0.15)';
+                    highlight = `rgba(${accentRgb}, 0.28)`;
                   } else if (direction === 1 && cIdx === activeWord.col && rIdx >= activeWord.row && rIdx < activeWord.row + activeWord.answer.length) {
-                    highlight = 'rgba(var(--game-accent-rgb), 0.15)';
+                    highlight = `rgba(${accentRgb}, 0.28)`;
                   }
                 }
 
@@ -331,10 +362,11 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderRadius: '3px',
-                    backgroundColor: isBlack ? 'rgba(var(--bg-secondary-rgb), 0.6)' : highlight,
-                    border: isBlack ? 'none' : '1px solid rgba(var(--border-color-rgb), 0.3)',
-                    transition: 'background-color 0.2s ease'
+                    borderRadius: '4px',
+                    backgroundColor: isBlack ? 'rgba(var(--bg-secondary-rgb), 0.92)' : highlight,
+                    border: isBlack ? 'none' : '1px solid rgba(var(--border-color-rgb), 0.6)',
+                    transition: 'background-color 0.2s ease, transform 0.1s ease',
+                    boxShadow: isFocused ? `inset 0 0 0 2px ${accentColor}` : 'none'
                   }}>
                     {/* Reveal Answer Bubble */}
                     {activeWord && !revealedWordIds.has(activeWord.id) &&
@@ -364,21 +396,22 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
                         style={{
                           width: '100%', height: '100%',
                           border: 'none', background: 'transparent',
-                          textAlign: 'center', fontSize: 'var(--cw-font-size, 18px)', fontWeight: 800,
+                          textAlign: 'center', fontSize: 'var(--cw-font-size, 19px)', fontWeight: 800,
                           color: cell === grid[rIdx][cIdx] ? 'var(--lush-lime)' : 'var(--text-primary)',
                           caretColor: 'transparent',
-                          outline: isFocused ? '2px solid var(--game-accent)' : 'none',
-                          outlineOffset: '-2px',
+                          outline: 'none',
                           zIndex: 2,
-                          padding: 0
+                          padding: 0,
+                          textShadow: isFocused ? `0 0 1px rgba(${accentRgb}, 0.3)` : 'none'
                         }}
                       />
                     )}
                     {number && (
                       <span style={{
-                        position: 'absolute', top: '2px', left: '3px',
-                        fontSize: 'var(--cw-num-size, 10px)', fontWeight: 800, opacity: 0.7, zIndex: 1,
-                        color: 'var(--text-secondary)'
+                        position: 'absolute', top: '1px', left: '2px',
+                        fontSize: 'var(--cw-num-size, 10.5px)', fontWeight: 900, opacity: 1, zIndex: 1,
+                        color: 'var(--text-secondary)',
+                        textShadow: '0 0 2px rgba(var(--bg-card-rgb), 0.8)'
                       }}>
                         {number}
                       </span>
@@ -394,11 +427,14 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
       {/* Clues */}
       <div className="crossword-clues" style={{
         flex: 1, minWidth: 'min(100%, 320px)', maxWidth: '500px',
-        textAlign: 'left', maxHeight: 'max(400px, 60vh)', overflowY: 'auto',
-        paddingRight: '12px', paddingLeft: '4px'
+        textAlign: 'left',
+        height: syncedHeight ? `${syncedHeight}px` : 'auto',
+        overflowY: 'auto',
+        paddingRight: '12px', paddingLeft: '4px',
+        transition: 'height 0.2s ease'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-             <h4 style={{ margin: 0, color: 'var(--game-accent)', fontSize: '1.25rem', fontWeight: 800 }}>Clues</h4>
+             <h4 style={{ margin: 0, color: accentColor, fontSize: '1.25rem', fontWeight: 800 }}>Clues</h4>
         </div>
 
         <div style={{ marginBottom: '28px' }}>
@@ -416,9 +452,9 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
                 style={{
                    marginBottom: '10px', fontSize: '14px', lineHeight: '1.5',
                    padding: '10px 16px', borderRadius: '12px', cursor: 'pointer',
-                   background: isCurrent ? 'rgba(var(--game-accent-rgb), 0.12)' : 'transparent',
+                   background: isCurrent ? `rgba(${accentRgb}, 0.22)` : 'transparent',
                    backdropFilter: isCurrent ? 'blur(4px)' : 'none',
-                   border: isCurrent ? '1px solid rgba(var(--game-accent-rgb), 0.3)' : '1px solid transparent',
+                   border: isCurrent ? `1px solid rgba(${accentRgb}, 0.5)` : '1px solid transparent',
                    boxShadow: isCurrent ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                 }}>
@@ -443,9 +479,9 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
                 style={{
                    marginBottom: '10px', fontSize: '14px', lineHeight: '1.5',
                    padding: '10px 16px', borderRadius: '12px', cursor: 'pointer',
-                   background: isCurrent ? 'rgba(var(--game-accent-rgb), 0.12)' : 'transparent',
+                   background: isCurrent ? `rgba(${accentRgb}, 0.22)` : 'transparent',
                    backdropFilter: isCurrent ? 'blur(4px)' : 'none',
-                   border: isCurrent ? '1px solid rgba(var(--game-accent-rgb), 0.3)' : '1px solid transparent',
+                   border: isCurrent ? `1px solid rgba(${accentRgb}, 0.5)` : '1px solid transparent',
                    boxShadow: isCurrent ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                 }}>
@@ -455,38 +491,29 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
           })}
         </div>
 
-        {isWon && (
-          <div style={{
-            marginTop: '30px', padding: '24px',
-            background: 'rgba(var(--bg-card-rgb), 0.8)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid var(--lush-lime)',
-            borderRadius: '20px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
-          }}>
-            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏆</div>
-            <h3 style={{ color: 'var(--lush-lime)', margin: '0 0 8px 0', fontSize: '1.8rem' }}>Puzzle Solved!</h3>
-
-            <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Final Score</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 800, color: score >= (placedWords.length * 100) ? 'var(--golden-amber)' : 'var(--text-primary)' }}>
-                    {score}
-                </div>
-            </div>
-
-            <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                {score >= (placedWords.length * 100) ? "✨ Flawless Victory! No reveals used. ✨" :
-                 score > 0 ? "Great job! You found most of them yourself." :
-                 "Phew! That was a tough one. Keep practicing!"}
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                <span><strong>Time:</strong> {formatTime(seconds)}</span>
-                <span><strong>Reveals:</strong> {revealedWordIds.size}</span>
-            </div>
-          </div>
-        )}
       </div>
+
+      <GameResultModal
+        open={showResultModal}
+        onClose={() => setShowResultModal(false)}
+        title="Crossword Solved!"
+        subtitle={score >= (placedWords.length * 10) ? "✨ Flawless Victory! No reveals used. ✨" : "Great job! You found most of them yourself."}
+        score={score}
+        stats={[
+            { label: 'Time', value: formatTime(seconds), icon: 'clock' },
+            { label: 'Reveals', value: revealedWordIds.size, icon: 'target' }
+        ]}
+        accentColor="var(--lush-lime)"
+        accentRgb="118, 209, 61"
+        primaryAction={{
+            label: 'Keep Studying',
+            onClick: () => setShowResultModal(false)
+        }}
+        secondaryAction={{
+            label: 'Exit',
+            onClick: onExit
+        }}
+      />
 
       <style>{`
         .crossword-clues::-webkit-scrollbar { width: 5px; }
@@ -501,7 +528,7 @@ export default function CrosswordGame({ grid, placedWords, onWordFound }) {
         }
 
         .reveal-bubble {
-            background: var(--game-accent);
+            background: ${accentColor};
             color: #fff;
             border: none;
             border-radius: 20px;

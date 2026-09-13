@@ -76,7 +76,7 @@ export default function StudyGamesHero() {
               </h1>
 
               <p style={{ margin: "0 0 10px", fontSize: "17px", color: "var(--text-primary)", lineHeight: 1.7 }}>
-                Learn through play with auto-generated puzzles. Crosswords, word searches, and more — all built from the platform's extensive assessment material.
+                Learn through play with auto-generated games. Crosswords, hangman, and more.
               </p>
               <p style={{ margin: "0", fontSize: "16px", color: "var(--text-secondary)", lineHeight: 1.7 }}>
                 Pick a module below to generate a new set of challenges and put your knowledge to the test.

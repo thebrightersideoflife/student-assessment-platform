@@ -36,8 +36,22 @@ function hydrateNotices(initialNotices = [], typingGoalMinutes = null, todayMinu
   const systemUpdateId = "system-update-reminder-v3.2";
   const typingReminderId = "typing-goal-reminder";
   const flashcardFeatureId = "flashcard-feature-notice";
+  const studyGamesFeatureId = "study-games-feature-notice";
   const nextNotices = [...notices];
 
+  if (!nextNotices.some((notice) => notice.id === studyGamesFeatureId)) {
+    nextNotices.unshift({
+      id: studyGamesFeatureId,
+      title: "New feature: Study Games",
+      message: "Level up your learning with interactive games. Challenge yourself with Memory Match and more!",
+      read: false,
+      actionLabel: "Play now",
+      actionHandler: null,
+      navigateTo: "/games",
+      deleted: false,
+      day: dayKey,
+    });
+  }
   if (!nextNotices.some((notice) => notice.id === flashcardFeatureId)) {
     nextNotices.unshift({
       id: flashcardFeatureId,
