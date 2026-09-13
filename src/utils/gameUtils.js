@@ -47,7 +47,11 @@ export function extractGameTerms(questions = []) {
       seenAnswers.add(cleanAnswer);
 
       // Clean hint: Remove Markdown and excessive whitespace
-      let cleanHint = hint.replace(/(\*\*|__|_|`|\[|\])/g, '').replace(/\s+/g, ' ').trim();
+      // Preserve "___" for fill-in-the-blank questions
+      let cleanHint = hint.replace(/_{3,}/g, '@@@BLANK@@@');
+      cleanHint = cleanHint.replace(/(\*\*|__|_|`|\[|\])/g, '');
+      cleanHint = cleanHint.replace(/@@@BLANK@@@/g, '___');
+      cleanHint = cleanHint.replace(/\s+/g, ' ').trim();
 
       terms.push({
         answer: cleanAnswer,
