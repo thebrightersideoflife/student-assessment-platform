@@ -72,11 +72,11 @@ export default function StudyGamesHero() {
                   lineHeight: 1.15,
                 }}
               >
-                Reinforce your knowledge at the <span style={{ color: "var(--game-accent)" }}>Games Hub</span>
+                Reinforce your knowledge through <span style={{ color: "var(--game-accent)" }}>game play</span>
               </h1>
 
               <p style={{ margin: "0 0 10px", fontSize: "17px", color: "var(--text-primary)", lineHeight: 1.7 }}>
-                Learn through play with auto-generated games. Crosswords, hangman, and more.
+                Learn the fun way with auto-generated games. Crosswords, hangman, word search, matching, and more.
               </p>
               <p style={{ margin: "0", fontSize: "16px", color: "var(--text-secondary)", lineHeight: 1.7 }}>
                 Pick a module below to generate a new set of challenges and put your knowledge to the test.

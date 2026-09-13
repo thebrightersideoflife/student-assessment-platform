@@ -195,7 +195,7 @@ export default function GameResultModal({
         .grm-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .grm-btn:active { transform: translateY(0); }
 
-        .grm-btn-primary { background: var(--grm-accent); color: white; box-shadow: 0 8px 20px rgba(var(--grm-accent-rgb), 0.3); }
+        .grm-btn-primary { background: var(--grm-accent); color: white; }
         .grm-btn-secondary { background: rgba(var(--bg-secondary-rgb), 0.7); border: 1px solid rgba(var(--border-color-rgb), 0.4); color: var(--text-primary); }
         .grm-btn-secondary:hover { background: rgba(var(--bg-secondary-rgb), 1); }
 
