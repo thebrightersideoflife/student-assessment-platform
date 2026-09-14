@@ -143,10 +143,10 @@ export default function GamesPage() {
   // 1. VIEW: GAME SELECTION
   if (view === "game-selection") {
     const gameOptions = [
-        { id: 'crossword', name: 'Crossword', icon: <Puzzle size={32} />, available: true, desc: 'Classic grid-based word puzzle' },
+        { id: 'crossword', name: 'Crossword', icon: <Puzzle size={32} />, available: true, popular: true, desc: 'Classic grid-based word puzzle' },
         { id: 'wordsearch', name: 'Word Search', icon: <Search size={32} />, available: true, desc: 'Find hidden words in the grid' },
         { id: 'matching', name: 'Matching', icon: <Layers size={32} />, available: true, desc: 'Connect terms with definitions' },
-        { id: 'hangman', name: 'Hangman', icon: <Ghost size={32} />, available: true, desc: 'Guess the word letter by letter' },
+        { id: 'hangman', name: 'Hangman', icon: <Ghost size={32} />, available: true, popular: true, desc: 'Guess the word letter by letter' },
         { id: 'memory', name: 'Memory Match', icon: <GalleryHorizontal size={32} />, available: true, desc: 'Test your spatial recall' },
         { id: 'flash', name: 'Flash Challenge', icon: <Zap size={32} />, available: false, desc: 'High-speed true/false quiz' },
     ];
@@ -191,6 +191,21 @@ export default function GamesPage() {
                             }}
                             className={game.available ? "game-card" : ""}
                         >
+                            {game.popular && (
+                                <div style={{
+                                    position: 'absolute', top: '16px', right: '16px',
+                                    padding: '4px 10px', borderRadius: '8px',
+                                    background: `rgba(${meta.accentRgb}, 0.15)`,
+                                    color: meta.accent,
+                                    fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px',
+                                    border: `1px solid rgba(${meta.accentRgb}, 0.3)`,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em'
+                                }}>
+                                    <Flame size={12} fill="currentColor" /> Popular
+                                </div>
+                            )}
+
                             {!game.available && (
                                 <div style={{
                                     position: 'absolute', top: '16px', right: '16px',
@@ -577,6 +592,9 @@ export default function GamesPage() {
             key={`cw-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}
             accentRgb={meta.accentRgb}
+            moduleName={module.name}
+            moduleId={module.id}
+            weekLabel={selectionMode === 'week' ? weekLabel : "Entire Module"}
            />
         ) : gameType === "wordsearch" && wordSearchData ? (
           <WordSearchGame
@@ -588,6 +606,9 @@ export default function GamesPage() {
             key={`ws-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}
             accentRgb={meta.accentRgb}
+            moduleName={module.name}
+            moduleId={module.id}
+            weekLabel={selectionMode === 'week' ? weekLabel : "Entire Module"}
           />
         ) : gameType === "matching" ? (
           <MatchingGame
@@ -597,6 +618,9 @@ export default function GamesPage() {
             key={`mt-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}
             accentRgb={meta.accentRgb}
+            moduleName={module.name}
+            moduleId={module.id}
+            weekLabel={selectionMode === 'week' ? weekLabel : "Entire Module"}
           />
         ) : gameType === "hangman" ? (
           <HangmanGame

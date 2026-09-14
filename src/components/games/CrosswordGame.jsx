@@ -1,8 +1,19 @@
-// src/components/games/CrosswordGame.jsx
 import { useState, useEffect, useRef, useMemo } from "react";
 import GameResultModal from "./GameResultModal";
+import GamePrintable from "./GamePrintable";
+import { PrintIcon } from "../AssessmentIcons";
 
-export default function CrosswordGame({ grid, placedWords, onWordFound, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
+export default function CrosswordGame({
+  grid,
+  placedWords,
+  onWordFound,
+  onExit,
+  accentColor = "#3b82f6",
+  accentRgb = "59, 130, 246",
+  moduleName = "",
+  moduleId = "",
+  weekLabel = ""
+}) {
   const [userGrid, setUserGrid] = useState(
     grid.map(row => row.map(cell => (cell === '' ? null : '')))
   );
@@ -23,6 +34,25 @@ export default function CrosswordGame({ grid, placedWords, onWordFound, onExit, 
   const clueRefs = useRef({});
   const gridAreaRef = useRef(null);
   const [syncedHeight, setSyncedHeight] = useState(null);
+
+  function handlePrint() {
+    // Force light theme so the print stylesheet gets clean colours
+    const prevTheme = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light");
+
+    const prevTitle = document.title;
+    document.title = `Crossword_${moduleName.replace(/\s+/g, '_')}`;
+
+    const cleanup = () => {
+      document.title = prevTitle;
+      if (prevTheme) document.documentElement.setAttribute("data-theme", prevTheme);
+      else document.documentElement.removeAttribute("data-theme");
+      window.removeEventListener("afterprint", cleanup);
+    };
+
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+  }
 
   // Synchronize Clues height with Grid Area height
   useEffect(() => {
@@ -317,6 +347,23 @@ export default function CrosswordGame({ grid, placedWords, onWordFound, onExit, 
               <span style={{ fontSize: '12px', opacity: 0.6, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>SCORE</span>
               {score}
             </div>
+
+            {/* Print Button */}
+            <button
+                className="action-button-mini"
+                onClick={handlePrint}
+                title="Print Offline Version"
+                style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    background: 'rgba(var(--bg-card-rgb), 0.8)', color: 'var(--text-primary)', padding: '8px 14px',
+                    borderRadius: '10px', border: '1px solid rgba(var(--border-color-rgb), 0.3)',
+                    cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap',
+                    fontSize: '12px', transition: 'all 0.2s ease', marginLeft: 'auto'
+                }}
+            >
+                <PrintIcon />
+                <span className="btn-label">Print Offline</span>
+            </button>
         </div>
 
         <div className="crossword-grid-wrapper" style={{
@@ -513,6 +560,15 @@ export default function CrosswordGame({ grid, placedWords, onWordFound, onExit, 
             label: 'Exit',
             onClick: onExit
         }}
+      />
+
+      {/* Printable Version (Print-only) */}
+      <GamePrintable
+        type="crossword"
+        moduleName={moduleName}
+        moduleId={moduleId}
+        weekLabel={weekLabel}
+        data={{ grid, placedWords }}
       />
 
       <style>{`

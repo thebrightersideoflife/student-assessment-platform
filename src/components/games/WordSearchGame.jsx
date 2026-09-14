@@ -1,8 +1,20 @@
-// src/components/games/WordSearchGame.jsx
 import { useState, useEffect, useRef } from "react";
 import GameResultModal from "./GameResultModal";
+import GamePrintable from "./GamePrintable";
+import { PrintIcon } from "../AssessmentIcons";
 
-export default function WordSearchGame({ grid, placedWords, difficulty = "normal", onWordFound, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
+export default function WordSearchGame({
+  grid,
+  placedWords,
+  difficulty = "normal",
+  onWordFound,
+  onExit,
+  accentColor = "#3b82f6",
+  accentRgb = "59, 130, 246",
+  moduleName = "",
+  moduleId = "",
+  weekLabel = ""
+}) {
   const [selectedCells, setSelectedCells] = useState([]);
   const [foundWordIds, setFoundWordIds] = useState(new Set());
   const [permanentHighlightCells, setPermanentHighlightCells] = useState(new Set());
@@ -14,6 +26,25 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
 
   const gridAreaRef = useRef(null);
   const [syncedHeight, setSyncedHeight] = useState(null);
+
+  function handlePrint() {
+    // Force light theme so the print stylesheet gets clean colours
+    const prevTheme = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light");
+
+    const prevTitle = document.title;
+    document.title = `WordSearch_${moduleName.replace(/\s+/g, '_')}`;
+
+    const cleanup = () => {
+      document.title = prevTitle;
+      if (prevTheme) document.documentElement.setAttribute("data-theme", prevTheme);
+      else document.documentElement.removeAttribute("data-theme");
+      window.removeEventListener("afterprint", cleanup);
+    };
+
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+  }
 
   // Synchronize Word List height with Grid Area height
   useEffect(() => {
@@ -199,6 +230,23 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
               <span style={{ fontSize: '12px', opacity: 0.6, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>SCORE</span>
               {score}
             </div>
+
+            {/* Print Button */}
+            <button
+                className="action-button-mini"
+                onClick={handlePrint}
+                title="Print Offline Version"
+                style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    background: 'rgba(var(--bg-card-rgb), 0.8)', color: 'var(--text-primary)', padding: '8px 14px',
+                    borderRadius: '10px', border: '1px solid rgba(var(--border-color-rgb), 0.3)',
+                    cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap',
+                    fontSize: '12px', transition: 'all 0.2s ease', marginLeft: 'auto'
+                }}
+            >
+                <PrintIcon />
+                <span className="btn-label">Print Offline</span>
+            </button>
         </div>
 
         {/* The Grid Wrapper */}
@@ -413,6 +461,15 @@ export default function WordSearchGame({ grid, placedWords, difficulty = "normal
             label: 'Exit',
             onClick: onExit
         }}
+      />
+
+      {/* Printable Version (Print-only) */}
+      <GamePrintable
+        type="wordsearch"
+        moduleName={moduleName}
+        moduleId={moduleId}
+        weekLabel={weekLabel}
+        data={{ grid, placedWords }}
       />
     </div>
   );

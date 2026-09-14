@@ -229,7 +229,7 @@ export default function HangmanGame({ terms, onComplete, onExit, accentColor = "
   return (
     <div className="hangman-game-container" style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      gap: '32px', width: '100%', maxWidth: '800px', margin: '0 auto', userSelect: 'none'
+      gap: '20px', width: '100%', maxWidth: '800px', margin: '0 auto', userSelect: 'none'
     }}>
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', width: '100%',
@@ -338,7 +338,20 @@ export default function HangmanGame({ terms, onComplete, onExit, accentColor = "
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        {/* Keyboard Tip */}
+        <div style={{
+          fontSize: '12px', color: 'var(--text-primary)', opacity: 0.7,
+          display: 'flex', alignItems: 'center', gap: '8px',
+          background: 'rgba(var(--bg-card-rgb), 0.4)', padding: '6px 16px', borderRadius: '20px',
+          border: '1px solid rgba(var(--border-color-rgb), 0.15)',
+        }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01"/><path d="M10 10h.01"/><path d="M14 10h.01"/><path d="M18 10h.01"/><path d="M7 14h10"/>
+            </svg>
+            <span>You can also use your physical keyboard to insert letters</span>
+        </div>
+
         <div style={{
             display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center',
             maxWidth: '640px', opacity: gameState === 'playing' ? 1 : 0.4, pointerEvents: gameState === 'playing' ? 'auto' : 'none',
@@ -362,7 +375,7 @@ export default function HangmanGame({ terms, onComplete, onExit, accentColor = "
                             color: isCorrect ? 'var(--lush-lime)' :
                                 isWrong ? 'rgba(var(--text-secondary-rgb), 0.4)' : 'var(--text-primary)',
                             fontWeight: 900, fontSize: '15px', cursor: 'pointer',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                             opacity: isGuessed ? 0.6 : 1,
                             transform: isGuessed ? 'scale(0.9)' : 'none',
                             boxShadow: !isGuessed ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
