@@ -539,9 +539,8 @@ export default function GamesPage() {
             {/* Action Buttons Group */}
             <div className="action-buttons-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <button
-                    onClick={handleNewGame}
+                    onClick={resetToGameSelection}
                     className="action-button-mini"
-                    title="Generate Next Game"
                     style={{
                         display: 'flex', alignItems: 'center', gap: '8px',
                         background: 'rgba(var(--bg-card-rgb), 0.8)', color: 'var(--text-primary)', padding: '10px 16px',
@@ -550,13 +549,13 @@ export default function GamesPage() {
                         fontSize: '14px', transition: 'all 0.2s ease'
                     }}
                 >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                    <span className="btn-label">Next Game</span>
+                    <span className="btn-label">Change Game</span>
                 </button>
 
                 <button
-                    onClick={resetToGameSelection}
+                    onClick={handleNewGame}
                     className="action-button-mini accent"
+                    title="Generate Next Game"
                     style={{
                         display: 'flex', alignItems: 'center', gap: '8px',
                         background: `color-mix(in srgb, ${meta.accent}, black 15%)`, color: '#fff', padding: '10px 16px',
@@ -565,7 +564,8 @@ export default function GamesPage() {
                         fontSize: '14px', transition: 'all 0.2s ease'
                     }}
                 >
-                    Change Game
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                    <span className="btn-label">Next Game</span>
                 </button>
             </div>
         </div>

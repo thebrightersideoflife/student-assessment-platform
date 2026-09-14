@@ -47,6 +47,7 @@ export default function MemoryMatchGame({ terms, onComplete, onRestart, onExit, 
     setMatchedIds(new Set());
     setFlippedIndices([]);
     setMoves(0);
+    setScore(0);
     setSeconds(0);
     setTimerActive(true);
     setShowResultModal(false);

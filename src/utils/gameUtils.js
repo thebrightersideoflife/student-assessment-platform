@@ -95,13 +95,14 @@ export function generateWordSearch(terms, size = 12) {
         { dr: -1, dc: 1,  type: 'D' }  // Up-Right
     ];
 
-    // Priority: Try to place Diagonals first to ensure they exist,
-    // otherwise the grid fills up with easier H/V words.
-    const shuffledDirs = [...allDirections].sort((a, b) => {
-        if (a.type === 'D' && b.type !== 'D') return -1;
-        if (a.type !== 'D' && b.type === 'D') return 1;
-        return Math.random() - 0.5;
-    });
+    // Fisher-Yates Shuffle for truly random distribution across all 8 directions.
+    // We removed the hard priority for Diagonals to prevent the grid from being
+    // overwhelmed by diagonal words, while still allowing them to appear naturally.
+    const shuffledDirs = [...allDirections];
+    for (let i = shuffledDirs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledDirs[i], shuffledDirs[j]] = [shuffledDirs[j], shuffledDirs[i]];
+    }
 
     for (const { dr, dc } of shuffledDirs) {
       if (placed) break;

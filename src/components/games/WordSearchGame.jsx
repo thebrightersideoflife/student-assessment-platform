@@ -70,8 +70,8 @@ export default function WordSearchGame({
 
   // Timer starts immediately on mount for Word Search
   useEffect(() => {
-    const isAllFound = foundWordIds.size === placedWords.length;
-    if (!isAllFound) {
+    const isFinished = (foundWordIds.size + revealedWordIds.size) === placedWords.length;
+    if (!isFinished) {
       timerRef.current = setInterval(() => {
         setSeconds(s => s + 1);
       }, 1000);
@@ -79,7 +79,7 @@ export default function WordSearchGame({
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
-  }, [foundWordIds.size, placedWords.length]);
+  }, [foundWordIds.size, revealedWordIds.size, placedWords.length]);
 
   function formatTime(s) {
     const mins = Math.floor(s / 60);
@@ -167,7 +167,7 @@ export default function WordSearchGame({
     onWordFound?.();
   }
 
-  const isAllFound = foundWordIds.size === placedWords.length;
+  const isAllFound = (foundWordIds.size + revealedWordIds.size) === placedWords.length;
 
   useEffect(() => {
     if (isAllFound) {

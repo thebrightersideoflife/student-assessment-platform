@@ -402,7 +402,7 @@ export default function HangmanGame({ terms, onComplete, onRestart, onExit, acce
         open={showResultModal}
         onClose={() => setShowResultModal(false)}
         title={gameState === 'won' ? (mistakes === 0 ? 'Flawless Victory!' : 'You saved him!') : 'Mission failed.'}
-        subtitle={gameState === 'won' ? (mistakes === 0 ? '✨ Absolute perfection! No mistakes made. ✨' : 'Brilliant deduction!') : `The correct answer was ${currentTerm.displayAnswer}.`}
+        subtitle={gameState === 'won' ? (mistakes === 0 ? '✨ Absolute perfection! No mistakes made. ✨' : 'Brilliant deduction!') : `The correct answer was "${currentTerm.displayAnswer}".`}
         icon={gameState === 'won' ? (mistakes === 0 ? '🏆' : '✨') : '💀'}
         score={gameState === 'won' ? Math.max(10, 100 - mistakes * 15) : 0}
         maxScore={100}

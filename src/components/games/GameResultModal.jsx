@@ -1,6 +1,7 @@
-// src/components/games/GameResultModal.jsx
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useContext } from "react";
 import { X, Zap, Flame, TrendingUp, Clock, MousePointer2 } from "lucide-react";
+import { ThemeContext } from "../../context/ThemeContext";
+import GoalConfetti from "../typing/GoalConfetti";
 
 const STAT_ICONS = {
     zap: <Zap size={16} />,
@@ -25,8 +26,10 @@ export default function GameResultModal({
   icon = "🏆"
 }) {
   const cardRef = useRef(null);
+  const { theme } = useContext(ThemeContext);
 
   const percentage = maxScore ? Math.max(0, Math.round((score / maxScore) * 100)) : null;
+  const isPerfect = maxScore !== undefined && score !== undefined && score >= maxScore;
 
   useEffect(() => {
     if (!open) return;
@@ -39,6 +42,8 @@ export default function GameResultModal({
   if (!open) return null;
 
   return (
+    <>
+    {isPerfect && <GoalConfetti mode="wpm" theme={theme} accentColor={accentColor} />}
     <div
       className="grm-overlay"
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
@@ -269,5 +274,6 @@ export default function GameResultModal({
         }
       `}</style>
     </div>
+    </>
   );
 }
