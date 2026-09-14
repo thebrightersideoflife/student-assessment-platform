@@ -216,7 +216,11 @@ export function generateCrossword(terms, size = 16) {
     const first = pool.shift();
 
     function canPlace(word, r, c, dr, dc) {
-      if (r < 0 || r + dr * (word.length - 1) >= size || c < 0 || c + dc * (word.length - 1) >= size) return false;
+      if (!word) return false;
+      const endR = r + dr * (word.length - 1);
+      const endC = c + dc * (word.length - 1);
+      if (r < 0 || r >= size || c < 0 || c >= size) return false;
+      if (endR < 0 || endR >= size || endC < 0 || endC >= size) return false;
 
       let intersections = 0;
       for (let i = 0; i < word.length; i++) {
@@ -260,10 +264,21 @@ export function generateCrossword(terms, size = 16) {
       placedWords.push({ ...term, row: r, col: c, dr, dc });
     }
 
-    // First word starts in a random orientation (Across, Down, Reverse Across, or Reverse Down)
-    const possibleFirstDirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    // First word starts in a random orientation (Across or Down)
+    const possibleFirstDirs = [[0, 1], [1, 0]];
     const firstDir = possibleFirstDirs[Math.floor(Math.random() * possibleFirstDirs.length)];
-    place(first, Math.floor(size / 2), Math.floor((size - first.answer.length) / 2), firstDir[0], firstDir[1]);
+    const len = first.answer.length;
+
+    let r, c;
+    if (firstDir[0] === 0) { // Across
+      r = Math.floor(size / 2);
+      c = Math.floor((size - len) / 2);
+    } else { // Down
+      r = Math.floor((size - len) / 2);
+      c = Math.floor(size / 2);
+    }
+
+    place(first, r, c, firstDir[0], firstDir[1]);
 
     // Try to place others iteratively
     let added = true;
