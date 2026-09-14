@@ -6,6 +6,7 @@ import { PrintIcon } from "../AssessmentIcons";
 export default function MatchingGame({
   terms,
   onComplete,
+  onRestart,
   onExit,
   accentColor = "#3b82f6",
   accentRgb = "59, 130, 246",
@@ -127,13 +128,16 @@ export default function MatchingGame({
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         background: 'rgba(var(--bg-card-rgb), 0.6)', padding: '12px 24px', borderRadius: '16px',
         border: '1px solid rgba(var(--border-color-rgb), 0.2)',
-        zIndex: 10
+        zIndex: 10,
+        gap: '20px'
       }}>
-        <div style={{ fontSize: '18px', fontWeight: 700 }}>
-          Matches: <span style={{ color: 'var(--lush-lime)' }}>{matches.size} / {terms.length}</span>
-        </div>
-        <div style={{ fontSize: '18px', fontWeight: 700 }}>
-          Score: <span style={{ color: score >= 0 ? 'var(--lush-lime)' : 'var(--poppy-red)' }}>{score}</span>
+        <div style={{ display: 'flex', gap: '32px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            Matches: <span style={{ color: 'var(--lush-lime)' }}>{matches.size} / {terms.length}</span>
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            Score: <span style={{ color: score >= 0 ? 'var(--lush-lime)' : 'var(--poppy-red)' }}>{score}</span>
+          </div>
         </div>
 
         {/* Print Button */}
@@ -317,22 +321,23 @@ export default function MatchingGame({
       <GameResultModal
         open={showResultModal}
         onClose={() => setShowResultModal(false)}
-        title="Perfect Match!"
-        subtitle="You've correctly paired all technical terms with their definitions."
+        title={score >= terms.length * 10 ? "Perfect Match!" : "Module Mastered!"}
+        subtitle={score >= terms.length * 10 ? "Flawless pairing! You've correctly connected every term without a single mistake." : "You've successfully paired the terms. Review the ones you missed to reach 100%!"}
         score={score}
-        icon="🎉"
+        maxScore={terms.length * 10}
+        icon={score >= terms.length * 10 ? "🏆" : "🎉"}
         accentColor="var(--lush-lime)"
         accentRgb="118, 209, 61"
         stats={[
             { label: 'Matches', value: `${matches.size}/${terms.length}`, icon: 'target' }
         ]}
         primaryAction={{
-            label: 'Keep Studying',
-            onClick: () => setShowResultModal(false)
+            label: 'Next Game',
+            onClick: onRestart
         }}
         secondaryAction={{
-            label: 'Exit',
-            onClick: onExit
+            label: 'Close',
+            onClick: () => setShowResultModal(false)
         }}
       />
 

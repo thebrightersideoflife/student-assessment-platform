@@ -588,6 +588,7 @@ export default function GamesPage() {
             grid={crosswordData.grid}
             placedWords={crosswordData.placedWords}
             onWordFound={() => setHasStarted(true)}
+            onRestart={handleNewGame}
             onExit={resetToGameSelection}
             key={`cw-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}
@@ -602,6 +603,7 @@ export default function GamesPage() {
             placedWords={wordSearchData.placedWords}
             difficulty={difficulty}
             onWordFound={() => setHasStarted(true)}
+            onRestart={handleNewGame}
             onExit={resetToGameSelection}
             key={`ws-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}
@@ -614,6 +616,7 @@ export default function GamesPage() {
           <MatchingGame
             terms={gameTerms}
             onComplete={() => setHasStarted(true)}
+            onRestart={handleNewGame}
             onExit={resetToGameSelection}
             key={`mt-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}
@@ -626,6 +629,7 @@ export default function GamesPage() {
           <HangmanGame
             terms={gameTerms}
             onComplete={() => setHasStarted(true)}
+            onRestart={handleNewGame}
             onExit={resetToGameSelection}
             key={`hg-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}
@@ -635,6 +639,7 @@ export default function GamesPage() {
           <MemoryMatchGame
             terms={gameTerms}
             onComplete={() => setHasStarted(true)}
+            onRestart={handleNewGame}
             onExit={resetToGameSelection}
             key={`mm-${gameVersion}-${urlWeekId || 'module'}`}
             accentColor={meta.accent}

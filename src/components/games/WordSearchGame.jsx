@@ -8,6 +8,7 @@ export default function WordSearchGame({
   placedWords,
   difficulty = "normal",
   onWordFound,
+  onRestart,
   onExit,
   accentColor = "#3b82f6",
   accentRgb = "59, 130, 246",
@@ -444,9 +445,11 @@ export default function WordSearchGame({
       <GameResultModal
         open={showResultModal}
         onClose={() => setShowResultModal(false)}
-        title="Word Search Solved!"
-        subtitle={score >= (placedWords.length * 10) ? "✨ Flawless Discovery! ✨" : "Persistence pays off! Keep studying."}
+        title={score >= (placedWords.length * 10) ? "Eagle Eyed!" : "Word Search Solved!"}
+        subtitle={score >= (placedWords.length * 10) ? "✨ Flawless Discovery! You found every word without a single hint. ✨" : "Persistence pays off! Keep studying to find them all yourself next time."}
         score={score}
+        maxScore={placedWords.length * 10}
+        icon={score >= (placedWords.length * 10) ? "🏆" : "🔍"}
         stats={[
             { label: 'Time', value: formatTime(seconds), icon: 'clock' },
             { label: 'Reveals', value: revealedWordIds.size, icon: 'target' }
@@ -454,12 +457,12 @@ export default function WordSearchGame({
         accentColor="var(--lush-lime)"
         accentRgb="118, 209, 61"
         primaryAction={{
-            label: 'Keep Studying',
-            onClick: () => setShowResultModal(false)
+            label: 'Next Game',
+            onClick: onRestart
         }}
         secondaryAction={{
-            label: 'Exit',
-            onClick: onExit
+            label: 'Close',
+            onClick: () => setShowResultModal(false)
         }}
       />
 

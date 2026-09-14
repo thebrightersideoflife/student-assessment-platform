@@ -7,6 +7,7 @@ export default function CrosswordGame({
   grid,
   placedWords,
   onWordFound,
+  onRestart,
   onExit,
   accentColor = "#3b82f6",
   accentRgb = "59, 130, 246",
@@ -543,9 +544,11 @@ export default function CrosswordGame({
       <GameResultModal
         open={showResultModal}
         onClose={() => setShowResultModal(false)}
-        title="Crossword Solved!"
-        subtitle={score >= (placedWords.length * 10) ? "✨ Flawless Victory! No reveals used. ✨" : "Great job! You found most of them yourself."}
+        title={score >= (placedWords.length * 10) ? "Flawless Crossword!" : "Crossword Solved!"}
+        subtitle={score >= (placedWords.length * 10) ? "✨ Incredible! You solved the entire grid without using any reveals. ✨" : "Great job completing the puzzle! Try to solve the next one without hints for a perfect score."}
         score={score}
+        maxScore={placedWords.length * 10}
+        icon={score >= (placedWords.length * 10) ? "🏆" : "🧩"}
         stats={[
             { label: 'Time', value: formatTime(seconds), icon: 'clock' },
             { label: 'Reveals', value: revealedWordIds.size, icon: 'target' }
@@ -553,12 +556,12 @@ export default function CrosswordGame({
         accentColor="var(--lush-lime)"
         accentRgb="118, 209, 61"
         primaryAction={{
-            label: 'Keep Studying',
-            onClick: () => setShowResultModal(false)
+            label: 'Next Game',
+            onClick: onRestart
         }}
         secondaryAction={{
-            label: 'Exit',
-            onClick: onExit
+            label: 'Close',
+            onClick: () => setShowResultModal(false)
         }}
       />
 

@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { GalleryHorizontal } from "lucide-react";
 import GameResultModal from "./GameResultModal";
 
-export default function MemoryMatchGame({ terms, onComplete, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
+export default function MemoryMatchGame({ terms, onComplete, onRestart, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
   const [cards, setCards] = useState([]);
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [matchedIds, setMatchedIds] = useState(new Set());
@@ -174,9 +174,10 @@ export default function MemoryMatchGame({ terms, onComplete, onExit, accentColor
         open={showResultModal}
         onClose={() => setShowResultModal(false)}
         title={level < 6 ? "Level Complete!" : "Memory Master!"}
-        subtitle={level < 6 ? `Great job! Ready for level ${level + 1}?` : `You cleared level ${level} in ${moves} moves.`}
+        subtitle={score >= (cards.length / 2) * 10 ? "✨ Flawless Memory! You didn't make a single mistake. ✨" : level < 6 ? `Great job! Ready for level ${level + 1}?` : `You cleared level ${level} in ${moves} moves.`}
         score={score}
-        icon={level < 6 ? "🌟" : "🧠"}
+        maxScore={(cards.length / 2) * 10}
+        icon={score >= (cards.length / 2) * 10 ? "🏆" : level < 6 ? "🌟" : "🧠"}
         accentColor="var(--lush-lime)"
         accentRgb="118, 209, 61"
         stats={[
@@ -184,13 +185,16 @@ export default function MemoryMatchGame({ terms, onComplete, onExit, accentColor
             { label: 'Moves', value: moves, icon: 'trend' },
             { label: 'Level', value: level, icon: 'zap' }
         ]}
-        primaryAction={{
-            label: level < 6 ? 'Next Level' : 'Continue Playing',
+        primaryAction={level < 6 ? {
+            label: 'Next Level',
             onClick: startNextLevel
+        } : {
+            label: 'Next Game',
+            onClick: onRestart
         }}
         secondaryAction={{
-            label: 'Exit',
-            onClick: onExit
+            label: 'Close',
+            onClick: () => setShowResultModal(false)
         }}
       />
     </div>

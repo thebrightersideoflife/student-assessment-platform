@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import GameResultModal from "./GameResultModal";
 
-export default function HangmanGame({ terms, onComplete, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
+export default function HangmanGame({ terms, onComplete, onRestart, onExit, accentColor = "#3b82f6", accentRgb = "59, 130, 246" }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [guessedLetters, setGuessedLetters] = useState(new Set());
   const [mistakes, setMistakes] = useState(0);
@@ -401,18 +401,23 @@ export default function HangmanGame({ terms, onComplete, onExit, accentColor = "
       <GameResultModal
         open={showResultModal}
         onClose={() => setShowResultModal(false)}
-        title={gameState === 'won' ? 'You saved him!' : 'Mission failed.'}
-        subtitle={gameState === 'won' ? 'Brilliant deduction!' : `The correct answer was ${currentTerm.displayAnswer}.`}
-        icon={gameState === 'won' ? '✨' : '💀'}
+        title={gameState === 'won' ? (mistakes === 0 ? 'Flawless Victory!' : 'You saved him!') : 'Mission failed.'}
+        subtitle={gameState === 'won' ? (mistakes === 0 ? '✨ Absolute perfection! No mistakes made. ✨' : 'Brilliant deduction!') : `The correct answer was ${currentTerm.displayAnswer}.`}
+        icon={gameState === 'won' ? (mistakes === 0 ? '🏆' : '✨') : '💀'}
+        score={gameState === 'won' ? Math.max(10, 100 - mistakes * 15) : 0}
+        maxScore={100}
         accentColor={gameState === 'won' ? 'var(--lush-lime)' : 'var(--poppy-red)'}
         accentRgb={gameState === 'won' ? '118, 209, 61' : '239, 68, 68'}
-        primaryAction={{
-            label: currentIndex < terms.length - 1 ? 'Next Term' : 'Finish',
+        primaryAction={currentIndex < terms.length - 1 ? {
+            label: 'Next Term',
             onClick: nextWord
+        } : {
+            label: 'Next Game',
+            onClick: onRestart
         }}
         secondaryAction={{
-            label: 'Exit',
-            onClick: onExit
+            label: 'Close',
+            onClick: () => setShowResultModal(false)
         }}
         stats={[
             { label: 'Time left', value: formatTime(timeLeft), icon: 'clock' },
